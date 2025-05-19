@@ -6,22 +6,42 @@
   /* 淺色主題變數 */
   --color-background: #ffffff;
   --color-text: #213547;
+  --color-text-secondary: #666666;
   --color-primary: #646cff;
   --color-primary-hover: #747bff;
   --color-button-bg: #f9f9f9;
   --color-button-border: transparent;
   --color-button-hover-border: #646cff;
+  --color-card-bg: #ffffff;
+  --color-border: #e5e7eb;
+  --color-input-bg: #ffffff;
+  --color-input-border: #d1d5db;
+  --color-input-focus-border: #646cff;
+  --color-error: #ef4444;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
 }
 
 [data-theme="dark"] {
   /* 深色主題變數 */
-  --color-background: #242424;
+  --color-background: #1a1a1a;
   --color-text: rgba(255, 255, 255, 0.87);
+  --color-text-secondary: rgba(255, 255, 255, 0.6);
   --color-primary: #646cff;
   --color-primary-hover: #535bf2;
-  --color-button-bg: #1a1a1a;
+  --color-button-bg: #2a2a2a;
   --color-button-border: transparent;
   --color-button-hover-border: #646cff;
+  --color-card-bg: #242424;
+  --color-border: #404040;
+  --color-input-bg: #2a2a2a;
+  --color-input-border: #404040;
+  --color-input-focus-border: #646cff;
+  --color-error: #f87171;
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
 }
 
 :root {
@@ -96,14 +116,20 @@ button:focus-visible {
   text-align: left;
 }
 
+/* 添加主題過渡效果 */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 移除重複的媒體查詢，因為我們現在使用 ThemeService 來處理主題切換 */
 @media (prefers-color-scheme: dark) {
   :root {
-    color-scheme: dark;
+    /* 這些樣式現在由 ThemeService 控制 */
   }
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color-scheme: light;
+    /* 這些樣式現在由 ThemeService 控制 */
   }
 }

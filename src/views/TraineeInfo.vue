@@ -15,7 +15,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";

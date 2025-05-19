@@ -1,9 +1,14 @@
-<script setup>
-// App.vue 無需額外邏輯
+<script setup lang="ts">
+import { onMounted } from "vue";
+import { ThemeService } from "./services/theme.service";
+
+onMounted(() => {
+  ThemeService.getInstance();
+});
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 w-full">
+  <div class="min-h-screen w-full" :class="{ 'bg-gray-100': true }">
     <header class="bg-primary text-white py-4 w-full">
       <div class="container mx-auto px-4 lg:px-8">
         <h1 class="text-2xl font-bold">管理資訊平台</h1>
@@ -16,8 +21,11 @@
       </div>
     </main>
 
-    <footer class="bg-gray-200 py-4 mt-8 w-full">
-      <div class="container mx-auto px-4 lg:px-8 text-center text-gray-600">
+    <footer
+      class="py-4 mt-8 w-full"
+      :class="{ 'bg-gray-200': true, 'text-gray-600': true }"
+    >
+      <div class="container mx-auto px-4 lg:px-8 text-center">
         <p>&copy; {{ new Date().getFullYear() }} 管理資訊平台</p>
       </div>
     </footer>

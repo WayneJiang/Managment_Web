@@ -33,7 +33,7 @@ const refError = ref("");
 
 onMounted(async () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const socialId = urlParams.get("socialId");
+  const socialId = urlParams.get("");
 
   if (!socialId) {
     refError.value = "請透過LINE連結訪問本頁面";

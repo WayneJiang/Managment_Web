@@ -24,7 +24,6 @@ export const useViewerStore = defineStore('viewer', {
                 return response.id
             } catch (error) {
                 this.error = error.message || '無法獲取使用者資料'
-                console.error('Failed to fetch user:', error)
                 return null
             } finally {
                 this.loading = false

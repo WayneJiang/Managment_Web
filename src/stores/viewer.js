@@ -19,7 +19,6 @@ export const useViewerStore = defineStore('viewer', {
 
             try {
                 const response = await api.getBySocialId(socialId)
-                console.log(response)
                 this.coach = response.coach
                 this.trainee = response.trainee
                 return response.id

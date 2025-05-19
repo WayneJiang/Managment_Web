@@ -1,11 +1,13 @@
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+axios.defaults.baseURL = API_BASE_URL;
+axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true'
 
 export const api = {
     async getBySocialId(socialId) {
         try {
-            const response = await axios.get(`${API_BASE_URL}/view/${socialId}`);
+            const response = await axios.get(`/view/${socialId}`);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);
@@ -15,7 +17,7 @@ export const api = {
 
     async getByCoachId(id) {
         try {
-            const response = await axios.get(`${API_BASE_URL}/coach/info/${id}`);
+            const response = await axios.get(`/coach/info/${id}`);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);
@@ -25,7 +27,7 @@ export const api = {
 
     async getTrainees() {
         try {
-            const response = await axios.get(`${API_BASE_URL}/trainees`);
+            const response = await axios.get(`/trainees`);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);
@@ -35,7 +37,7 @@ export const api = {
 
     async getByTraineeId(id) {
         try {
-            const response = await axios.get(`${API_BASE_URL}/trainee/info/${id}`);
+            const response = await axios.get(`/trainee/info/${id}`);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);
@@ -45,7 +47,7 @@ export const api = {
 
     async getCoaches() {
         try {
-            const response = await axios.get(`${API_BASE_URL}/coaches`);
+            const response = await axios.get(`/coaches`);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);
@@ -55,7 +57,7 @@ export const api = {
 
     async updateTrainee(trainee) {
         try {
-            const response = await axios.put(`${API_BASE_URL}/trainee/info/${trainee.id}`, trainee);
+            const response = await axios.put(`/trainee/info/${trainee.id}`, trainee);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);
@@ -65,7 +67,7 @@ export const api = {
 
     async createTrainingPlan(trainingPlan) {
         try {
-            const response = await axios.post(`${API_BASE_URL}/trainingPlan`, trainingPlan);
+            const response = await axios.post(`/trainingPlan`, trainingPlan);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);

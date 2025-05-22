@@ -118,6 +118,7 @@
 import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
+import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TrainingPlanList from "../components/TrainingPlanList.vue";
 
@@ -207,13 +208,13 @@ const handleSubmit = async () => {
       data.id = refEditTrainingPlanId.value;
       const result = await traineeStore.updateTrainingPlan(data);
       if (!result) {
-        alert("更新失敗");
+        ElMessage.error("更新失敗");
         return;
       }
     } else {
       const result = await traineeStore.createTrainingPlan(data);
       if (!result) {
-        alert("新增失敗");
+        ElMessage.error("新增失敗");
         return;
       }
     }
@@ -228,7 +229,7 @@ const handleSubmit = async () => {
     const trainee = await traineeStore.fetchById(refTrainee.value.id);
     refTrainee.value = trainee;
 
-    alert(isEditMode ? "更新成功" : "新增成功");
+    ElMessage.success(isEditMode ? "更新成功" : "新增成功");
   } catch (err) {
     refError.value = err.message || "發生錯誤，請稍後再試";
   } finally {

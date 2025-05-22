@@ -19,6 +19,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
+import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TraineeForm from "../components/TraineeForm.vue";
 import TrainingRecordList from "../components/TrainingRecordList.vue";
@@ -70,26 +71,26 @@ const save = async (trainee) => {
         trainee
       );
       if (result) {
-        alert("已新增");
+        ElMessage.success("已新增");
         if (refIsCoach.value) {
           back();
         }
       } else {
-        refError.value = "新增失敗";
+        ElMessage.error("新增失敗");
       }
     } else {
       const result = await traineeStore.updateTrainee(trainee);
       if (result) {
-        alert("已更新");
+        ElMessage.success("已更新");
         if (refIsCoach.value) {
           back();
         }
       } else {
-        refError.value = "更新失敗";
+        ElMessage.error("更新失敗");
       }
     }
   } catch (err) {
-    refError.value = err.message || "發生錯誤，請稍後再試";
+    ElMessage.error(err.message || "發生錯誤，請稍後再試");
   } finally {
     refLoading.value = false;
   }

@@ -33,19 +33,18 @@ const refError = ref("");
 const refIsCoach = ref(false);
 const refIsRegister = ref(false);
 const refSocialId = ref("");
+
 onMounted(async () => {
   refLoading.value = true;
   refIsCoach.value = route.query.coach == "true";
   refIsRegister.value = route.query.register == "true";
 
+  refSocialId.value = route.params.id;
   try {
     if (!refIsRegister.value) {
-      const id = route.params.id;
-      const trainee = await traineeStore.fetchById(id);
+      const trainee = await traineeStore.fetchById(refSocialId.value);
       refTrainee.value = trainee;
     } else {
-      refSocialId.value = route.params.socialId;
-
       refTrainee.value = {
         name: "",
         gender: "male",

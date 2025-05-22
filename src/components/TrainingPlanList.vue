@@ -3,13 +3,13 @@
     <table class="table table-zebra w-full">
       <thead class="sticky top-0 bg-base-100 z-10">
         <tr>
-          <th class="text-center">開始日期</th>
-          <th class="text-center">結束日期</th>
-          <th class="text-center">計畫類型</th>
-          <th class="text-center">負責教練</th>
-          <th class="text-center">計畫額度</th>
-          <th class="text-center">已用額度</th>
-          <th class="text-center">編輯者</th>
+          <th class="text-center">開始</th>
+          <th class="text-center">結束</th>
+          <th class="text-center">計畫</th>
+          <th class="text-center">教練</th>
+          <th class="text-center">額度</th>
+          <th class="text-center">已用</th>
+          <th class="text-center">編輯</th>
           <th class="text-center">操作</th>
         </tr>
       </thead>

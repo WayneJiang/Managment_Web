@@ -1,7 +1,16 @@
 <template>
   <div class="card bg-base-100 shadow-xl mt-4 w-full">
     <div class="card-body">
-      <h2 class="card-title text-2xl">簽到歷史記錄</h2>
+      <div class="flex justify-between items-center">
+        <h2 class="card-title text-2xl">簽到歷史記錄</h2>
+        <button
+          class="btn btn-primary"
+          @click="exportToPdf"
+          :disabled="trainingRecords.length === 0"
+        >
+          匯出 PDF
+        </button>
+      </div>
       <div class="overflow-x-auto mt-4 w-full">
         <table class="table table-zebra w-full">
           <thead>
@@ -10,7 +19,8 @@
               <th class="text-center">時間</th>
               <th class="text-center">計畫</th>
               <th class="text-center">教練</th>
-              <th class="text-center">剩餘額度</th>
+              <th class="text-center">額度</th>
+              <th class="text-center">已用</th>
             </tr>
           </thead>
           <tbody>
@@ -28,11 +38,14 @@
                 {{ trainingRecord.trainingPlan?.coach?.name }}
               </td>
               <td class="text-center">
-                {{ trainingRecord.trainingPlan?.quota }}
+                {{ trainingRecord.trainingPlan?.planQuota }}
+              </td>
+              <td class="text-center">
+                {{ trainingRecord.trainingPlan?.usedQuota }}
               </td>
             </tr>
             <tr v-if="trainingRecords.length === 0">
-              <td colspan="5" class="text-center">無簽到記錄</td>
+              <td colspan="6" class="text-center">無簽到記錄</td>
             </tr>
           </tbody>
         </table>
@@ -42,10 +55,11 @@
 </template>
 
 <script setup>
-import { defineProps } from "vue";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const props = defineProps({
   trainingRecords: {
@@ -72,5 +86,46 @@ const formatDate = (dateTimeString) => {
 
 const formatTime = (dateTimeString) => {
   return dayjs(dateTimeString).tz("Asia/Taipei").format("HH:mm:ss");
+};
+
+const exportToPdf = async () => {
+  const doc = new jsPDF();
+
+  doc.addFont("/fonts/NotoSansTC-Regular.ttf", "NotoSansTC", "normal");
+  doc.addFont("/fonts/NotoSansTC-Bold.ttf", "NotoSansTC", "bold");
+  doc.setFont("NotoSansTC");
+
+  doc.setFontSize(20);
+  doc.text("簽到歷史記錄", 14, 20);
+
+  const tableData = props.trainingRecords.map((record) => [
+    formatDate(record.createdDate),
+    formatTime(record.createdDate),
+    plan(record.trainingPlan?.planType),
+    record.trainingPlan?.coach?.name || "",
+    record.trainingPlan?.planQuota || "",
+    record.trainingPlan?.usedQuota || "",
+  ]);
+
+  autoTable(doc, {
+    head: [["日期", "時間", "計畫", "教練", "額度", "已用"]],
+    body: tableData,
+    startY: 30,
+    styles: {
+      font: "NotoSansTC",
+      fontSize: 10,
+    },
+    headStyles: {
+      font: "NotoSansTC",
+      fontStyle: "bold",
+      fillColor: [66, 139, 202],
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245],
+    },
+    margin: { top: 30 },
+  });
+
+  doc.save(`簽到歷史記錄_${formatDate(new Date())}.pdf`);
 };
 </script>

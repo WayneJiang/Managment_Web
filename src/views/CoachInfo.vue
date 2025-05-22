@@ -2,11 +2,8 @@
   <div class="w-full">
     <div class="flex flex-col md:flex-row justify-between items-center mb-4">
       <h1 class="text-3xl font-bold">教練管理介面</h1>
-      <div
-        v-if="refCoachName"
-        class="badge badge-primary badge-lg mt-2 md:mt-0"
-      >
-        {{ refCoachName }}
+      <div v-if="refCoach" class="badge badge-primary badge-lg mt-2 md:mt-0">
+        {{ refCoach.name }}
       </div>
     </div>
 
@@ -16,7 +13,7 @@
       <TraineeList
         :trainees="refTrainees"
         @update="navigateToUpdate"
-        @add="navigateToAdd"
+        @adjust="navigateToAdjust"
       />
     </div>
   </div>
@@ -26,12 +23,14 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useCoachStore } from "../stores/coach";
+import TraineeList from "../components/TraineeList.vue";
+import LoadingState from "../components/LoadingState.vue";
 
 const route = useRoute();
 const router = useRouter();
 const coachStore = useCoachStore();
 
-const refCoachName = ref("");
+const refCoach = ref(null);
 const refTrainees = ref([]);
 const refLoading = ref(false);
 const refError = ref("");
@@ -43,7 +42,7 @@ onMounted(async () => {
     const id = route.params.id;
 
     const coach = await coachStore.fetchById(id);
-    refCoachName.value = coach.name;
+    refCoach.value = coach;
 
     const trainees = await coachStore.fetchAll();
     refTrainees.value = trainees;
@@ -55,10 +54,10 @@ onMounted(async () => {
 });
 
 const navigateToUpdate = (trainee) => {
-  router.push(`/trainee/info/${trainee.id}?coach=true`);
+  router.push(`/trainee/info/${trainee.id}?coach=true&register=false`);
 };
 
-const navigateToAdd = (trainee) => {
-  router.push(`/plan/${trainee.id}`);
+const navigateToAdjust = (trainee) => {
+  router.push(`/plan/${refCoach.value.id}/${trainee.id}`);
 };
 </script>

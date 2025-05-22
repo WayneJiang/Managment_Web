@@ -6,23 +6,33 @@
         <table class="table table-zebra w-full">
           <thead>
             <tr>
-              <th>日期</th>
-              <th>時間</th>
-              <th>計畫</th>
-              <th>教練</th>
-              <th>剩餘額度</th>
+              <th class="text-center">日期</th>
+              <th class="text-center">時間</th>
+              <th class="text-center">計畫</th>
+              <th class="text-center">教練</th>
+              <th class="text-center">剩餘額度</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(trainingRecord, index) in trainingRecords" :key="index">
-              <td>{{ formatDate(trainingRecord.createdDate) }}</td>
-              <td>{{ formatTime(trainingRecord.createdDate) }}</td>
-              <td>{{ plan(trainingRecord.trainingPlan?.planType) }}</td>
-              <td>{{ trainingRecord.trainingPlan?.coach?.name }}</td>
-              <td>{{ trainingRecord.trainingPlan?.quota }}</td>
+              <td class="text-center">
+                {{ formatDate(trainingRecord.createdDate) }}
+              </td>
+              <td class="text-center">
+                {{ formatTime(trainingRecord.createdDate) }}
+              </td>
+              <td class="text-center">
+                {{ plan(trainingRecord.trainingPlan?.planType) }}
+              </td>
+              <td class="text-center">
+                {{ trainingRecord.trainingPlan?.coach?.name }}
+              </td>
+              <td class="text-center">
+                {{ trainingRecord.trainingPlan?.quota }}
+              </td>
             </tr>
             <tr v-if="trainingRecords.length === 0">
-              <td colspan="2" class="text-center">無簽到記錄</td>
+              <td colspan="5" class="text-center">無簽到記錄</td>
             </tr>
           </tbody>
         </table>

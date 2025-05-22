@@ -47,11 +47,11 @@ onMounted(async () => {
     const viewer = await viewerStore.fetchBySocialId(socialId);
 
     if (viewerStore.isTrainee) {
-      router.push(`/trainee/info/${viewer}?coach=false`);
+      router.push(`/trainee/info/${viewer}?coach=false&register=false`);
     } else if (viewerStore.isCoach) {
       router.push(`/coach/${viewer}?coach=true`);
     } else {
-      refError.value = "未知的用戶類型";
+      router.push(`/trainee/info/${socialId}?coach=false&register=true`);
     }
   } catch (err) {
     refError.value = err.message || "發生錯誤，請稍後再試";

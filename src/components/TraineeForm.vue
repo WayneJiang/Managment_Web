@@ -11,7 +11,12 @@
             type="text"
             v-model="refTrainee.name"
             class="input input-bordered"
+            :class="{ 'input-error': refNameError }"
+            @input="validateName"
           />
+          <label class="label" v-if="refNameError">
+            <span class="label-text-alt text-error">{{ refNameError }}</span>
+          </label>
         </div>
         <div class="form-control">
           <label class="label">
@@ -36,6 +41,12 @@
             :class="{ 'input-error': refBirthdayError }"
             :min="dayjs().subtract(100, 'year').format('YYYY-MM-DD')"
             :max="dayjs().subtract(10, 'year').format('YYYY-MM-DD')"
+            :placeholder="
+              refTrainee.birthday === '1900-01-01' ? '年/月/日' : ''
+            "
+            :value="
+              refTrainee.birthday === '1900-01-01' ? '' : refTrainee.birthday
+            "
             @input="validateBirthday"
           />
           <label class="label" v-if="refBirthdayError">
@@ -149,6 +160,7 @@ const refFormattedPhone = ref("");
 const refBirthdayError = ref("");
 const refHeightError = ref("");
 const refWeightError = ref("");
+const refNameError = ref("");
 
 const validatePhone = (event) => {
   const input = event.target;
@@ -173,22 +185,14 @@ const validatePhone = (event) => {
 };
 
 const validateBirthday = () => {
-  if (!refTrainee.value.birthday) {
+  if (
+    !refTrainee.value.birthday ||
+    refTrainee.value.birthday === "1900-01-01"
+  ) {
     refBirthdayError.value = "請選擇生日";
     return;
   }
-
-  const birthDate = dayjs(refTrainee.value.birthday);
-  const today = dayjs();
-  const age = today.diff(birthDate, "year");
-
-  if (age < 10) {
-    refBirthdayError.value = "年齡必須大於或等於10歲";
-  } else if (age > 100) {
-    refBirthdayError.value = "年齡必須小於或等於100歲";
-  } else {
-    refBirthdayError.value = "";
-  }
+  refBirthdayError.value = "";
 };
 
 const validateHeight = () => {
@@ -217,24 +221,20 @@ const validateWeight = () => {
   }
 };
 
-watch(
-  () => refTrainee.value.birthday,
-  () => {
-    validateBirthday();
+const validateName = () => {
+  if (!refTrainee.value.name || refTrainee.value.name.trim() === "") {
+    refNameError.value = "請輸入姓名";
+    return;
   }
-);
+  refNameError.value = "";
+};
 
 watch(refFormattedPhone, (value) => {
   refTrainee.value.phone = value.replace(/\D/g, "");
 });
 
 onMounted(() => {
-  refTrainee.value = {
-    ...props.trainee,
-    birthday: props.trainee.birthday
-      ? dayjs(props.trainee.birthday).format("YYYY-MM-DD")
-      : "",
-  };
+  refTrainee.value = props.trainee;
 
   if (refTrainee.value.phone) {
     refFormattedPhone.value = refTrainee.value.phone.replace(
@@ -252,20 +252,30 @@ const calculateBMI = computed(() => {
 });
 
 const onSubmit = () => {
+  validateName();
   validateBirthday();
+  validatePhone({ target: { value: refTrainee.value.phone } });
   validateHeight();
   validateWeight();
   if (
+    refNameError.value ||
     refBirthdayError.value ||
     refPhoneError.value ||
     refHeightError.value ||
-    refWeightError.value
+    refWeightError.value ||
+    !refTrainee.value.phone
   ) {
+    if (!refTrainee.value.phone) {
+      refPhoneError.value = "請輸入手機號碼";
+    }
     return;
   }
   const data = {
     ...refTrainee.value,
-    birthday: dayjs(refTrainee.value.birthday).format("YYYY-MM-DD"),
+    birthday:
+      refTrainee.value.birthday === "1900-01-01"
+        ? "1900-01-01"
+        : dayjs(refTrainee.value.birthday).format("YYYY-MM-DD"),
     phone: refTrainee.value.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3"),
     height: Number(refTrainee.value.height).toFixed(1),
     weight: Number(refTrainee.value.weight).toFixed(1),

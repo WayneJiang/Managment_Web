@@ -57,7 +57,7 @@ export const api = {
 
     async updateTrainee(trainee) {
         try {
-            const response = await axios.put(`/trainee/info/${trainee.id}`, trainee);
+            const response = await axios.patch(`/trainee/info/${trainee.id}`, trainee);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);
@@ -68,6 +68,16 @@ export const api = {
     async createTrainingPlan(trainingPlan) {
         try {
             const response = await axios.post(`/trainingPlan`, trainingPlan);
+            return response.data;
+        } catch (error) {
+            console.error('API 請求失敗:', error);
+            throw new Error(error.response?.data?.message || '無法更新資訊');
+        }
+    },
+
+    async updateTrainingPlan(trainingPlan) {
+        try {
+            const response = await axios.patch(`/trainingPlan/${trainingPlan.id}`, trainingPlan);
             return response.data;
         } catch (error) {
             console.error('API 請求失敗:', error);

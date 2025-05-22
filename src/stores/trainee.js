@@ -75,6 +75,23 @@ export const useTraineeStore = defineStore('trainee', {
             } finally {
                 this.loading = false
             }
+        },
+
+        async updateTrainingPlan(trainingPlan) {
+            this.loading = true
+            this.error = null
+
+            try {
+                const response = await api.updateTrainingPlan(trainingPlan)
+
+                return response
+            } catch (error) {
+                this.error = error.message || '無法更新訓練計畫資料'
+                console.error('Failed to update training plan:', error)
+                return null
+            } finally {
+                this.loading = false
+            }
         }
     }
 }) 

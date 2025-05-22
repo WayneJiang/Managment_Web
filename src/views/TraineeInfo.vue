@@ -4,13 +4,13 @@
     <LoadingState :loading="refLoading" :error="refError" />
 
     <div v-if="!refLoading && !refError && refTrainee" class="w-full">
-      <TraineeFormComponent
+      <TraineeForm
         :trainee="refTrainee"
         :coach="refIsCoach"
         @save="save"
         @back="back"
       />
-      <TrainingRecordComponent :trainingRecords="refTrainee.trainingRecord" />
+      <TrainingRecordList :trainingRecords="refTrainee.trainingRecord" />
     </div>
   </div>
 </template>
@@ -20,8 +20,8 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import LoadingState from "../components/LoadingState.vue";
-import TraineeFormComponent from "../components/TraineeForm.vue";
-import TrainingRecordComponent from "../components/TrainingRecord.vue";
+import TraineeForm from "../components/TraineeForm.vue";
+import TrainingRecordList from "../components/TrainingRecordList.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -31,15 +31,27 @@ const refTrainee = ref(null);
 const refLoading = ref(false);
 const refError = ref("");
 const refIsCoach = ref(false);
+const refIsRegister = ref(false);
 
 onMounted(async () => {
   refLoading.value = true;
   refIsCoach.value = route.query.coach == "true";
+  refIsRegister.value = route.query.register == "true";
 
   try {
-    const id = route.params.id;
-    const trainee = await traineeStore.fetchById(id);
-    refTrainee.value = trainee;
+    if (!refIsRegister.value) {
+      const id = route.params.id;
+      const trainee = await traineeStore.fetchById(id);
+      refTrainee.value = trainee;
+    } else {
+      refTrainee.value = {
+        name: "",
+        gender: "male",
+        height: "0.0",
+        weight: "0.0",
+        phone: "",
+      };
+    }
   } catch (err) {
     refError.value = err.message || "發生錯誤，請稍後再試";
   } finally {

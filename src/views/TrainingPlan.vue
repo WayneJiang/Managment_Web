@@ -3,15 +3,18 @@
     <h1 class="text-3xl font-bold mb-4">訓練計畫</h1>
     <LoadingState :loading="refLoading" :error="refError" />
 
-    <div v-if="!refLoading && !refError" class="w-full">
+    <div v-if="!refLoading && !refError && refTrainee" class="w-full space-y-6">
       <div class="card bg-base-100 shadow-xl w-full">
         <div class="card-body">
-          <h2 class="card-title text-2xl">計畫編輯</h2>
+          <h2 class="card-title text-2xl">
+            {{ refEditTrainingPlanId ? "編輯" : "新增" }}
+            {{ refTrainee.name }} 的訓練計畫
+          </h2>
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text">選擇教練</span>
+                  <span class="label-text">負責教練</span>
                 </label>
                 <select
                   v-model="refSelectedCoach"
@@ -73,24 +76,6 @@
                   }}</span>
                 </label>
               </div>
-
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text">計畫開始日期</span>
-                </label>
-                <input
-                  type="date"
-                  v-model="refStart"
-                  class="input input-bordered w-full"
-                  :class="{ 'input-error': refStartError }"
-                  :min="dayjs().format('YYYY-MM-DD')"
-                />
-                <label v-if="refStartError" class="label">
-                  <span class="label-text-alt text-error">{{
-                    refStartError
-                  }}</span>
-                </label>
-              </div>
             </div>
 
             <div class="card-actions justify-end mt-4">
@@ -100,18 +85,29 @@
                 :disabled="refLoading"
               >
                 <span v-if="refLoading" class="loading loading-spinner"></span>
-                儲存
+                {{ refEditTrainingPlanId ? "更新" : "新增" }}
               </button>
               <button
                 type="button"
                 class="btn btn-ghost"
-                @click="back"
+                @click="
+                  () => (refEditTrainingPlanId ? handleCancelEdit() : back())
+                "
                 :disabled="refLoading"
               >
-                返回
+                {{ refEditTrainingPlanId ? "取消" : "返回" }}
               </button>
             </div>
           </form>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-xl w-full">
+        <div class="card-body">
+          <h2 class="card-title text-2xl mb-4">歷史訓練計畫</h2>
+          <TrainingPlanList
+            :trainingPlans="refTrainee.trainingPlan"
+            @edit="handleEditTrainingPlan"
+          />
         </div>
       </div>
     </div>
@@ -123,7 +119,7 @@ import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import LoadingState from "../components/LoadingState.vue";
-import dayjs from "dayjs";
+import TrainingPlanList from "../components/TrainingPlanList.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -134,13 +130,13 @@ const refCoaches = ref([]);
 const refSelectedCoach = ref("");
 const refPlanType = ref("");
 const refQuota = ref("");
-const refStart = ref("");
 const refLoading = ref(false);
 const refError = ref("");
 const refCoachError = ref("");
 const refPlanTypeError = ref("");
 const refQuotaError = ref("");
-const refStartError = ref("");
+const refEditTrainingPlanId = ref(null);
+const refEditorId = ref(null);
 
 onMounted(async () => {
   refLoading.value = true;
@@ -148,11 +144,15 @@ onMounted(async () => {
   try {
     const id = route.params.id;
 
-    const trainee = await traineeStore.fetchById(id);
-    refTrainee.value = trainee;
+    refEditorId.value = route.params.editor;
 
-    const coach = await traineeStore.fetchCoaches();
-    refCoaches.value = coach;
+    const [trainee, coaches] = await Promise.all([
+      traineeStore.fetchById(id),
+      traineeStore.fetchCoaches(),
+    ]);
+
+    refTrainee.value = trainee;
+    refCoaches.value = coaches;
   } catch (err) {
     refError.value = err.message || "發生錯誤，請稍後再試";
   } finally {
@@ -185,48 +185,74 @@ const validateForm = () => {
   } else {
     refQuotaError.value = "";
   }
-
-  if (!refStart.value) {
-    refStartError.value = "請選擇開始日期";
-  } else {
-    refStartError.value = "";
-  }
 };
 
 const handleSubmit = async () => {
   validateForm();
-  if (
-    refCoachError.value ||
-    refPlanTypeError.value ||
-    refQuotaError.value ||
-    refStartError.value
-  ) {
+  if (refCoachError.value || refPlanTypeError.value || refQuotaError.value) {
     return;
   }
 
   refLoading.value = true;
   try {
     const data = {
-      start: dayjs(refStart.value).format("YYYY-MM-DD"),
-      planType: refPlanType.value,
-      quota: refQuota.value,
       trainee: refTrainee.value.id,
       coach: refSelectedCoach.value,
+      planType: refPlanType.value,
+      planQuota: refQuota.value,
+      editor: refEditorId.value,
     };
 
-    const result = await traineeStore.createTrainingPlan(data);
-
-    if (result) {
-      alert("新增成功");
-      back();
+    if (refEditTrainingPlanId.value) {
+      data.id = refEditTrainingPlanId.value;
+      const result = await traineeStore.updateTrainingPlan(data);
+      if (!result) {
+        alert("更新失敗");
+        return;
+      }
     } else {
-      alert("新增失敗");
+      const result = await traineeStore.createTrainingPlan(data);
+      if (!result) {
+        alert("新增失敗");
+        return;
+      }
     }
+
+    const isEditMode = refEditTrainingPlanId.value != null;
+
+    refSelectedCoach.value = "";
+    refPlanType.value = "";
+    refQuota.value = "";
+    refEditTrainingPlanId.value = null;
+
+    const trainee = await traineeStore.fetchById(refTrainee.value.id);
+    refTrainee.value = trainee;
+
+    alert(isEditMode ? "更新成功" : "新增成功");
   } catch (err) {
     refError.value = err.message || "發生錯誤，請稍後再試";
   } finally {
     refLoading.value = false;
   }
+};
+
+const handleEditTrainingPlan = async (trainingPlan) => {
+  refEditTrainingPlanId.value = trainingPlan.id;
+  refSelectedCoach.value = trainingPlan.coach.id;
+  refPlanType.value = trainingPlan.planType;
+  refQuota.value = trainingPlan.planQuota;
+};
+
+const handleCancelEdit = () => {
+  refEditTrainingPlanId.value = null;
+  refSelectedCoach.value = "";
+  refPlanType.value = "";
+  refQuota.value = "";
+
+  refCoachError.value = "";
+  refPlanTypeError.value = "";
+  refQuotaError.value = "";
+  refError.value = "";
 };
 
 const back = () => {

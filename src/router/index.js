@@ -15,7 +15,7 @@ const routes = [
         component: () => import('../views/CoachInfo.vue')
     },
     {
-        path: '/plan/:id',
+        path: '/plan/:editor/:id',
         name: 'TrainingPlan',
         component: () => import('../views/TrainingPlan.vue')
     }

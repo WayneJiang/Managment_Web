@@ -6,21 +6,25 @@
         <table class="table table-zebra w-full">
           <thead>
             <tr>
-              <th>姓名</th>
-              <th>本期訓練計畫</th>
-              <th>本期負責教練</th>
-              <th>本期剩餘額度</th>
-              <th>更新資料</th>
-              <th>新增計畫</th>
+              <th class="text-center">姓名</th>
+              <th class="text-center">本期訓練計畫</th>
+              <th class="text-center">本期負責教練</th>
+              <th class="text-center">本期剩餘額度</th>
+              <th class="text-center">更新資料</th>
+              <th class="text-center">調整計畫</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="trainee in trainees" :key="trainee.id" class="hover">
-              <td>{{ trainee.name }}</td>
-              <td>{{ plan(trainee.trainingPlan[0]?.planType) }}</td>
-              <td>{{ trainee.trainingPlan[0]?.coach.name }}</td>
-              <td>{{ trainee.trainingPlan[0]?.quota }}</td>
-              <td>
+              <td class="text-center">{{ trainee.name }}</td>
+              <td class="text-center">
+                {{ plan(trainee.trainingPlan[0]?.planType) }}
+              </td>
+              <td class="text-center">
+                {{ trainee.trainingPlan[0]?.coach.name }}
+              </td>
+              <td class="text-center">{{ trainee.trainingPlan[0]?.quota }}</td>
+              <td class="text-center">
                 <button
                   class="btn btn-sm btn-primary"
                   @click="onUpdate(trainee)"
@@ -28,18 +32,12 @@
                   更新
                 </button>
               </td>
-              <td>
+              <td class="text-center">
                 <button
                   class="btn btn-sm btn-primary"
-                  @click="onAdd(trainee)"
-                  :disabled="trainee.trainingPlan[0]?.quota > 0"
-                  :title="
-                    trainee.trainingPlan[0]?.quota > 0
-                      ? '剩餘課程數必須為 0 才能新增計畫'
-                      : '新增計畫'
-                  "
+                  @click="onAdjust(trainee)"
                 >
-                  新增
+                  調整
                 </button>
               </td>
             </tr>
@@ -72,13 +70,13 @@ const plan = (planType) => {
   }
 };
 
-const emit = defineEmits(["update", "add"]);
+const emit = defineEmits(["update", "adjust"]);
 
 const onUpdate = (trainee) => {
   emit("update", trainee);
 };
 
-const onAdd = (trainee) => {
-  emit("add", trainee);
+const onAdjust = (trainee) => {
+  emit("adjust", trainee);
 };
 </script>

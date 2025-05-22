@@ -2,8 +2,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 axios.defaults.baseURL = API_BASE_URL;
-axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true'
-axios.defaults.headers.common['Access-Control-Allow-Origin'] = 'ALLOWED_ORIGIN'
+axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true';
 
 export const api = {
     async getBySocialId(socialId) {

@@ -55,6 +55,16 @@ export const api = {
         }
     },
 
+     async createTrainee(socialId, trainee) {
+        try {
+            const response = await axios.post(`/trainee/info/${socialId}`, trainee);
+            return response.data;
+        } catch (error) {
+            console.error('API 請求失敗:', error);
+            throw new Error(error.response?.data?.message || '無法更新資訊');
+        }
+    },
+
     async updateTrainee(trainee) {
         try {
             const response = await axios.patch(`/trainee/info/${trainee.id}`, trainee);

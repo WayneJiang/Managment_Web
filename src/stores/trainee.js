@@ -43,6 +43,23 @@ export const useTraineeStore = defineStore('trainee', {
             }
         },
 
+        async createTrainee(socialId, trainee) {
+            this.loading = true
+            this.error = null
+
+            try {
+                const response = await api.createTrainee(socialId, trainee)
+
+                return response
+            } catch (error) {
+                this.error = error.message || '無法新增學員資料'
+                console.error('Failed to update student:', error)
+                return null
+            } finally {
+                this.loading = false
+            }
+        },
+
         async updateTrainee(trainee) {
             this.loading = true
             this.error = null

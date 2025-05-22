@@ -32,7 +32,7 @@ const refLoading = ref(false);
 const refError = ref("");
 const refIsCoach = ref(false);
 const refIsRegister = ref(false);
-
+const refSocialId = ref("");
 onMounted(async () => {
   refLoading.value = true;
   refIsCoach.value = route.query.coach == "true";
@@ -44,6 +44,8 @@ onMounted(async () => {
       const trainee = await traineeStore.fetchById(id);
       refTrainee.value = trainee;
     } else {
+      refSocialId.value = route.params.socialId;
+
       refTrainee.value = {
         name: "",
         gender: "male",
@@ -63,14 +65,29 @@ const save = async (trainee) => {
   refLoading.value = true;
 
   try {
-    const result = await traineeStore.updateTrainee(trainee);
-    if (result) {
-      alert("已更新");
-      if (refIsCoach.value) {
-        back();
+    if (refIsRegister.value) {
+      const result = await traineeStore.createTrainee(
+        refSocialId.value,
+        trainee
+      );
+      if (result) {
+        alert("已新增");
+        if (refIsCoach.value) {
+          back();
+        }
+      } else {
+        refError.value = "新增失敗";
       }
     } else {
-      refError.value = "更新失敗";
+      const result = await traineeStore.updateTrainee(trainee);
+      if (result) {
+        alert("已更新");
+        if (refIsCoach.value) {
+          back();
+        }
+      } else {
+        refError.value = "更新失敗";
+      }
     }
   } catch (err) {
     refError.value = err.message || "發生錯誤，請稍後再試";

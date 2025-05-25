@@ -19,7 +19,7 @@
             {{ formatDateTime(trainingPlan.planStartedAt) }}
           </td>
           <td class="text-center">
-            {{ formatDateTime(trainingPlan.planEndededAt) }}
+            {{ formatDateTime(trainingPlan.planEndedAt) }}
           </td>
           <td class="text-center">{{ plan(trainingPlan.planType) }}</td>
           <td class="text-center">{{ trainingPlan.coach.name }}</td>
@@ -46,39 +46,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { TrainingPlan } from "../services/trainingPlan";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const props = defineProps({
-  trainingPlans: {
-    type: Array,
-    required: true,
-  },
-});
+const props = defineProps<{
+  trainingPlans: TrainingPlan[];
+}>();
 
-const emit = defineEmits(["edit"]);
+const emit = defineEmits<{
+  (e: "edit", trainingPlan: TrainingPlan): void;
+}>();
 
-const formatDateTime = (timestamp) => {
+const formatDateTime = (timestamp: string | undefined): string => {
   return timestamp
     ? dayjs(timestamp).tz("Asia/Taipei").format("YYYY-MM-DD HH:mm:ss")
     : "";
 };
 
-const plan = (planType) => {
+const plan = (planType: string): string => {
   switch (planType) {
     case "private":
       return "個人教練";
     case "group":
       return "團體";
+    default:
+      return "";
   }
 };
 
-const handleEdit = (trainingPlan) => {
+const handleEdit = (trainingPlan: TrainingPlan): void => {
   emit("edit", trainingPlan);
 };
 </script>

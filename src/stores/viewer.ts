@@ -1,19 +1,28 @@
 import { defineStore } from "pinia";
 import { api } from "../services/api";
 
+interface ViewerState {
+  loading: boolean;
+  error: string | null;
+  coach: boolean;
+  trainee: boolean;
+}
+
 export const useViewerStore = defineStore("viewer", {
-  state: () => ({
+  state: (): ViewerState => ({
     loading: false,
     error: null,
+    coach: false,
+    trainee: false,
   }),
 
   getters: {
-    isCoach: (state) => state.coach,
-    isTrainee: (state) => state.trainee,
+    isCoach: (state: ViewerState): boolean => state.coach,
+    isTrainee: (state: ViewerState): boolean => state.trainee,
   },
 
   actions: {
-    async fetchBySocialId(socialId) {
+    async fetchBySocialId(socialId: string): Promise<number | null> {
       this.loading = true;
       this.error = null;
 
@@ -23,7 +32,8 @@ export const useViewerStore = defineStore("viewer", {
         this.trainee = response.trainee;
         return response.id;
       } catch (error) {
-        this.error = error.message || "無法獲取使用者資料";
+        this.error =
+          error instanceof Error ? error.message : "無法獲取使用者資料";
         return null;
       } finally {
         this.loading = false;

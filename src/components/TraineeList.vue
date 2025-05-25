@@ -23,7 +23,9 @@
               <td class="text-center">
                 {{ trainee.trainingPlan[0]?.coach.name }}
               </td>
-              <td class="text-center">{{ trainee.trainingPlan[0]?.quota }}</td>
+              <td class="text-center">
+                {{ trainee.trainingPlan[0]?.planQuota }}
+              </td>
               <td class="text-center">
                 <button
                   class="btn btn-sm btn-primary"
@@ -51,32 +53,38 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { defineProps, defineEmits } from "vue";
+import { Trainee } from "../services/trainee";
+import { TrainingPlan } from "../services/trainingPlan";
 
-const props = defineProps({
-  trainees: {
-    type: Array,
-    default: () => [],
-  },
-});
+interface Props {
+  trainees: Trainee[];
+}
 
-const plan = (planType) => {
+const props = defineProps<Props>();
+
+const plan = (planType: TrainingPlan["planType"]): string => {
   switch (planType) {
     case "private":
       return "個人教練";
     case "group":
       return "團體";
+    default:
+      return "";
   }
 };
 
-const emit = defineEmits(["update", "adjust"]);
+const emit = defineEmits<{
+  (e: "update", trainee: Trainee): void;
+  (e: "adjust", trainee: Trainee): void;
+}>();
 
-const onUpdate = (trainee) => {
+const onUpdate = (trainee: Trainee): void => {
   emit("update", trainee);
 };
 
-const onAdjust = (trainee) => {
+const onAdjust = (trainee: Trainee): void => {
   emit("adjust", trainee);
 };
 </script>

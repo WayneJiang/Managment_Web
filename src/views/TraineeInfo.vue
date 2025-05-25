@@ -15,7 +15,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
@@ -23,52 +23,60 @@ import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TraineeForm from "../components/TraineeForm.vue";
 import TrainingRecordList from "../components/TrainingRecordList.vue";
+import type { Trainee } from "../services/trainee";
+import { ModifyTrainee } from "../services/modifyTrainee";
 
 const route = useRoute();
 const router = useRouter();
 const traineeStore = useTraineeStore();
 
-const refTrainee = ref(null);
-const refLoading = ref(false);
-const refError = ref("");
-const refIsCoach = ref(false);
-const refIsRegister = ref(false);
-const refSocialId = ref("");
+const refTrainee = ref<Trainee | null>(null);
+const refLoading = ref<boolean>(false);
+const refError = ref<string>("");
+const refIsCoach = ref<boolean>(false);
+const refIsRegister = ref<boolean>(false);
+const refId = ref<string>("");
 
-onMounted(async () => {
+onMounted(async (): Promise<void> => {
   refLoading.value = true;
-  refIsCoach.value = route.query.coach == "true";
-  refIsRegister.value = route.query.register == "true";
+  refIsCoach.value = route.query.coach === "true";
+  refIsRegister.value = route.query.register === "true";
 
-  refSocialId.value = route.params.id;
+  refId.value = route.params.id as string;
   try {
     if (!refIsRegister.value) {
-      const trainee = await traineeStore.fetchById(refSocialId.value);
+      const trainee = await traineeStore.fetchById(Number(refId.value));
       refTrainee.value = trainee;
     } else {
       refTrainee.value = {
+        id: 0,
+        socialId: refId.value,
         name: "",
         gender: "male",
-        height: "0.0",
-        weight: "0.0",
+        birthday: "",
+        height: 0,
+        weight: 0,
         phone: "",
-      };
+        trainingPlan: [],
+        trainingRecord: [],
+      } as Trainee;
     }
   } catch (err) {
-    refError.value = err.message || "發生錯誤，請稍後再試";
+    refError.value =
+      err instanceof Error ? err.message : "發生錯誤，請稍後再試";
   } finally {
     refLoading.value = false;
   }
 });
 
-const save = async (trainee) => {
+const save = async (modifyTrainee: ModifyTrainee): Promise<void> => {
   refLoading.value = true;
 
   try {
     if (refIsRegister.value) {
       const result = await traineeStore.createTrainee(
-        refSocialId.value,
-        trainee
+        refId.value,
+        modifyTrainee
       );
       if (result) {
         ElMessage.success("已新增");
@@ -79,7 +87,10 @@ const save = async (trainee) => {
         ElMessage.error("新增失敗");
       }
     } else {
-      const result = await traineeStore.updateTrainee(trainee);
+      const result = await traineeStore.updateTrainee(
+        Number(refId.value),
+        modifyTrainee
+      );
       if (result) {
         ElMessage.success("已更新");
         if (refIsCoach.value) {
@@ -90,13 +101,15 @@ const save = async (trainee) => {
       }
     }
   } catch (err) {
-    ElMessage.error(err.message || "發生錯誤，請稍後再試");
+    ElMessage.error(
+      err instanceof Error ? err.message : "發生錯誤，請稍後再試"
+    );
   } finally {
     refLoading.value = false;
   }
 };
 
-const back = () => {
+const back = (): void => {
   router.back();
 };
 </script>

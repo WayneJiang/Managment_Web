@@ -23,15 +23,11 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  error: {
-    type: String,
-    default: "",
-  },
-});
+<script setup lang="ts">
+interface Props {
+  loading: boolean;
+  error: string;
+}
+
+defineProps<Props>();
 </script>

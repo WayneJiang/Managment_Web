@@ -7,7 +7,7 @@
       <div class="card bg-base-100 shadow-xl w-full">
         <div class="card-body">
           <h2 class="card-title text-2xl">
-            {{ refEditTrainingPlanId ? "編輯" : "新增" }}
+            {{ refEditTrainingPlanId != 0 ? "編輯" : "新增" }}
             {{ refTrainee.name }} 的訓練計畫
           </h2>
           <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -47,7 +47,7 @@
                   :class="{ 'select-error': refPlanTypeError }"
                 >
                   <option value="">請選擇計畫類型</option>
-                  <option value="group">團隊</option>
+                  <option value="group">團體</option>
                   <option value="private">個人教練</option>
                 </select>
                 <label v-if="refPlanTypeError" class="label">
@@ -85,7 +85,7 @@
                 :disabled="refLoading"
               >
                 <span v-if="refLoading" class="loading loading-spinner"></span>
-                {{ refEditTrainingPlanId ? "更新" : "新增" }}
+                {{ refEditTrainingPlanId != 0 ? "更新" : "新增" }}
               </button>
               <button
                 type="button"
@@ -95,7 +95,7 @@
                 "
                 :disabled="refLoading"
               >
-                {{ refEditTrainingPlanId ? "取消" : "返回" }}
+                {{ refEditTrainingPlanId != 0 ? "取消" : "返回" }}
               </button>
             </div>
           </form>
@@ -114,38 +114,41 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TrainingPlanList from "../components/TrainingPlanList.vue";
+import { Trainee } from "../services/trainee";
+import { Coach } from "../services/coach";
+import { TrainingPlan } from "../services/trainingPlan";
+import { ModifyTrainingPlan } from "../services/modifyTrainingPlan";
 
 const route = useRoute();
 const router = useRouter();
 const traineeStore = useTraineeStore();
 
-const refTrainee = ref(null);
-const refCoaches = ref([]);
-const refSelectedCoach = ref("");
-const refPlanType = ref("");
-const refQuota = ref("");
-const refLoading = ref(false);
-const refError = ref("");
-const refCoachError = ref("");
-const refPlanTypeError = ref("");
-const refQuotaError = ref("");
-const refEditTrainingPlanId = ref(null);
-const refEditorId = ref(null);
+const refTrainee = ref<Trainee | null>(null);
+const refCoaches = ref<Coach[] | null>([]);
+const refSelectedCoach = ref<number>(0);
+const refPlanType = ref<string>("");
+const refQuota = ref<number>(0);
+const refLoading = ref<boolean>(false);
+const refError = ref<string>("");
+const refCoachError = ref<string>("");
+const refPlanTypeError = ref<string>("");
+const refQuotaError = ref<string>("");
+const refEditTrainingPlanId = ref<number>(0);
+const refEditorId = ref<number>(0);
 
 onMounted(async () => {
   refLoading.value = true;
 
   try {
-    const id = route.params.id;
-
-    refEditorId.value = route.params.editor;
+    const id = Number(route.params.id as string);
+    refEditorId.value = Number(route.params.editor as string);
 
     const [trainee, coaches] = await Promise.all([
       traineeStore.fetchById(id),
@@ -155,14 +158,15 @@ onMounted(async () => {
     refTrainee.value = trainee;
     refCoaches.value = coaches;
   } catch (err) {
-    refError.value = err.message || "發生錯誤，請稍後再試";
+    refError.value =
+      err instanceof Error ? err.message : "發生錯誤，請稍後再試";
   } finally {
     refLoading.value = false;
   }
 });
 
 watch(refQuota, (newValue) => {
-  if (newValue !== null) {
+  if (typeof newValue === "number") {
     if (newValue < 1) refQuota.value = 1;
     if (newValue > 100) refQuota.value = 100;
   }
@@ -194,14 +198,20 @@ const handleSubmit = async () => {
     return;
   }
 
+  if (!refTrainee.value) {
+    refError.value = "找不到學員資料";
+    return;
+  }
+
   refLoading.value = true;
   try {
-    const data = {
+    const data: ModifyTrainingPlan = {
       trainee: refTrainee.value.id,
       coach: refSelectedCoach.value,
       planType: refPlanType.value,
       planQuota: refQuota.value,
       editor: refEditorId.value,
+      id: 0,
     };
 
     if (refEditTrainingPlanId.value) {
@@ -219,25 +229,26 @@ const handleSubmit = async () => {
       }
     }
 
-    const isEditMode = refEditTrainingPlanId.value != null;
+    const isEditMode = refEditTrainingPlanId.value != 0;
 
-    refSelectedCoach.value = "";
+    refSelectedCoach.value = 0;
     refPlanType.value = "";
-    refQuota.value = "";
-    refEditTrainingPlanId.value = null;
+    refQuota.value = 0;
+    refEditTrainingPlanId.value = 0;
 
     const trainee = await traineeStore.fetchById(refTrainee.value.id);
     refTrainee.value = trainee;
 
     ElMessage.success(isEditMode ? "更新成功" : "新增成功");
   } catch (err) {
-    refError.value = err.message || "發生錯誤，請稍後再試";
+    refError.value =
+      err instanceof Error ? err.message : "發生錯誤，請稍後再試";
   } finally {
     refLoading.value = false;
   }
 };
 
-const handleEditTrainingPlan = async (trainingPlan) => {
+const handleEditTrainingPlan = (trainingPlan: TrainingPlan) => {
   refEditTrainingPlanId.value = trainingPlan.id;
   refSelectedCoach.value = trainingPlan.coach.id;
   refPlanType.value = trainingPlan.planType;
@@ -245,10 +256,10 @@ const handleEditTrainingPlan = async (trainingPlan) => {
 };
 
 const handleCancelEdit = () => {
-  refEditTrainingPlanId.value = null;
-  refSelectedCoach.value = "";
+  refEditTrainingPlanId.value = 0;
+  refSelectedCoach.value = 0;
   refPlanType.value = "";
-  refQuota.value = "";
+  refQuota.value = 0;
 
   refCoachError.value = "";
   refPlanTypeError.value = "";

@@ -66,7 +66,7 @@
             :class="{ 'input-error': refPhoneError }"
             placeholder="09XX-XXX-XXX"
             maxlength="12"
-            @input="validatePhone"
+            @input="(e: Event) => validatePhone((e.target as HTMLInputElement).value)"
           />
           <label class="label" v-if="refPhoneError">
             <span class="label-text-alt text-error">{{ refPhoneError }}</span>
@@ -128,63 +128,54 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import dayjs from "dayjs";
+import { Trainee } from "../services/trainee";
 
-const props = defineProps({
-  trainee: {
-    type: Object,
-    required: true,
-  },
-  coach: {
-    type: Boolean,
-    default: false,
-  },
-});
+interface Props {
+  trainee: Trainee;
+  coach?: boolean;
+}
 
-const emit = defineEmits(["save", "back"]);
+const props = defineProps<Props>();
 
-const refTrainee = ref({
-  name: "",
-  birthday: "",
-  gender: "male",
-  age: 0,
-  phone: "",
-  height: 0,
-  weight: 0,
-});
+const emit = defineEmits<{
+  (e: "save", data: Trainee): void;
+  (e: "back"): void;
+}>();
 
-const refPhoneError = ref("");
-const refFormattedPhone = ref("");
-const refBirthdayError = ref("");
-const refHeightError = ref("");
-const refWeightError = ref("");
-const refNameError = ref("");
+const refTrainee = ref<Trainee>({} as Trainee);
 
-const validatePhone = (event) => {
-  const input = event.target;
-  let value = input.value.replace(/\D/g, "");
+const refPhoneError = ref<string>("");
+const refFormattedPhone = ref<string>("");
+const refBirthdayError = ref<string>("");
+const refHeightError = ref<string>("");
+const refWeightError = ref<string>("");
+const refNameError = ref<string>("");
 
-  if (!value) {
+const validatePhone = (value: string): void => {
+  const phone = value.replace(/\D/g, "");
+
+  if (!phone) {
     refPhoneError.value = "請輸入手機號碼";
     return;
   }
 
-  if (!value.startsWith("09")) {
+  if (!phone.startsWith("09")) {
     refPhoneError.value = "手機號碼必須以 09 開頭";
     return;
   }
-  if (value.length !== 10) {
+  if (phone.length !== 10) {
     refPhoneError.value = "手機號碼必須為 10 位數字";
     return;
   }
 
   refPhoneError.value = "";
-  refFormattedPhone.value = value.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3");
+  refFormattedPhone.value = phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3");
 };
 
-const validateBirthday = () => {
+const validateBirthday = (): void => {
   if (
     !refTrainee.value.birthday ||
     refTrainee.value.birthday === "1900-01-01"
@@ -195,7 +186,7 @@ const validateBirthday = () => {
   refBirthdayError.value = "";
 };
 
-const validateHeight = () => {
+const validateHeight = (): void => {
   const height = refTrainee.value.height;
   if (!height) {
     refHeightError.value = "請輸入身高";
@@ -208,7 +199,7 @@ const validateHeight = () => {
   }
 };
 
-const validateWeight = () => {
+const validateWeight = (): void => {
   const weight = refTrainee.value.weight;
   if (!weight) {
     refWeightError.value = "請輸入體重";
@@ -221,7 +212,7 @@ const validateWeight = () => {
   }
 };
 
-const validateName = () => {
+const validateName = (): void => {
   if (!refTrainee.value.name || refTrainee.value.name.trim() === "") {
     refNameError.value = "請輸入姓名";
     return;
@@ -229,7 +220,7 @@ const validateName = () => {
   refNameError.value = "";
 };
 
-watch(refFormattedPhone, (value) => {
+watch(refFormattedPhone, (value: string) => {
   refTrainee.value.phone = value.replace(/\D/g, "");
 });
 
@@ -244,17 +235,17 @@ onMounted(() => {
   }
 });
 
-const calculateBMI = computed(() => {
+const calculateBMI = computed<string>(() => {
   if (!refTrainee.value.height || !refTrainee.value.weight) return "未知";
   const heightInMeters = refTrainee.value.height / 100;
   const bmi = refTrainee.value.weight / (heightInMeters * heightInMeters);
   return bmi.toFixed(2);
 });
 
-const onSubmit = () => {
+const onSubmit = (): void => {
   validateName();
   validateBirthday();
-  validatePhone({ target: { value: refTrainee.value.phone } });
+  validatePhone(refTrainee.value.phone);
   validateHeight();
   validateWeight();
   if (
@@ -270,20 +261,20 @@ const onSubmit = () => {
     }
     return;
   }
-  const data = {
+  const data: Trainee = {
     ...refTrainee.value,
     birthday:
       refTrainee.value.birthday === "1900-01-01"
         ? "1900-01-01"
         : dayjs(refTrainee.value.birthday).format("YYYY-MM-DD"),
     phone: refTrainee.value.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3"),
-    height: Number(refTrainee.value.height).toFixed(1),
-    weight: Number(refTrainee.value.weight).toFixed(1),
+    height: Number(Number(refTrainee.value.height).toFixed(1)),
+    weight: Number(Number(refTrainee.value.weight).toFixed(1)),
   };
   emit("save", data);
 };
 
-const onBack = () => {
+const onBack = (): void => {
   emit("back");
 };
 </script>

@@ -19,45 +19,53 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useCoachStore } from "../stores/coach";
 import TraineeList from "../components/TraineeList.vue";
 import LoadingState from "../components/LoadingState.vue";
+import type { Coach } from "../services/coach";
+import type { Trainee } from "../services/trainee";
 
 const route = useRoute();
 const router = useRouter();
 const coachStore = useCoachStore();
 
-const refCoach = ref(null);
-const refTrainees = ref([]);
-const refLoading = ref(false);
-const refError = ref("");
+const refCoach = ref<Coach | null>(null);
+const refTrainees = ref<Trainee[]>([]);
+const refLoading = ref<boolean>(false);
+const refError = ref<string>("");
 
-onMounted(async () => {
+onMounted(async (): Promise<void> => {
   refLoading.value = true;
 
   try {
-    const id = route.params.id;
+    const id = Number(route.params.id as string);
 
     const coach = await coachStore.fetchById(id);
+    if (!coach) {
+      throw new Error("無法獲取教練資料");
+    }
     refCoach.value = coach;
 
-    const trainees = await coachStore.fetchAll();
+    const trainees: Trainee[] = await coachStore.fetchAll();
     refTrainees.value = trainees;
-  } catch (err) {
-    refError.value = err.message || "發生錯誤，請稍後再試";
+  } catch (err: unknown) {
+    const errorMessage: string =
+      err instanceof Error ? err.message : "發生錯誤，請稍後再試";
+    refError.value = errorMessage;
   } finally {
     refLoading.value = false;
   }
 });
 
-const navigateToUpdate = (trainee) => {
+const navigateToUpdate = (trainee: Trainee): void => {
   router.push(`/trainee/info/${trainee.id}?coach=true&register=false`);
 };
 
-const navigateToAdjust = (trainee) => {
+const navigateToAdjust = (trainee: Trainee): void => {
+  if (!refCoach.value) return;
   router.push(`/plan/${refCoach.value.id}/${trainee.id}`);
 };
 </script>

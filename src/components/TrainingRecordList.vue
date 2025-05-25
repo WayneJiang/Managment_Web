@@ -54,41 +54,43 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { TrainingRecord } from "../services/trainingRecord";
+import { TrainingPlan } from "../services/trainingPlan";
 
-const props = defineProps({
-  trainingRecords: {
-    type: Array,
-    default: () => [],
-  },
-});
+const props = defineProps<{
+  trainingRecords: TrainingRecord[];
+}>();
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const plan = (planType) => {
+const plan = (planType: TrainingPlan["planType"]): string => {
+  if (!planType) return "";
   switch (planType) {
     case "private":
       return "個人教練";
     case "group":
       return "團體";
+    default:
+      return "";
   }
 };
 
-const formatDate = (dateTimeString) => {
+const formatDate = (dateTimeString: string): string => {
   return dayjs(dateTimeString).tz("Asia/Taipei").format("YYYY-MM-DD");
 };
 
-const formatTime = (dateTimeString) => {
+const formatTime = (dateTimeString: string): string => {
   return dayjs(dateTimeString).tz("Asia/Taipei").format("HH:mm:ss");
 };
 
-const exportToPdf = async () => {
+const exportToPdf = async (): Promise<void> => {
   const doc = new jsPDF();
 
   doc.addFont("/fonts/NotoSansTC-Regular.ttf", "NotoSansTC", "normal");
@@ -103,8 +105,8 @@ const exportToPdf = async () => {
     formatTime(record.createdDate),
     plan(record.trainingPlan?.planType),
     record.trainingPlan?.coach?.name || "",
-    record.trainingPlan?.planQuota || "",
-    record.trainingPlan?.usedQuota || "",
+    record.trainingPlan?.planQuota?.toString() || "",
+    record.trainingPlan?.usedQuota?.toString() || "",
   ]);
 
   autoTable(doc, {
@@ -114,18 +116,21 @@ const exportToPdf = async () => {
     styles: {
       font: "NotoSansTC",
       fontSize: 10,
+      halign: "center",
     },
     headStyles: {
       font: "NotoSansTC",
       fontStyle: "bold",
       fillColor: [66, 139, 202],
+      halign: "center",
     },
     alternateRowStyles: {
       fillColor: [245, 245, 245],
+      halign: "center",
     },
     margin: { top: 30 },
   });
 
-  doc.save(`簽到歷史記錄_${formatDate(new Date())}.pdf`);
+  doc.save(`簽到歷史記錄.pdf`);
 };
 </script>

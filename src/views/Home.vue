@@ -18,22 +18,25 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useViewerStore } from "../stores/viewer";
 import LoadingState from "../components/LoadingState.vue";
+import type { Router } from "vue-router";
 
-const router = useRouter();
+const router: Router = useRouter();
 const viewerStore = useViewerStore();
 
-const refSocialId = ref("");
-const refLoading = ref(false);
-const refError = ref("");
+const refSocialId = ref<string>("");
+const refLoading = ref<boolean>(false);
+const refError = ref<string>("");
 
-onMounted(async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const socialId = urlParams.get("socialId");
+onMounted(async (): Promise<void> => {
+  const urlParams: URLSearchParams = new URLSearchParams(
+    window.location.search
+  );
+  const socialId: string | null = urlParams.get("socialId");
 
   if (!socialId) {
     refError.value = "請透過LINE連結訪問本頁面";
@@ -44,7 +47,7 @@ onMounted(async () => {
   refLoading.value = true;
 
   try {
-    const viewer = await viewerStore.fetchBySocialId(socialId);
+    const viewer: number | null = await viewerStore.fetchBySocialId(socialId);
 
     if (viewerStore.isTrainee) {
       router.push(`/trainee/info/${viewer}?coach=false&register=false`);
@@ -53,8 +56,9 @@ onMounted(async () => {
     } else {
       router.push(`/trainee/info/${socialId}?coach=false&register=true`);
     }
-  } catch (err) {
-    refError.value = err.message || "發生錯誤，請稍後再試";
+  } catch (err: unknown) {
+    refError.value =
+      err instanceof Error ? err.message : "發生錯誤，請稍後再試";
   } finally {
     refLoading.value = false;
   }

@@ -3,7 +3,7 @@
     <div class="card-body">
       <h2 class="card-title text-2xl">學員列表</h2>
       <div class="overflow-x-auto mt-4 w-full">
-        <table class="table table-zebra w-full">
+        <table class="table table-zebra responsive-table w-full">
           <thead>
             <tr>
               <th class="text-center">姓名</th>
@@ -16,17 +16,19 @@
           </thead>
           <tbody>
             <tr v-for="trainee in trainees" :key="trainee.id" class="hover">
-              <td class="text-center">{{ trainee.name }}</td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'姓名'">
+                {{ trainee.name }}
+              </td>
+              <td class="text-center" :data-label="'本期訓練計畫'">
                 {{ plan(trainee.trainingPlan[0]?.planType) }}
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'本期負責教練'">
                 {{ trainee.trainingPlan[0]?.coach.name }}
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'本期剩餘額度'">
                 {{ trainee.trainingPlan[0]?.planQuota }}
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'更新資料'">
                 <button
                   class="btn btn-sm btn-primary"
                   @click="onUpdate(trainee)"
@@ -34,7 +36,7 @@
                   更新
                 </button>
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'調整計畫'">
                 <button
                   class="btn btn-sm btn-primary"
                   @click="onAdjust(trainee)"
@@ -44,7 +46,7 @@
               </td>
             </tr>
             <tr v-if="trainees.length == 0">
-              <td colspan="4" class="text-center">無學員記錄</td>
+              <td colspan="6" class="text-center">無學員記錄</td>
             </tr>
           </tbody>
         </table>

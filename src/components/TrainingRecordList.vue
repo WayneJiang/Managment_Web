@@ -12,7 +12,7 @@
         </button>
       </div>
       <div class="overflow-x-auto mt-4 w-full">
-        <table class="table table-zebra w-full">
+        <table class="table table-zebra responsive-table w-full">
           <thead>
             <tr>
               <th class="text-center">日期</th>
@@ -25,22 +25,22 @@
           </thead>
           <tbody>
             <tr v-for="(trainingRecord, index) in trainingRecords" :key="index">
-              <td class="text-center">
+              <td class="text-center" :data-label="'日期'">
                 {{ formatDate(trainingRecord.createdDate) }}
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'時間'">
                 {{ formatTime(trainingRecord.createdDate) }}
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'計畫'">
                 {{ plan(trainingRecord.trainingPlan?.planType) }}
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'教練'">
                 {{ trainingRecord.trainingPlan?.coach?.name }}
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'額度'">
                 {{ trainingRecord.trainingPlan?.planQuota }}
               </td>
-              <td class="text-center">
+              <td class="text-center" :data-label="'已用'">
                 {{ trainingRecord.trainingPlan?.usedQuota }}
               </td>
             </tr>

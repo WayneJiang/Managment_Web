@@ -1,6 +1,6 @@
 <template>
   <div class="w-full">
-    <table class="table table-zebra w-full">
+    <table class="table table-zebra responsive-table w-full">
       <thead class="sticky top-0 bg-base-100 z-10">
         <tr>
           <th class="text-center">開始</th>
@@ -15,18 +15,28 @@
       </thead>
       <tbody>
         <tr v-for="trainingPlan in trainingPlans" :key="trainingPlan.id">
-          <td class="text-center">
+          <td class="text-center" :data-label="'開始'">
             {{ formatDateTime(trainingPlan.planStartedAt) }}
           </td>
-          <td class="text-center">
+          <td class="text-center" :data-label="'結束'">
             {{ formatDateTime(trainingPlan.planEndedAt) }}
           </td>
-          <td class="text-center">{{ plan(trainingPlan.planType) }}</td>
-          <td class="text-center">{{ trainingPlan.coach.name }}</td>
-          <td class="text-center">{{ trainingPlan.planQuota }}</td>
-          <td class="text-center">{{ trainingPlan.usedQuota }}</td>
-          <td class="text-center">{{ trainingPlan.editor.name }}</td>
-          <td class="text-center">
+          <td class="text-center" :data-label="'計畫'">
+            {{ plan(trainingPlan.planType) }}
+          </td>
+          <td class="text-center" :data-label="'教練'">
+            {{ trainingPlan.coach.name }}
+          </td>
+          <td class="text-center" :data-label="'額度'">
+            {{ trainingPlan.planQuota }}
+          </td>
+          <td class="text-center" :data-label="'已用'">
+            {{ trainingPlan.usedQuota }}
+          </td>
+          <td class="text-center" :data-label="'編輯'">
+            {{ trainingPlan.editor.name }}
+          </td>
+          <td class="text-center" :data-label="'操作'">
             <div class="flex justify-center gap-2">
               <button
                 class="btn btn-sm btn-primary"
@@ -39,7 +49,7 @@
           </td>
         </tr>
         <tr v-if="trainingPlans.length == 0">
-          <td colspan="6" class="text-center py-4">尚無訓練計畫</td>
+          <td colspan="8" class="text-center py-4">尚無訓練計畫</td>
         </tr>
       </tbody>
     </table>

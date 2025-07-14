@@ -1,10 +1,21 @@
 <template>
-  <div class="card bg-base-100 shadow-xl mt-4 w-full">
+  <div
+    class="card shadow-xl mt-4 w-full"
+    :style="{
+      backgroundColor: 'var(--color-card-bg)',
+      color: 'var(--color-text)',
+    }"
+  >
     <div class="card-body">
       <div class="flex justify-between items-center">
         <h2 class="card-title text-2xl">簽到歷史記錄</h2>
         <button
-          class="btn btn-primary"
+          class="btn"
+          :style="{
+            backgroundColor: 'var(--color-primary)',
+            color: '#fff',
+            borderColor: 'var(--color-primary)',
+          }"
           @click="exportToPdf"
           :disabled="trainingRecords.length === 0"
         >
@@ -12,7 +23,10 @@
         </button>
       </div>
       <div class="overflow-x-auto mt-4 w-full">
-        <table class="table table-zebra responsive-table w-full">
+        <table
+          class="table responsive-table w-full"
+          :style="{ borderColor: 'var(--color-border)' }"
+        >
           <thead>
             <tr>
               <th class="text-center">日期</th>
@@ -24,7 +38,14 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(trainingRecord, index) in trainingRecords" :key="index">
+            <tr
+              v-for="(trainingRecord, index) in trainingRecords"
+              :key="index"
+              :style="{
+                backgroundColor: 'var(--color-card-bg)',
+                color: 'var(--color-text)',
+              }"
+            >
               <td class="text-center" :data-label="'日期'">
                 {{ formatDate(trainingRecord.createdDate) }}
               </td>

@@ -8,22 +8,32 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen w-full" :class="{ 'bg-gray-100': true }">
-    <header class="bg-primary text-white py-4 w-full">
+  <div
+    class="min-h-screen w-full"
+    :style="{
+      backgroundColor: 'var(--color-background)',
+      color: 'var(--color-text)',
+    }"
+  >
+    <header
+      :style="{ backgroundColor: 'var(--color-primary)', color: '#fff' }"
+      class="py-4 w-full"
+    >
       <div class="container mx-auto px-4 lg:px-8">
         <h1 class="text-2xl font-bold">管理資訊平台</h1>
       </div>
     </header>
-
     <main class="py-6 w-full">
       <div class="container mx-auto px-4 lg:px-8">
         <router-view />
       </div>
     </main>
-
     <footer
       class="py-4 mt-8 w-full"
-      :class="{ 'bg-gray-200': true, 'text-gray-600': true }"
+      :style="{
+        backgroundColor: 'var(--color-card-bg)',
+        color: 'var(--color-text-secondary)',
+      }"
     >
       <div class="container mx-auto px-4 lg:px-8 text-center">
         <p>&copy; {{ new Date().getFullYear() }} 管理資訊平台</p>

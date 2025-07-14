@@ -3,45 +3,45 @@
 @tailwind utilities;
 
 :root {
-  /* 淺色主題變數 */
+  /* Light theme variables */
   --color-background: #ffffff;
-  --color-text: #213547;
-  --color-text-secondary: #666666;
-  --color-primary: #646cff;
-  --color-primary-hover: #747bff;
-  --color-button-bg: #f9f9f9;
-  --color-button-border: transparent;
-  --color-button-hover-border: #646cff;
-  --color-card-bg: #ffffff;
-  --color-border: #e5e7eb;
+  --color-text: #111111;
+  --color-text-secondary: #7c7c7c;
+  --color-primary: #d32f2f; /* Red */
+  --color-primary-hover: #b71c1c; /* Darker Red */
+  --color-button-bg: #fff0f0;
+  --color-button-border: #d32f2f;
+  --color-button-hover-border: #b71c1c;
+  --color-card-bg: #fffafa;
+  --color-border: #d32f2f;
   --color-input-bg: #ffffff;
-  --color-input-border: #d1d5db;
-  --color-input-focus-border: #646cff;
-  --color-error: #ef4444;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-info: #3b82f6;
+  --color-input-border: #d32f2f;
+  --color-input-focus-border: #b71c1c;
+  --color-error: #d32f2f;
+  --color-success: #43a047;
+  --color-warning: #ffa000;
+  --color-info: #1976d2;
 }
 
 [data-theme="dark"] {
-  /* 深色主題變數 */
-  --color-background: #1a1a1a;
-  --color-text: rgba(255, 255, 255, 0.87);
-  --color-text-secondary: rgba(255, 255, 255, 0.6);
-  --color-primary: #646cff;
-  --color-primary-hover: #535bf2;
-  --color-button-bg: #2a2a2a;
-  --color-button-border: transparent;
-  --color-button-hover-border: #646cff;
-  --color-card-bg: #242424;
-  --color-border: #404040;
-  --color-input-bg: #2a2a2a;
-  --color-input-border: #404040;
-  --color-input-focus-border: #646cff;
-  --color-error: #f87171;
-  --color-success: #4ade80;
-  --color-warning: #fbbf24;
-  --color-info: #60a5fa;
+  /* Dark theme variables */
+  --color-background: #111111;
+  --color-text: #fffafa;
+  --color-text-secondary: #bdbdbd;
+  --color-primary: #ff5252; /* Bright Red */
+  --color-primary-hover: #ff1744; /* Deeper Red */
+  --color-button-bg: #1a1a1a;
+  --color-button-border: #ff5252;
+  --color-button-hover-border: #ff1744;
+  --color-card-bg: #181818;
+  --color-border: #ff5252;
+  --color-input-bg: #181818;
+  --color-input-border: #ff5252;
+  --color-input-focus-border: #ff1744;
+  --color-error: #ff5252;
+  --color-success: #66bb6a;
+  --color-warning: #ffb300;
+  --color-info: #64b5f6;
 }
 
 :root {

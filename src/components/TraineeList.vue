@@ -1,9 +1,18 @@
 <template>
-  <div class="card bg-base-100 shadow-xl mt-4 w-full">
+  <div
+    class="card shadow-xl mt-4 w-full"
+    :style="{
+      backgroundColor: 'var(--color-card-bg)',
+      color: 'var(--color-text)',
+    }"
+  >
     <div class="card-body">
       <h2 class="card-title text-2xl">學員列表</h2>
       <div class="overflow-x-auto mt-4 w-full">
-        <table class="table table-zebra responsive-table w-full">
+        <table
+          class="table responsive-table w-full"
+          :style="{ borderColor: 'var(--color-border)' }"
+        >
           <thead>
             <tr>
               <th class="text-center">姓名</th>
@@ -15,7 +24,15 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="trainee in trainees" :key="trainee.id" class="hover">
+            <tr
+              v-for="trainee in trainees"
+              :key="trainee.id"
+              class="hover"
+              :style="{
+                backgroundColor: 'var(--color-card-bg)',
+                color: 'var(--color-text)',
+              }"
+            >
               <td class="text-center" :data-label="'姓名'">
                 {{ trainee.name }}
               </td>
@@ -30,7 +47,12 @@
               </td>
               <td class="text-center" :data-label="'更新資料'">
                 <button
-                  class="btn btn-sm btn-primary"
+                  class="btn btn-sm"
+                  :style="{
+                    backgroundColor: 'var(--color-primary)',
+                    color: '#fff',
+                    borderColor: 'var(--color-primary)',
+                  }"
                   @click="onUpdate(trainee)"
                 >
                   更新
@@ -38,7 +60,12 @@
               </td>
               <td class="text-center" :data-label="'調整計畫'">
                 <button
-                  class="btn btn-sm btn-primary"
+                  class="btn btn-sm"
+                  :style="{
+                    backgroundColor: 'var(--color-primary)',
+                    color: '#fff',
+                    borderColor: 'var(--color-primary)',
+                  }"
                   @click="onAdjust(trainee)"
                 >
                   調整

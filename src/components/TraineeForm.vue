@@ -1,5 +1,11 @@
 <template>
-  <div class="card bg-base-100 shadow-xl w-full">
+  <div
+    class="card shadow-xl w-full"
+    :style="{
+      backgroundColor: 'var(--color-card-bg)',
+      color: 'var(--color-text)',
+    }"
+  >
     <div class="card-body">
       <h2 class="card-title text-2xl">學員資料</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -10,12 +16,22 @@
           <input
             type="text"
             v-model="refTrainee.name"
-            class="input input-bordered"
-            :class="{ 'input-error': refNameError }"
+            class="input"
+            :style="{
+              borderColor: refNameError
+                ? 'var(--color-error)'
+                : 'var(--color-input-border)',
+              backgroundColor: 'var(--color-input-bg)',
+              color: 'var(--color-text)',
+            }"
             @input="validateName"
           />
           <label class="label" v-if="refNameError">
-            <span class="label-text-alt text-error">{{ refNameError }}</span>
+            <span
+              class="label-text-alt"
+              :style="{ color: 'var(--color-error)' }"
+              >{{ refNameError }}</span
+            >
           </label>
         </div>
         <div class="form-control">
@@ -24,7 +40,12 @@
           </label>
           <select
             v-model="refTrainee.gender"
-            class="select select-bordered w-full"
+            class="select"
+            :style="{
+              borderColor: 'var(--color-input-border)',
+              backgroundColor: 'var(--color-input-bg)',
+              color: 'var(--color-text)',
+            }"
           >
             <option value="male">男</option>
             <option value="female">女</option>
@@ -37,7 +58,7 @@
           <input
             type="date"
             v-model="refTrainee.birthday"
-            class="input input-bordered"
+            class="input"
             :class="{ 'input-error': refBirthdayError }"
             :min="dayjs().subtract(100, 'year').format('YYYY-MM-DD')"
             :max="dayjs().subtract(10, 'year').format('YYYY-MM-DD')"
@@ -62,7 +83,7 @@
           <input
             type="tel"
             v-model="refFormattedPhone"
-            class="input input-bordered"
+            class="input"
             :class="{ 'input-error': refPhoneError }"
             placeholder="09XX-XXX-XXX"
             maxlength="12"
@@ -79,7 +100,7 @@
           <input
             type="number"
             v-model.number="refTrainee.height"
-            class="input input-bordered"
+            class="input"
             :class="{ 'input-error': refHeightError }"
             min="100.0"
             max="250.0"
@@ -97,7 +118,7 @@
           <input
             type="number"
             v-model.number="refTrainee.weight"
-            class="input input-bordered"
+            class="input"
             :class="{ 'input-error': refWeightError }"
             min="30.0"
             max="300.0"
@@ -112,17 +133,33 @@
           <label class="label">
             <span class="label-text">BMI</span>
           </label>
-          <input
-            type="text"
-            :value="calculateBMI"
-            class="input input-bordered"
-            disabled
-          />
+          <input type="text" :value="calculateBMI" class="input" disabled />
         </div>
       </div>
       <div class="card-actions justify-end mt-4">
-        <button class="btn btn-primary" @click="onSubmit">儲存</button>
-        <button v-if="coach" class="btn btn" @click="onBack">返回</button>
+        <button
+          class="btn"
+          :style="{
+            backgroundColor: 'var(--color-primary)',
+            color: '#fff',
+            borderColor: 'var(--color-primary)',
+          }"
+          @click="onSubmit"
+        >
+          儲存
+        </button>
+        <button
+          v-if="coach"
+          class="btn"
+          :style="{
+            backgroundColor: 'transparent',
+            color: 'var(--color-primary)',
+            borderColor: 'var(--color-primary)',
+          }"
+          @click="onBack"
+        >
+          返回
+        </button>
       </div>
     </div>
   </div>

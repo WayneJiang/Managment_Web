@@ -1,7 +1,16 @@
 <template>
   <div class="w-full">
-    <table class="table table-zebra responsive-table w-full">
-      <thead class="sticky top-0 bg-base-100 z-10">
+    <table
+      class="table responsive-table w-full"
+      :style="{ borderColor: 'var(--color-border)' }"
+    >
+      <thead
+        class="sticky top-0"
+        :style="{
+          backgroundColor: 'var(--color-card-bg)',
+          color: 'var(--color-text)',
+        }"
+      >
         <tr>
           <th class="text-center">開始</th>
           <th class="text-center">結束</th>
@@ -14,7 +23,14 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="trainingPlan in trainingPlans" :key="trainingPlan.id">
+        <tr
+          v-for="trainingPlan in trainingPlans"
+          :key="trainingPlan.id"
+          :style="{
+            backgroundColor: 'var(--color-card-bg)',
+            color: 'var(--color-text)',
+          }"
+        >
           <td class="text-center" :data-label="'開始'">
             {{ formatDateTime(trainingPlan.planStartedAt) }}
           </td>
@@ -39,7 +55,12 @@
           <td class="text-center" :data-label="'操作'">
             <div class="flex justify-center gap-2">
               <button
-                class="btn btn-sm btn-primary"
+                class="btn btn-sm"
+                :style="{
+                  backgroundColor: 'var(--color-primary)',
+                  color: '#fff',
+                  borderColor: 'var(--color-primary)',
+                }"
                 @click="handleEdit(trainingPlan)"
                 :disabled="trainingPlan.planStartedAt != undefined"
               >

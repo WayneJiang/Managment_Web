@@ -1,10 +1,17 @@
 <template>
   <div class="w-full">
     <div v-if="loading" class="flex justify-center items-center py-8">
-      <div class="loading loading-spinner loading-lg text-primary"></div>
+      <div
+        class="loading loading-spinner loading-lg"
+        :style="{ color: 'var(--color-primary)' }"
+      ></div>
       <div class="ml-2">加載中...</div>
     </div>
-    <div v-if="error" class="alert alert-error mt-4">
+    <div
+      v-if="error"
+      class="alert mt-4"
+      :style="{ backgroundColor: 'var(--color-error)', color: '#fff' }"
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         class="stroke-current shrink-0 h-6 w-6"

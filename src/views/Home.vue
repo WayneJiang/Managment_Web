@@ -1,15 +1,27 @@
 <template>
   <div class="w-full">
-    <div class="card bg-base-100 shadow-xl">
+    <div
+      class="card shadow-xl"
+      :style="{
+        backgroundColor: 'var(--color-card-bg)',
+        color: 'var(--color-text)',
+      }"
+    >
       <div class="card-body text-center">
-        <h1 class="text-3xl font-bold">管理資訊平台</h1>
+        <h1
+          class="text-3xl font-bold"
+          :style="{ color: 'var(--color-primary)' }"
+        >
+          管理資訊平台
+        </h1>
         <LoadingState :loading="refLoading" :error="refError" />
         <p v-if="!refLoading && !refError && refSocialId" class="mt-4">
           正在檢查身份...
         </p>
         <p
           v-if="!refLoading && !refError && !refSocialId"
-          class="text-error mt-4"
+          :style="{ color: 'var(--color-error)' }"
+          class="mt-4"
         >
           請透過LINE連結訪問本頁面
         </p>

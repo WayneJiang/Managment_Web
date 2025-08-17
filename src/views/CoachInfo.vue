@@ -41,7 +41,8 @@ onMounted(async (): Promise<void> => {
   refLoading.value = true;
 
   try {
-    const id = Number(route.params.id as string);
+    const routeState = history.state;
+    const id = Number(routeState?.id);
 
     const coach = await coachStore.fetchById(id);
     if (!coach) {
@@ -61,11 +62,17 @@ onMounted(async (): Promise<void> => {
 });
 
 const navigateToUpdate = (trainee: Trainee): void => {
-  router.push(`/trainee/info/${trainee.id}?coach=true&register=false`);
+  router.push({
+    path: `/trainee/info`,
+    state: { id: trainee.id, coach: true, register: false },
+  });
 };
 
 const navigateToAdjust = (trainee: Trainee): void => {
   if (!refCoach.value) return;
-  router.push(`/plan/${refCoach.value.id}/${trainee.id}`);
+  router.push({
+    path: `/plan`,
+    state: { editor: refCoach.value.id, id: trainee.id },
+  });
 };
 </script>

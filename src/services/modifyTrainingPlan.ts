@@ -1,3 +1,5 @@
+import { TrainingSlot } from "./trainingPlan";
+
 export interface ModifyTrainingPlan {
   id: number;
   planType: string;
@@ -5,4 +7,5 @@ export interface ModifyTrainingPlan {
   trainee: number;
   coach: number;
   editor: number;
+  trainingSlot: TrainingSlot[];
 }

@@ -10,6 +10,7 @@
         @save="save"
         @back="back"
       />
+      <TraineePlanList :trainingPlans="refTrainee.trainingPlan" />
       <TrainingRecordList :trainingRecords="refTrainee.trainingRecord" />
     </div>
   </div>
@@ -23,6 +24,7 @@ import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TraineeForm from "../components/TraineeForm.vue";
 import TrainingRecordList from "../components/TrainingRecordList.vue";
+import TraineePlanList from "../components/TraineePlanList.vue";
 import type { Trainee } from "../services/trainee";
 import { ModifyTrainee } from "../services/modifyTrainee";
 
@@ -39,10 +41,12 @@ const refId = ref<string>("");
 
 onMounted(async (): Promise<void> => {
   refLoading.value = true;
-  refIsCoach.value = route.query.coach === "true";
-  refIsRegister.value = route.query.register === "true";
 
-  refId.value = route.params.id as string;
+  const routeState = history.state;
+  refIsCoach.value = routeState?.coach;
+  refIsRegister.value = routeState?.register;
+  refId.value = routeState?.id?.toString();
+
   try {
     if (!refIsRegister.value) {
       const trainee = await traineeStore.fetchById(Number(refId.value));

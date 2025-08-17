@@ -20,7 +20,7 @@ onMounted(() => {
       class="py-4 w-full"
     >
       <div class="container mx-auto px-4 lg:px-8">
-        <h1 class="text-2xl font-bold">管理資訊平台</h1>
+        <h1 class="text-2xl font-bold">好！來健身 管理資訊平台</h1>
       </div>
     </header>
     <main class="py-6 w-full">

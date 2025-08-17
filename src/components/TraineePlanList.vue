@@ -8,24 +8,12 @@
   >
     <div class="card-body">
       <div class="flex justify-between items-center">
-        <h2 class="card-title text-2xl">簽到歷史記錄</h2>
-        <button
-          class="btn"
-          :style="{
-            backgroundColor: 'var(--color-primary)',
-            color: '#fff',
-            borderColor: 'var(--color-primary)',
-          }"
-          @click="exportToPdf"
-          :disabled="trainingRecords.length === 0"
-        >
-          匯出 PDF
-        </button>
+        <h2 class="card-title text-2xl">個人訓練計畫</h2>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
         <div
-          v-for="(trainingRecord, index) in trainingRecords"
+          v-for="(trainingPlan, index) in trainingPlans"
           :key="index"
           class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300"
           :style="{
@@ -39,18 +27,16 @@
               <div
                 class="badge badge-lg"
                 :class="{
-                  'badge-primary':
-                    trainingRecord.trainingPlan?.planType === 'private',
-                  'badge-secondary':
-                    trainingRecord.trainingPlan?.planType === 'group',
+                  'badge-primary': trainingPlan.planType === 'private',
+                  'badge-secondary': trainingPlan.planType === 'group',
                 }"
               >
-                {{ plan(trainingRecord.trainingPlan?.planType) }}
+                {{ plan(trainingPlan.planType) }}
               </div>
             </div>
 
-            <div class="mb-4">
-              <div class="flex items-center gap-2 mb-2">
+            <div class="space-y-2 mb-4">
+              <div class="flex items-center gap-2">
                 <svg
                   class="w-4 h-4 opacity-70"
                   fill="none"
@@ -64,10 +50,29 @@
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   ></path>
                 </svg>
-                <span class="font-semibold text-sm opacity-80">簽到日期</span>
+                <span class="text-sm opacity-80">計畫開始</span>
+                <span class="text-sm font-medium">
+                  {{ formatDateTime(trainingPlan.planStartedAt) }}
+                </span>
               </div>
-              <div class="text-lg font-bold">
-                {{ formatDate(trainingRecord.createdDate) }}
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-4 h-4 opacity-70"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  ></path>
+                </svg>
+                <span class="text-sm opacity-80">計畫結束</span>
+                <span class="text-sm font-medium">
+                  {{ formatDateTime(trainingPlan.planEndedAt) }}
+                </span>
               </div>
             </div>
 
@@ -86,10 +91,17 @@
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   ></path>
                 </svg>
-                <span class="font-semibold text-sm opacity-80">簽到時間</span>
+                <span class="font-semibold text-sm opacity-80">訓練時段</span>
               </div>
-              <div class="text-lg font-bold">
-                {{ formatTime(trainingRecord.createdDate) }}
+              <div class="space-y-1">
+                <div
+                  v-for="(slot, slotIndex) in trainingPlan.trainingSlot"
+                  :key="slotIndex"
+                  class="text-xs p-2 rounded bg-base-200"
+                  :style="{ backgroundColor: 'var(--color-border)' }"
+                >
+                  {{ formatTrainingSlotText(slot) }}
+                </div>
               </div>
             </div>
 
@@ -108,26 +120,28 @@
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                   ></path>
                 </svg>
-                <span class="font-semibold text-sm opacity-80">指導教練</span>
+                <span class="text-sm opacity-80">指導教練</span>
               </div>
-              <div class="text-lg font-bold">
-                {{ trainingRecord.trainingPlan?.coach?.name || "未指定" }}
+              <div class="text-base font-medium">
+                {{ trainingPlan.coach.name }}
               </div>
             </div>
 
             <div
-              class="flex justify-center items-center pt-3 border-t"
+              class="flex justify-between items-center pt-3 border-t"
               :style="{ borderColor: 'var(--color-border)' }"
             >
               <div class="text-center">
+                <div class="font-semibold text-sm opacity-80">總額度</div>
+                <div class="font-bold text-lg">
+                  {{ trainingPlan.planQuota }}
+                </div>
+              </div>
+              <div class="text-center">
                 <div class="font-semibold text-sm opacity-80">剩餘</div>
-                <div class="text-lg font-bold text-success">
+                <div class="font-bold text-lg text-warning">
                   {{
-                    Math.max(
-                      0,
-                      (trainingRecord.trainingPlan?.planQuota || 0) -
-                        (trainingRecord.trainingPlan?.usedQuota || 0)
-                    )
+                    Math.max(0, trainingPlan.planQuota - trainingPlan.usedQuota)
                   }}
                 </div>
               </div>
@@ -136,7 +150,7 @@
         </div>
       </div>
 
-      <div v-if="trainingRecords.length === 0" class="text-center py-8">
+      <div v-if="trainingPlans.length === 0" class="text-center py-8">
         <svg
           class="w-16 h-16 mx-auto opacity-50 mb-4"
           fill="none"
@@ -147,10 +161,10 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
           ></path>
         </svg>
-        <p class="text-lg opacity-70">目前沒有簽到記錄</p>
+        <p class="text-lg opacity-70">目前沒有訓練計畫</p>
       </div>
     </div>
   </div>
@@ -160,13 +174,10 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { TrainingRecord } from "../services/trainingRecord";
-import { TrainingPlan } from "../services/trainingPlan";
+import { TrainingPlan, TrainingSlot } from "../services/trainingPlan";
 
-const props = defineProps<{
-  trainingRecords: TrainingRecord[];
+defineProps<{
+  trainingPlans: TrainingPlan[];
 }>();
 
 dayjs.extend(utc);
@@ -184,55 +195,24 @@ const plan = (planType: TrainingPlan["planType"]): string => {
   }
 };
 
-const formatDate = (dateTimeString: string): string => {
-  return dayjs(dateTimeString).tz("Asia/Taipei").format("MM/DD");
+const formatDateTime = (timestamp: string | undefined): string => {
+  return timestamp
+    ? dayjs(timestamp).tz("Asia/Taipei").format("MM/DD HH:mm")
+    : "";
 };
 
-const formatTime = (dateTimeString: string): string => {
-  return dayjs(dateTimeString).tz("Asia/Taipei").format("HH:mm");
-};
+const formatTrainingSlotText = (slot: TrainingSlot): string => {
+  const dayOfWeekMap: Record<string, string> = {
+    Monday: "星期一",
+    Tuesday: "星期二",
+    Wednesday: "星期三",
+    Thursday: "星期四",
+    Friday: "星期五",
+    Saturday: "星期六",
+    Sunday: "星期天",
+  };
 
-const exportToPdf = async (): Promise<void> => {
-  const doc = new jsPDF();
-
-  doc.addFont("/fonts/NotoSansTC-Regular.ttf", "NotoSansTC", "normal");
-  doc.addFont("/fonts/NotoSansTC-Bold.ttf", "NotoSansTC", "bold");
-  doc.setFont("NotoSansTC");
-
-  doc.setFontSize(20);
-  doc.text("簽到歷史記錄", 14, 20);
-
-  const tableData = props.trainingRecords.map((record) => [
-    formatDate(record.createdDate),
-    formatTime(record.createdDate),
-    plan(record.trainingPlan?.planType),
-    record.trainingPlan?.coach?.name || "",
-    record.trainingPlan?.planQuota?.toString() || "",
-    record.trainingPlan?.usedQuota?.toString() || "",
-  ]);
-
-  autoTable(doc, {
-    head: [["日期", "時間", "計畫", "教練", "額度", "已用"]],
-    body: tableData,
-    startY: 30,
-    styles: {
-      font: "NotoSansTC",
-      fontSize: 10,
-      halign: "center",
-    },
-    headStyles: {
-      font: "NotoSansTC",
-      fontStyle: "bold",
-      fillColor: [66, 139, 202],
-      halign: "center",
-    },
-    alternateRowStyles: {
-      fillColor: [245, 245, 245],
-      halign: "center",
-    },
-    margin: { top: 30 },
-  });
-
-  doc.save(`簽到歷史記錄.pdf`);
+  const dayName = dayOfWeekMap[slot.dayOfWeek] || slot.dayOfWeek;
+  return `${dayName} ${slot.start}~${slot.end}`;
 };
 </script>

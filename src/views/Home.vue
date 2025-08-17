@@ -62,11 +62,20 @@ onMounted(async (): Promise<void> => {
     const viewer: number | null = await viewerStore.fetchBySocialId(socialId);
 
     if (viewerStore.isTrainee) {
-      router.push(`/trainee/info/${viewer}?coach=false&register=false`);
+      router.push({
+        path: `/trainee/info`,
+        state: { id: viewer, coach: false, register: false },
+      });
     } else if (viewerStore.isCoach) {
-      router.push(`/coach/${viewer}?coach=true`);
+      router.push({
+        path: `/coach`,
+        state: { id: viewer, coach: true },
+      });
     } else {
-      router.push(`/trainee/info/${socialId}?coach=false&register=true`);
+      router.push({
+        path: `/trainee/info`,
+        state: { id: socialId, coach: false, register: true },
+      });
     }
   } catch (err: unknown) {
     refError.value =

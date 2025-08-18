@@ -28,7 +28,6 @@ import TraineePlanList from "../components/TraineePlanList.vue";
 import type { Trainee } from "../services/trainee";
 import { ModifyTrainee } from "../services/modifyTrainee";
 
-const route = useRoute();
 const router = useRouter();
 const traineeStore = useTraineeStore();
 

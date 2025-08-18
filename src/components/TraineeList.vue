@@ -69,6 +69,9 @@
                     trainee.trainingPlan[0]?.planType === 'private',
                   'badge-secondary':
                     trainee.trainingPlan[0]?.planType === 'group',
+                  'badge-error':
+                    !trainee.trainingPlan[0]?.planType ||
+                    trainee.trainingPlan[0].planType === '',
                 }"
               >
                 {{ plan(trainee.trainingPlan[0]?.planType) }}
@@ -95,11 +98,16 @@
                 >
               </div>
               <div class="text-base font-medium">
-                {{ trainee.trainingPlan[0]?.coach.name || "未指定" }}
+                <span
+                  :class="{
+                    'text-error': !trainee.trainingPlan[0]?.coach?.name,
+                  }"
+                >
+                  {{ trainee.trainingPlan[0]?.coach.name || "未指定" }}
+                </span>
               </div>
             </div>
 
-            <!-- 本期訓練時段 -->
             <div class="mb-4">
               <div class="flex items-center gap-2 mb-2">
                 <svg
@@ -120,15 +128,13 @@
                 >
               </div>
               <div
-                v-if="
-                  trainee.trainingPlan[0]?.trainingSlot &&
-                  trainee.trainingPlan[0].trainingSlot.length > 0
-                "
+                v-if="getTrainingSlots(trainee.trainingPlan[0]).length > 0"
                 class="space-y-1"
               >
                 <div
-                  v-for="(slot, slotIndex) in trainee.trainingPlan[0]
-                    .trainingSlot"
+                  v-for="(slot, slotIndex) in getTrainingSlots(
+                    trainee.trainingPlan[0]
+                  )"
                   :key="slotIndex"
                   class="text-sm p-2 rounded bg-base-200"
                   :style="{ backgroundColor: 'var(--color-border)' }"
@@ -136,7 +142,7 @@
                   {{ formatTrainingSlotText(slot) }}
                 </div>
               </div>
-              <div v-else class="text-sm opacity-70 italic">
+              <div v-else class="text-base italic text-error">
                 尚未設定訓練時段
               </div>
             </div>
@@ -160,14 +166,28 @@
                   >本期剩餘額度</span
                 >
               </div>
-              <div class="text-lg font-bold text-info">
-                {{
-                  Math.max(
-                    0,
-                    trainee.trainingPlan[0]?.planQuota -
-                      trainee.trainingPlan[0]?.usedQuota
-                  )
-                }}
+              <div class="text-lg font-bold">
+                <span
+                  :class="{
+                    'text-error':
+                      !trainee.trainingPlan[0]?.planQuota ||
+                      !trainee.trainingPlan[0]?.usedQuota,
+                    'text-info':
+                      trainee.trainingPlan[0]?.planQuota &&
+                      trainee.trainingPlan[0]?.usedQuota !== undefined,
+                  }"
+                >
+                  {{
+                    trainee.trainingPlan[0]?.planQuota &&
+                    trainee.trainingPlan[0]?.usedQuota !== undefined
+                      ? Math.max(
+                          0,
+                          trainee.trainingPlan[0].planQuota -
+                            trainee.trainingPlan[0].usedQuota
+                        )
+                      : "未設定"
+                  }}
+                </span>
               </div>
             </div>
 
@@ -212,9 +232,9 @@
               <button
                 class="btn btn-sm flex-1"
                 :style="{
-                  backgroundColor: 'var(--color-primary)',
+                  backgroundColor: '#f97316',
                   color: '#fff',
-                  borderColor: 'var(--color-primary)',
+                  borderColor: '#f97316',
                 }"
                 @click="onUpdate(trainee)"
               >
@@ -223,9 +243,9 @@
               <button
                 class="btn btn-sm flex-1"
                 :style="{
-                  backgroundColor: 'var(--color-primary)',
+                  backgroundColor: '#f97316',
                   color: '#fff',
-                  borderColor: 'var(--color-primary)',
+                  borderColor: '#f97316',
                 }"
                 @click="onAdjust(trainee)"
               >
@@ -257,9 +277,9 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
+import { defineEmits } from "vue";
 import { Trainee } from "../services/trainee";
-import { TrainingPlan } from "../services/trainingPlan";
+import { TrainingPlan, TrainingSlot } from "../services/trainingPlan";
 
 interface Props {
   trainees: Trainee[];
@@ -268,17 +288,54 @@ interface Props {
 const props = defineProps<Props>();
 
 const plan = (planType: TrainingPlan["planType"]): string => {
+  if (!planType || planType === "") {
+    return "未指定";
+  }
+
   switch (planType) {
     case "private":
       return "個人教練";
     case "group":
       return "團體";
     default:
-      return "";
+      return "未指定";
   }
 };
 
-const formatTrainingSlotText = (slot: any): string => {
+const getTrainingSlots = (
+  trainingPlan: TrainingPlan | undefined
+): TrainingSlot[] => {
+  if (!trainingPlan?.trainingSlot) {
+    return [];
+  }
+
+  if (Array.isArray(trainingPlan.trainingSlot)) {
+    return trainingPlan.trainingSlot;
+  }
+
+  if (typeof trainingPlan.trainingSlot === "string") {
+    try {
+      const parsedSlots = JSON.parse(trainingPlan.trainingSlot);
+      if (Array.isArray(parsedSlots)) {
+        return parsedSlots;
+      }
+    } catch (error) {
+      console.error("解析 trainingSlot JSON 字串失敗:", error);
+    }
+  }
+
+  return [];
+};
+
+const formatTrainingSlotText = (slot: TrainingSlot): string => {
+  if (!slot || typeof slot !== "object") {
+    return "無效的時段資料";
+  }
+
+  if (!slot.dayOfWeek || !slot.start || !slot.end) {
+    return "時段資料不完整";
+  }
+
   const dayOfWeekMap: Record<string, string> = {
     Monday: "星期一",
     Tuesday: "星期二",
@@ -336,13 +393,13 @@ const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
     }
 
     const currentSlots = JSON.stringify(
-      currentPlan.trainingSlot?.sort((a, b) =>
+      getTrainingSlots(currentPlan).sort((a, b) =>
         a.dayOfWeek.localeCompare(b.dayOfWeek)
       )
     );
 
     const traineeSlots = JSON.stringify(
-      traineePlan.trainingSlot?.sort((a, b) =>
+      getTrainingSlots(traineePlan).sort((a, b) =>
         a.dayOfWeek.localeCompare(b.dayOfWeek)
       )
     );

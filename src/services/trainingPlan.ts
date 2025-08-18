@@ -13,11 +13,10 @@ export interface TrainingPlan {
   planStartedAt: string;
   planEndedAt: string;
   planType: string;
-  trainingSlot: TrainingSlot[];
+  trainingSlot: TrainingSlot[] | string;
   planQuota: number;
-  usedQuota: number;
-  trainee: Trainee;
+  usedQuota?: number;
   coach: Coach;
   editor: Coach;
-  traininRecord: TrainingRecord[];
+  trainingRecord: TrainingRecord[];
 }

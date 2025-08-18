@@ -111,7 +111,13 @@
                 <span class="font-semibold text-sm opacity-80">指導教練</span>
               </div>
               <div class="text-lg font-bold">
-                {{ trainingRecord.trainingPlan?.coach?.name || "未指定" }}
+                <span
+                  :class="{
+                    'text-error': !trainingRecord.trainingPlan?.coach?.name,
+                  }"
+                >
+                  {{ trainingRecord.trainingPlan?.coach?.name || "未指定" }}
+                </span>
               </div>
             </div>
 
@@ -121,14 +127,28 @@
             >
               <div class="text-center">
                 <div class="font-semibold text-sm opacity-80">剩餘</div>
-                <div class="text-lg font-bold text-success">
-                  {{
-                    Math.max(
-                      0,
-                      (trainingRecord.trainingPlan?.planQuota || 0) -
-                        (trainingRecord.trainingPlan?.usedQuota || 0)
-                    )
-                  }}
+                <div class="text-lg font-bold">
+                  <span
+                    :class="{
+                      'text-error':
+                        !trainingRecord.trainingPlan?.planQuota ||
+                        trainingRecord.trainingPlan?.usedQuota === undefined,
+                      'text-success':
+                        trainingRecord.trainingPlan?.planQuota &&
+                        trainingRecord.trainingPlan?.usedQuota !== undefined,
+                    }"
+                  >
+                    {{
+                      trainingRecord.trainingPlan?.planQuota &&
+                      trainingRecord.trainingPlan?.usedQuota !== undefined
+                        ? Math.max(
+                            0,
+                            trainingRecord.trainingPlan.planQuota -
+                              trainingRecord.trainingPlan.usedQuota
+                          )
+                        : "未設定"
+                    }}
+                  </span>
                 </div>
               </div>
             </div>

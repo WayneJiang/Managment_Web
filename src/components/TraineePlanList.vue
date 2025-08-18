@@ -95,12 +95,16 @@
               </div>
               <div class="space-y-1">
                 <div
-                  v-for="(slot, slotIndex) in trainingPlan.trainingSlot"
+                  v-if="getTrainingSlots(trainingPlan).length > 0"
+                  v-for="(slot, slotIndex) in getTrainingSlots(trainingPlan)"
                   :key="slotIndex"
                   class="text-xs p-2 rounded bg-base-200"
                   :style="{ backgroundColor: 'var(--color-border)' }"
                 >
                   {{ formatTrainingSlotText(slot) }}
+                </div>
+                <div v-else class="text-base italic text-error">
+                  尚未設定訓練時段
                 </div>
               </div>
             </div>
@@ -141,7 +145,10 @@
                 <div class="font-semibold text-sm opacity-80">剩餘</div>
                 <div class="font-bold text-lg text-warning">
                   {{
-                    Math.max(0, trainingPlan.planQuota - trainingPlan.usedQuota)
+                    Math.max(
+                      0,
+                      trainingPlan.planQuota - (trainingPlan.usedQuota || 0)
+                    )
                   }}
                 </div>
               </div>
@@ -201,7 +208,39 @@ const formatDateTime = (timestamp: string | undefined): string => {
     : "";
 };
 
+const getTrainingSlots = (trainingPlan: TrainingPlan): TrainingSlot[] => {
+  if (!trainingPlan?.trainingSlot) {
+    return [];
+  }
+
+  if (Array.isArray(trainingPlan.trainingSlot)) {
+    return trainingPlan.trainingSlot;
+  }
+
+  if (typeof trainingPlan.trainingSlot === "string") {
+    try {
+      const parsedSlots = JSON.parse(trainingPlan.trainingSlot);
+      if (Array.isArray(parsedSlots)) {
+        return parsedSlots;
+      }
+    } catch (error) {
+      console.error("解析 trainingSlot JSON 字串失敗:", error);
+    }
+  }
+
+  return [];
+};
+
 const formatTrainingSlotText = (slot: TrainingSlot): string => {
+  // 防護措施：確保 slot 物件存在且包含必要屬性
+  if (!slot || typeof slot !== "object") {
+    return "無效的時段資料";
+  }
+
+  if (!slot.dayOfWeek || !slot.start || !slot.end) {
+    return "時段資料不完整";
+  }
+
   const dayOfWeekMap: Record<string, string> = {
     Monday: "星期一",
     Tuesday: "星期二",

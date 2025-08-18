@@ -241,7 +241,7 @@
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            d="M19 7l-.867 12.142A2 2 0 01 16.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                           ></path>
                         </svg>
                       </button>
@@ -317,7 +317,7 @@
                         >
                           <option value="">請選擇</option>
                           <option
-                            v-for="time in timeOptions"
+                            v-for="time in getEndTimeOptions(slot.start)"
                             :key="time.value"
                             :value="time.value"
                           >
@@ -393,7 +393,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
@@ -404,7 +404,6 @@ import { TrainingPlan } from "../services/trainingPlan";
 import { ModifyTrainingPlan } from "../services/modifyTrainingPlan";
 import { TrainingSlot } from "../services/trainingPlan";
 
-const route = useRoute();
 const router = useRouter();
 const traineeStore = useTraineeStore();
 
@@ -423,7 +422,6 @@ const refTrainingSlotError = ref<string>("");
 const refEditTrainingPlanId = ref<number>(0);
 const refEditorId = ref<number>(0);
 
-// 星期選項
 const dayOptions = [
   { value: "Monday", label: "星期一" },
   { value: "Tuesday", label: "星期二" },
@@ -434,7 +432,6 @@ const dayOptions = [
   { value: "Sunday", label: "星期日" },
 ];
 
-// 時間選項（每小時一個選項）
 const timeOptions = Array.from({ length: 24 }, (_, i) => {
   const hour = i.toString().padStart(2, "0");
   return { value: `${hour}:00`, label: `${hour}:00` };
@@ -473,13 +470,22 @@ watch(refQuota, (newValue) => {
 const addTrainingSlot = () => {
   refTrainingSlots.value.push({
     dayOfWeek: "",
-    start: "",
-    end: "",
+    start: "09:00",
+    end: "10:00",
   });
 };
 
 const removeTrainingSlot = (index: number) => {
   refTrainingSlots.value.splice(index, 1);
+};
+
+const getEndTimeOptions = (startTime: string) => {
+  if (!startTime) return timeOptions;
+  const startHour = parseInt(startTime.split(":")[0]);
+  return timeOptions.filter((time) => {
+    const timeHour = parseInt(time.value.split(":")[0]);
+    return timeHour > startHour;
+  });
 };
 
 const validateForm = () => {
@@ -510,7 +516,17 @@ const validateForm = () => {
     if (hasInvalidSlot) {
       refTrainingSlotError.value = "請完整填寫所有訓練時段";
     } else {
-      refTrainingSlotError.value = "";
+      const hasInvalidTimeRange = refTrainingSlots.value.some((slot) => {
+        if (!slot.start || !slot.end) return false;
+        const startHour = parseInt(slot.start.split(":")[0]);
+        const endHour = parseInt(slot.end.split(":")[0]);
+        return endHour <= startHour;
+      });
+      if (hasInvalidTimeRange) {
+        refTrainingSlotError.value = "結束時間必須晚於開始時間";
+      } else {
+        refTrainingSlotError.value = "";
+      }
     }
   }
 };
@@ -583,7 +599,49 @@ const handleEditTrainingPlan = (trainingPlan: TrainingPlan) => {
   refSelectedCoach.value = trainingPlan.coach.id;
   refPlanType.value = trainingPlan.planType;
   refQuota.value = trainingPlan.planQuota;
-  refTrainingSlots.value = [...trainingPlan.trainingSlot];
+
+  let slots: TrainingSlot[] = [];
+
+  if (typeof trainingPlan.trainingSlot === "string") {
+    if (trainingPlan.trainingSlot.trim() === "") {
+      slots = [];
+    } else {
+      try {
+        const parsedSlots = JSON.parse(trainingPlan.trainingSlot);
+        if (Array.isArray(parsedSlots)) {
+          slots = parsedSlots;
+        } else {
+          slots = [];
+        }
+      } catch (error) {
+        console.error("解析 trainingSlot JSON 字串失敗:", error);
+        slots = [];
+      }
+    }
+  } else if (Array.isArray(trainingPlan.trainingSlot)) {
+    slots = trainingPlan.trainingSlot;
+  } else {
+    slots = [];
+  }
+
+  if (slots.length > 0) {
+    const uniqueSlots = slots.filter(
+      (slot, index, self) =>
+        index ===
+        self.findIndex(
+          (s) =>
+            s.dayOfWeek === slot.dayOfWeek &&
+            s.start === slot.start &&
+            s.end === slot.end
+        )
+    );
+
+    refTrainingSlots.value = uniqueSlots;
+  } else {
+    refTrainingSlots.value = [];
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 const handleCancelEdit = () => {

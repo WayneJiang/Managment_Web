@@ -83,7 +83,40 @@
               <span class="font-semibold text-sm opacity-80">指導教練</span>
             </div>
             <div class="text-base font-medium">
-              {{ trainingPlan.coach.name }}
+              {{ trainingPlan.coach?.name || "" }}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="flex items-center gap-2 mb-2">
+              <svg
+                class="w-4 h-4 opacity-70"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <span class="font-semibold text-sm opacity-80">訓練時段</span>
+            </div>
+            <div class="space-y-1">
+              <div
+                v-if="getTrainingSlots(trainingPlan).length > 0"
+                v-for="(slot, slotIndex) in getTrainingSlots(trainingPlan)"
+                :key="slotIndex"
+                class="text-xs p-2 rounded bg-base-200"
+                :style="{ backgroundColor: 'var(--color-border)' }"
+              >
+                {{ formatTrainingSlotText(slot) }}
+              </div>
+              <div v-else class="text-base italic text-error">
+                尚未設定訓練時段
+              </div>
             </div>
           </div>
 
@@ -103,20 +136,24 @@
                 class="font-bold text-lg"
                 :class="{
                   'text-success':
-                    trainingPlan.usedQuota < trainingPlan.planQuota,
+                    (trainingPlan.usedQuota || 0) < trainingPlan.planQuota,
                   'text-warning':
-                    trainingPlan.usedQuota === trainingPlan.planQuota,
-                  'text-error': trainingPlan.usedQuota > trainingPlan.planQuota,
+                    (trainingPlan.usedQuota || 0) === trainingPlan.planQuota,
+                  'text-error':
+                    (trainingPlan.usedQuota || 0) > trainingPlan.planQuota,
                 }"
               >
-                {{ trainingPlan.usedQuota }}
+                {{ trainingPlan.usedQuota || 0 }}
               </div>
             </div>
             <div class="text-center">
               <div class="font-semibold text-sm opacity-80">剩餘</div>
               <div class="font-bold text-lg text-info">
                 {{
-                  Math.max(0, trainingPlan.planQuota - trainingPlan.usedQuota)
+                  Math.max(
+                    0,
+                    trainingPlan.planQuota - (trainingPlan.usedQuota || 0)
+                  )
                 }}
               </div>
             </div>
@@ -140,7 +177,7 @@
               <span class="font-semibold text-sm opacity-80">編輯者</span>
             </div>
             <div class="text-base font-medium">
-              {{ trainingPlan.editor.name }}
+              {{ trainingPlan.editor?.name || "" }}
             </div>
           </div>
 
@@ -187,7 +224,8 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { TrainingPlan } from "../services/trainingPlan";
+import { TrainingPlan, TrainingSlot } from "../services/trainingPlan";
+import { Trainee } from "../services/trainee";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -201,9 +239,13 @@ const emit = defineEmits<{
 }>();
 
 const formatDateTime = (timestamp: string | undefined): string => {
-  return timestamp
-    ? dayjs(timestamp).tz("Asia/Taipei").format("MM/DD HH:mm")
-    : "";
+  if (!timestamp) return "";
+  try {
+    return dayjs(timestamp).tz("Asia/Taipei").format("MM/DD HH:mm");
+  } catch (error) {
+    console.error("日期格式化錯誤:", error);
+    return "日期錯誤";
+  }
 };
 
 const plan = (planType: string): string => {
@@ -219,6 +261,52 @@ const plan = (planType: string): string => {
 
 const handleEdit = (trainingPlan: TrainingPlan): void => {
   emit("edit", trainingPlan);
+};
+
+const getTrainingSlots = (trainingPlan: TrainingPlan): TrainingSlot[] => {
+  if (!trainingPlan?.trainingSlot) {
+    return [];
+  }
+
+  if (Array.isArray(trainingPlan.trainingSlot)) {
+    return trainingPlan.trainingSlot;
+  }
+
+  if (typeof trainingPlan.trainingSlot === "string") {
+    try {
+      const parsedSlots = JSON.parse(trainingPlan.trainingSlot);
+      if (Array.isArray(parsedSlots)) {
+        return parsedSlots;
+      }
+    } catch (error) {
+      console.error("解析 trainingSlot JSON 字串失敗:", error);
+    }
+  }
+
+  return [];
+};
+
+const formatTrainingSlotText = (slot: TrainingSlot): string => {
+  if (!slot || typeof slot !== "object") {
+    return "無效的時段資料";
+  }
+
+  if (!slot.dayOfWeek || !slot.start || !slot.end) {
+    return "時段資料不完整";
+  }
+
+  const dayOfWeekMap: Record<string, string> = {
+    Monday: "星期一",
+    Tuesday: "星期二",
+    Wednesday: "星期三",
+    Thursday: "星期四",
+    Friday: "星期五",
+    Saturday: "星期六",
+    Sunday: "星期日",
+  };
+
+  const dayName = dayOfWeekMap[slot.dayOfWeek] || slot.dayOfWeek;
+  return `${dayName} ${slot.start}~${slot.end}`;
 };
 </script>
 

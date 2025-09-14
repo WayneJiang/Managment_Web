@@ -9,7 +9,9 @@
     <div class="card-body">
       <h2 class="card-title text-2xl">學員列表</h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6"
+      >
         <div
           v-for="trainee in trainees"
           :key="trainee.id"
@@ -20,7 +22,7 @@
             border: '1px solid var(--color-border)',
           }"
         >
-          <div class="card-body p-4">
+          <div class="card-body p-3 sm:p-4">
             <div class="mb-4">
               <div class="flex items-center gap-2 mb-2">
                 <svg
@@ -38,7 +40,7 @@
                 </svg>
                 <span class="font-semibold text-sm opacity-80">學員姓名</span>
               </div>
-              <div class="text-xl font-bold">
+              <div class="text-lg sm:text-xl font-bold">
                 {{ trainee.name }}
               </div>
             </div>
@@ -200,7 +202,7 @@
             </div>
 
             <div
-              class="flex gap-2 pt-3 border-t"
+              class="flex flex-col sm:flex-row gap-2 pt-3 border-t"
               :style="{ borderColor: 'var(--color-border)' }"
             >
               <button

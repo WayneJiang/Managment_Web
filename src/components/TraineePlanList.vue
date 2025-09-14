@@ -11,7 +11,9 @@
         <h2 class="card-title text-2xl">個人訓練計畫</h2>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6"
+      >
         <div
           v-for="(trainingPlan, index) in trainingPlans"
           :key="index"
@@ -22,7 +24,7 @@
             border: '1px solid var(--color-border)',
           }"
         >
-          <div class="card-body p-4">
+          <div class="card-body p-3 sm:p-4">
             <div class="flex justify-between items-start mb-3">
               <div
                 class="badge badge-lg"

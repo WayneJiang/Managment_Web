@@ -19,12 +19,12 @@ onMounted(() => {
       :style="{ backgroundColor: 'var(--color-primary)', color: '#fff' }"
       class="py-4 w-full"
     >
-      <div class="container mx-auto px-2 lg:px-4">
-        <h1 class="text-2xl font-bold">好！來健身 管理資訊平台</h1>
+      <div class="container mx-auto px-3 lg:px-4">
+        <h1 class="text-xl sm:text-2xl font-bold">好！來健身 管理資訊平台</h1>
       </div>
     </header>
     <main class="py-6 w-full">
-      <div class="container mx-auto px-2 lg:px-4">
+      <div class="container mx-auto px-3 lg:px-4">
         <router-view />
       </div>
     </main>
@@ -35,7 +35,7 @@ onMounted(() => {
         color: 'var(--color-text-secondary)',
       }"
     >
-      <div class="container mx-auto px-2 lg:px-4 text-center">
+      <div class="container mx-auto px-3 lg:px-4 text-center">
         <p>&copy; {{ new Date().getFullYear() }} 管理資訊平台</p>
       </div>
     </footer>
@@ -48,6 +48,23 @@ onMounted(() => {
   max-width: 100%;
 }
 
+/* 針對 6.3 吋手機螢幕 (約 375px-414px) 優化 */
+@media (min-width: 375px) and (max-width: 414px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* 針對較大的手機螢幕 (414px-768px) */
+@media (min-width: 414px) and (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* 針對桌面螢幕 */
 @media (min-width: 1024px) {
   .container {
     padding-left: 1rem;

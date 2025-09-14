@@ -25,9 +25,9 @@
             {{ currentTrainee.name }} 的訓練計畫
           </h2>
           <form @submit.prevent="handleSubmit" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4">
               <div
-                class="card bg-base-100 shadow-md p-4"
+                class="card bg-base-100 shadow-md p-3 sm:p-4"
                 :style="{
                   backgroundColor: 'var(--color-card-bg)',
                   border: '1px solid var(--color-border)',
@@ -73,7 +73,7 @@
               </div>
 
               <div
-                class="card bg-base-100 shadow-md p-4"
+                class="card bg-base-100 shadow-md p-3 sm:p-4"
                 :style="{
                   backgroundColor: 'var(--color-card-bg)',
                   border: '1px solid var(--color-border)',
@@ -115,7 +115,7 @@
               </div>
 
               <div
-                class="card bg-base-100 shadow-md p-4"
+                class="card bg-base-100 shadow-md p-3 sm:p-4"
                 :style="{
                   backgroundColor: 'var(--color-card-bg)',
                   border: '1px solid var(--color-border)',
@@ -251,7 +251,7 @@
                       </button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                       <div class="form-control">
                         <label class="label">
                           <span class="label-text text-sm opacity-70"

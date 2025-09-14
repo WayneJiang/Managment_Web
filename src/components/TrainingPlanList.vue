@@ -1,6 +1,6 @@
 <template>
   <div class="w-full">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       <div
         v-for="trainingPlan in trainingPlans"
         :key="trainingPlan.id"
@@ -11,7 +11,7 @@
           border: '1px solid var(--color-border)',
         }"
       >
-        <div class="card-body p-4">
+        <div class="card-body p-3 sm:p-4">
           <div class="flex justify-between items-start mb-3">
             <div
               class="badge badge-lg"

@@ -62,7 +62,7 @@
             border: '1px solid var(--color-border)',
           }"
         >
-          <div class="card-body p-4">
+          <div class="card-body p-3 sm:p-4">
             <!-- 日期標題 -->
             <div
               class="flex items-center gap-3 mb-4 pb-3 border-b"

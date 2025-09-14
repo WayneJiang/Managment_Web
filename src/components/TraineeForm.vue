@@ -8,7 +8,7 @@
   >
     <div class="card-body">
       <h2 class="card-title text-2xl">學員資料</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
         <div class="form-control">
           <label class="label">
             <span class="label-text">姓名</span>

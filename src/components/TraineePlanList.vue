@@ -1,6 +1,6 @@
 <template>
   <div
-    class="card shadow-xl mt-4 w-full"
+    class="card shadow-xl mt-2 w-full"
     :style="{
       backgroundColor: 'var(--color-card-bg)',
       color: 'var(--color-text)',
@@ -12,7 +12,7 @@
       </div>
 
       <div
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 sm:gap-2 mt-4"
       >
         <div
           v-for="(trainingPlan, index) in trainingPlans"
@@ -24,7 +24,7 @@
             border: '1px solid var(--color-border)',
           }"
         >
-          <div class="card-body p-3 sm:p-4">
+          <div class="card-body p-2 sm:p-3">
             <div class="flex justify-between items-start mb-3">
               <div
                 class="badge badge-lg"

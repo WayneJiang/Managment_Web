@@ -1,17 +1,17 @@
 <template>
   <div class="w-full">
-    <div class="space-y-4">
+    <div class="space-y-2">
       <div
         v-for="day in weekDays"
         :key="day"
-        class="bg-base-200 rounded-lg p-4"
+        class="bg-base-200 rounded-lg p-3"
       >
         <h3 class="text-lg font-semibold mb-4">{{ day }}</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           <div
             v-for="course in getCoursesByDay(day)"
             :key="course.id"
-            class="bg-secondary text-secondary-content rounded-lg p-3 shadow-sm"
+            class="bg-secondary text-secondary-content rounded-lg p-2 shadow-sm"
           >
             <div class="flex justify-between items-start mb-2">
               <div class="font-medium">課程名稱：{{ course.name }}</div>

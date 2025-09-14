@@ -10,7 +10,7 @@
 
     <div
       v-if="!isLoading && !errorMessage && currentTrainee"
-      class="w-full space-y-6"
+      class="w-full space-y-3"
     >
       <div
         class="card shadow-xl w-full"
@@ -25,9 +25,9 @@
             {{ currentTrainee.name }} 的訓練計畫
           </h2>
           <form @submit.prevent="handleSubmit" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-4">
               <div
-                class="card bg-base-100 shadow-md p-3 sm:p-4"
+                class="card bg-base-100 shadow-md p-2 sm:p-3"
                 :style="{
                   backgroundColor: 'var(--color-card-bg)',
                   border: '1px solid var(--color-border)',
@@ -73,7 +73,7 @@
               </div>
 
               <div
-                class="card bg-base-100 shadow-md p-3 sm:p-4"
+                class="card bg-base-100 shadow-md p-2 sm:p-3"
                 :style="{
                   backgroundColor: 'var(--color-card-bg)',
                   border: '1px solid var(--color-border)',
@@ -115,7 +115,7 @@
               </div>
 
               <div
-                class="card bg-base-100 shadow-md p-3 sm:p-4"
+                class="card bg-base-100 shadow-md p-2 sm:p-3"
                 :style="{
                   backgroundColor: 'var(--color-card-bg)',
                   border: '1px solid var(--color-border)',
@@ -157,7 +157,7 @@
             </div>
 
             <div
-              class="card bg-base-100 shadow-md p-4 mt-4"
+              class="card bg-base-100 shadow-md p-3 mt-4"
               :style="{
                 backgroundColor: 'var(--color-card-bg)',
                 border: '1px solid var(--color-border)',
@@ -222,7 +222,7 @@
                   <div
                     v-for="(slot, index) in trainingTimeSlots"
                     :key="index"
-                    class="card bg-base-200 p-4"
+                    class="card bg-base-200 p-3"
                     :style="{
                       backgroundColor: 'var(--color-input-bg)',
                       border: '1px solid var(--color-border)',
@@ -251,7 +251,7 @@
                       </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
                       <div class="form-control">
                         <label class="label">
                           <span class="label-text text-sm opacity-70"

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="card shadow-xl mt-4 w-full"
+    class="card shadow-xl mt-2 w-full"
     :style="{
       backgroundColor: 'var(--color-card-bg)',
       color: 'var(--color-text)',

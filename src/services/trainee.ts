@@ -13,3 +13,12 @@ export interface Trainee {
   trainingPlan: TrainingPlan[];
   trainingRecord: TrainingRecord[];
 }
+
+export interface UpdateTrainee {
+  name: string;
+  gender: string;
+  birthday: string;
+  phone: string;
+  height: number;
+  weight: number;
+}

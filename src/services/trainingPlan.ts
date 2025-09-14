@@ -1,8 +1,7 @@
 import { Coach } from "./coach";
-import { Trainee } from "./trainee";
 import { TrainingRecord } from "./trainingRecord";
 
-export interface TrainingSlot {
+export interface TrainingTimeSlot {
   dayOfWeek: string;
   start: string;
   end: string;
@@ -10,13 +9,23 @@ export interface TrainingSlot {
 
 export interface TrainingPlan {
   id: number;
-  planStartedAt: string;
-  planEndedAt: string;
+  start: string;
+  end: string;
   planType: string;
-  trainingSlot: TrainingSlot[] | string;
+  trainingTimeSlot: TrainingTimeSlot[] | [];
   planQuota: number;
   usedQuota?: number;
-  coach: Coach;
+  coach?: Coach;
   editor: Coach;
   trainingRecord: TrainingRecord[];
+}
+
+export interface UpdateTrainingPlan {
+  id: number;
+  planType: string;
+  planQuota: number;
+  trainee: number;
+  coach: number;
+  editor: number;
+  trainingTimeSlot: TrainingTimeSlot[];
 }

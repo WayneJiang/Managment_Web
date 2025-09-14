@@ -6,9 +6,12 @@
     >
       訓練計畫
     </h1>
-    <LoadingState :loading="refLoading" :error="refError" />
+    <LoadingState :loading="isLoading" :error="errorMessage || ''" />
 
-    <div v-if="!refLoading && !refError && refTrainee" class="w-full space-y-6">
+    <div
+      v-if="!isLoading && !errorMessage && currentTrainee"
+      class="w-full space-y-6"
+    >
       <div
         class="card shadow-xl w-full"
         :style="{
@@ -18,8 +21,8 @@
       >
         <div class="card-body">
           <h2 class="card-title text-2xl">
-            {{ refEditTrainingPlanId != 0 ? "編輯" : "新增" }}
-            {{ refTrainee.name }} 的訓練計畫
+            {{ isEditMode ? "編輯" : "新增" }}
+            {{ currentTrainee.name }} 的訓練計畫
           </h2>
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -39,12 +42,12 @@
                     >
                   </label>
                   <select
-                    v-model="refSelectedCoach"
+                    v-model="selectedCoach"
                     class="select select-bordered w-full"
-                    :class="{ 'select-error': refCoachError }"
+                    :class="{ 'select-error': validationErrors.coach }"
                     :style="{
                       backgroundColor: 'var(--color-input-bg)',
-                      borderColor: refCoachError
+                      borderColor: validationErrors.coach
                         ? 'var(--color-error)'
                         : 'var(--color-input-border)',
                       color: 'var(--color-text)',
@@ -52,18 +55,18 @@
                   >
                     <option value="">請選擇教練</option>
                     <option
-                      v-for="coach in refCoaches"
+                      v-for="coach in coaches"
                       :key="coach.id"
                       :value="coach.id"
                     >
                       {{ coach.name }}
                     </option>
                   </select>
-                  <label v-if="refCoachError" class="label">
+                  <label v-if="validationErrors.coach" class="label">
                     <span
                       class="label-text-alt"
                       :style="{ color: 'var(--color-error)' }"
-                      >{{ refCoachError }}</span
+                      >{{ validationErrors.coach }}</span
                     >
                   </label>
                 </div>
@@ -85,26 +88,27 @@
                     >
                   </label>
                   <select
-                    v-model="refPlanType"
+                    v-model="planType"
                     class="select select-bordered w-full"
-                    :class="{ 'select-error': refPlanTypeError }"
+                    :class="{ 'select-error': validationErrors.planType }"
                     :style="{
                       backgroundColor: 'var(--color-input-bg)',
-                      borderColor: refPlanTypeError
+                      borderColor: validationErrors.planType
                         ? 'var(--color-error)'
                         : 'var(--color-input-border)',
                       color: 'var(--color-text)',
                     }"
                   >
                     <option value="">請選擇計畫類型</option>
-                    <option value="group">團體</option>
                     <option value="private">個人教練</option>
+                    <option value="block">團體課程</option>
+                    <option value="sequential">開放團體課程</option>
                   </select>
-                  <label v-if="refPlanTypeError" class="label">
+                  <label v-if="validationErrors.planType" class="label">
                     <span
                       class="label-text-alt"
                       :style="{ color: 'var(--color-error)' }"
-                      >{{ refPlanTypeError }}</span
+                      >{{ validationErrors.planType }}</span
                     >
                   </label>
                 </div>
@@ -127,12 +131,12 @@
                   </label>
                   <input
                     type="number"
-                    v-model.number="refQuota"
+                    v-model.number="quota"
                     class="input input-bordered w-full"
-                    :class="{ 'input-error': refQuotaError }"
+                    :class="{ 'input-error': validationErrors.quota }"
                     :style="{
                       backgroundColor: 'var(--color-input-bg)',
-                      borderColor: refQuotaError
+                      borderColor: validationErrors.quota
                         ? 'var(--color-error)'
                         : 'var(--color-input-border)',
                       color: 'var(--color-text)',
@@ -141,11 +145,11 @@
                     max="100"
                     placeholder="請輸入1-100之間的數字"
                   />
-                  <label v-if="refQuotaError" class="label">
+                  <label v-if="validationErrors.quota" class="label">
                     <span
                       class="label-text-alt"
                       :style="{ color: 'var(--color-error)' }"
-                      >{{ refQuotaError }}</span
+                      >{{ validationErrors.quota }}</span
                     >
                   </label>
                 </div>
@@ -195,7 +199,7 @@
                 </div>
 
                 <div
-                  v-if="refTrainingSlots.length === 0"
+                  v-if="trainingTimeSlots.length === 0"
                   class="text-center py-8 opacity-70"
                 >
                   <svg
@@ -216,7 +220,7 @@
 
                 <div v-else class="space-y-4">
                   <div
-                    v-for="(slot, index) in refTrainingSlots"
+                    v-for="(slot, index) in trainingTimeSlots"
                     :key="index"
                     class="card bg-base-200 p-4"
                     :style="{
@@ -329,11 +333,11 @@
                   </div>
                 </div>
 
-                <label v-if="refTrainingSlotError" class="label mt-3">
+                <label v-if="validationErrors.trainingSlots" class="label mt-3">
                   <span
                     class="label-text-alt"
                     :style="{ color: 'var(--color-error)' }"
-                    >{{ refTrainingSlotError }}</span
+                    >{{ validationErrors.trainingSlots }}</span
                   >
                 </label>
               </div>
@@ -343,30 +347,28 @@
               <button
                 type="submit"
                 class="btn btn-primary"
-                :disabled="refLoading"
+                :disabled="isLoading"
                 :style="{
                   backgroundColor: 'var(--color-primary)',
                   borderColor: 'var(--color-primary)',
                   color: 'white',
                 }"
               >
-                <span v-if="refLoading" class="loading loading-spinner"></span>
-                {{ refEditTrainingPlanId != 0 ? "更新" : "新增" }}
+                <span v-if="isLoading" class="loading loading-spinner"></span>
+                {{ isEditMode ? "更新" : "新增" }}
               </button>
               <button
                 type="button"
                 class="btn btn-ghost"
-                @click="
-                  () => (refEditTrainingPlanId ? handleCancelEdit() : back())
-                "
-                :disabled="refLoading"
+                @click="handleCancel"
+                :disabled="isLoading"
                 :style="{
                   backgroundColor: 'var(--color-button-bg)',
                   borderColor: 'var(--color-button-border)',
                   color: 'var(--color-text)',
                 }"
               >
-                {{ refEditTrainingPlanId != 0 ? "取消" : "返回" }}
+                {{ isEditMode ? "取消" : "返回" }}
               </button>
             </div>
           </form>
@@ -382,46 +384,70 @@
         <div class="card-body">
           <h2 class="card-title text-2xl mb-4">歷史訓練計畫</h2>
           <TrainingPlanList
-            :trainingPlans="refTrainee.trainingPlan"
+            :trainingPlans="currentTrainee.trainingPlan"
             @edit="handleEditTrainingPlan"
           />
         </div>
       </div>
+
+      <!-- 訓練記錄列表 -->
+      <TrainingRecordList
+        :traineeId="currentTrainee.id"
+        :trainingRecords="trainingRecords"
+        :coachId="editorId"
+        @update-records="handleUpdateTrainingRecords"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TrainingPlanList from "../components/TrainingPlanList.vue";
-import { Trainee } from "../services/trainee";
-import { Coach } from "../services/coach";
-import { TrainingPlan } from "../services/trainingPlan";
-import { ModifyTrainingPlan } from "../services/modifyTrainingPlan";
-import { TrainingSlot } from "../services/trainingPlan";
+import TrainingRecordList from "../components/TrainingRecordList.vue";
+import type { Trainee } from "../services/trainee";
+import type { Coach } from "../services/coach";
+import type {
+  TrainingPlan,
+  UpdateTrainingPlan,
+  TrainingTimeSlot,
+} from "../services/trainingPlan";
+import type { TrainingRecord } from "../services/trainingRecord";
 
 const router = useRouter();
 const traineeStore = useTraineeStore();
 
-const refTrainee = ref<Trainee | null>(null);
-const refCoaches = ref<Coach[] | null>([]);
-const refSelectedCoach = ref<number>(0);
-const refPlanType = ref<string>("");
-const refQuota = ref<number>(0);
-const refTrainingSlots = ref<TrainingSlot[]>([]);
-const refLoading = ref<boolean>(false);
-const refError = ref<string>("");
-const refCoachError = ref<string>("");
-const refPlanTypeError = ref<string>("");
-const refQuotaError = ref<string>("");
-const refTrainingSlotError = ref<string>("");
-const refEditTrainingPlanId = ref<number>(0);
-const refEditorId = ref<number>(0);
+// 使用 store 的狀態，而不是本地 ref
+const currentTrainee = computed(() => traineeStore.currentTrainee);
+const isLoading = computed(() => traineeStore.loading);
+const errorMessage = computed(() => traineeStore.error);
 
+// 本地狀態管理
+const coaches = ref<Coach[]>([]);
+const selectedCoach = ref<number>(0);
+const planType = ref<string>("");
+const quota = ref<number>(0);
+const trainingTimeSlots = ref<TrainingTimeSlot[]>([]);
+const editTrainingPlanId = ref<number>(0);
+const editorId = ref<number>(0);
+const trainingRecords = ref<TrainingRecord[]>([]);
+
+// 驗證錯誤狀態
+const validationErrors = ref({
+  coach: "",
+  planType: "",
+  quota: "",
+  trainingSlots: "",
+});
+
+// 計算屬性
+const isEditMode = computed(() => editTrainingPlanId.value !== 0);
+
+// 選項資料
 const dayOptions = [
   { value: "Monday", label: "星期一" },
   { value: "Tuesday", label: "星期二" },
@@ -437,48 +463,74 @@ const timeOptions = Array.from({ length: 24 }, (_, i) => {
   return { value: `${hour}:00`, label: `${hour}:00` };
 });
 
-onMounted(async () => {
-  refLoading.value = true;
+/**
+ * 從路由狀態中提取參數
+ */
+const extractRouteParams = (): void => {
+  const routeState = history.state;
+  editorId.value = Number(routeState?.editor) || 0;
+};
 
+/**
+ * 初始化資料
+ */
+const initializeData = async (): Promise<void> => {
   try {
     const routeState = history.state;
-    const id = Number(routeState?.id);
-    refEditorId.value = Number(routeState?.editor);
+    const traineeId = Number(routeState?.id);
 
-    const [trainee, coaches] = await Promise.all([
-      traineeStore.fetchById(id),
+    if (!traineeId) {
+      throw new Error("缺少學員 ID");
+    }
+
+    const [trainee, coachesData] = await Promise.all([
+      traineeStore.fetchById(traineeId),
       traineeStore.fetchCoaches(),
     ]);
 
-    refTrainee.value = trainee;
-    refCoaches.value = coaches;
-  } catch (err) {
-    refError.value =
-      err instanceof Error ? err.message : "發生錯誤，請稍後再試";
-  } finally {
-    refLoading.value = false;
-  }
-});
+    if (!trainee) {
+      throw new Error("無法獲取學員資料");
+    }
 
-watch(refQuota, (newValue) => {
+    coaches.value = coachesData || [];
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";
+    console.error("Failed to initialize training plan data:", err);
+    // Store 會自動處理錯誤狀態
+  }
+};
+
+/**
+ * 監聽額度變化，確保在有效範圍內
+ */
+watch(quota, (newValue: number) => {
   if (typeof newValue === "number") {
-    if (newValue < 1) refQuota.value = 1;
-    if (newValue > 100) refQuota.value = 100;
+    if (newValue < 1) quota.value = 1;
+    if (newValue > 100) quota.value = 100;
   }
 });
 
-const addTrainingSlot = () => {
-  refTrainingSlots.value.push({
+/**
+ * 新增訓練時段
+ */
+const addTrainingSlot = (): void => {
+  trainingTimeSlots.value.push({
     dayOfWeek: "",
     start: "09:00",
     end: "10:00",
   });
 };
 
-const removeTrainingSlot = (index: number) => {
-  refTrainingSlots.value.splice(index, 1);
+/**
+ * 移除訓練時段
+ */
+const removeTrainingSlot = (index: number): void => {
+  trainingTimeSlots.value.splice(index, 1);
 };
 
+/**
+ * 獲取結束時間選項
+ */
 const getEndTimeOptions = (startTime: string) => {
   if (!startTime) return timeOptions;
   const startHour = parseInt(startTime.split(":")[0]);
@@ -488,144 +540,139 @@ const getEndTimeOptions = (startTime: string) => {
   });
 };
 
-const validateForm = () => {
-  if (!refSelectedCoach.value) {
-    refCoachError.value = "請選擇教練";
-  } else {
-    refCoachError.value = "";
+/**
+ * 驗證表單
+ */
+const validateForm = (): boolean => {
+  const errors = {
+    coach: "",
+    planType: "",
+    quota: "",
+    trainingSlots: "",
+  };
+
+  if (!selectedCoach.value) {
+    errors.coach = "請選擇教練";
   }
 
-  if (!refPlanType.value) {
-    refPlanTypeError.value = "請選擇計畫類型";
-  } else {
-    refPlanTypeError.value = "";
+  if (!planType.value) {
+    errors.planType = "請選擇計畫類型";
   }
 
-  if (!refQuota.value || refQuota.value == 0) {
-    refQuotaError.value = "請輸入1-100之間的數字";
-  } else {
-    refQuotaError.value = "";
+  if (!quota.value || quota.value === 0) {
+    errors.quota = "請輸入1-100之間的數字";
   }
 
-  if (refTrainingSlots.value.length === 0) {
-    refTrainingSlotError.value = "請至少設定一個訓練時段";
+  if (trainingTimeSlots.value.length === 0) {
+    errors.trainingSlots = "請至少設定一個訓練時段";
   } else {
-    const hasInvalidSlot = refTrainingSlots.value.some(
+    const hasInvalidSlot = trainingTimeSlots.value.some(
       (slot) => !slot.dayOfWeek || !slot.start || !slot.end
     );
     if (hasInvalidSlot) {
-      refTrainingSlotError.value = "請完整填寫所有訓練時段";
+      errors.trainingSlots = "請完整填寫所有訓練時段";
     } else {
-      const hasInvalidTimeRange = refTrainingSlots.value.some((slot) => {
+      const hasInvalidTimeRange = trainingTimeSlots.value.some((slot) => {
         if (!slot.start || !slot.end) return false;
         const startHour = parseInt(slot.start.split(":")[0]);
         const endHour = parseInt(slot.end.split(":")[0]);
         return endHour <= startHour;
       });
       if (hasInvalidTimeRange) {
-        refTrainingSlotError.value = "結束時間必須晚於開始時間";
-      } else {
-        refTrainingSlotError.value = "";
+        errors.trainingSlots = "結束時間必須晚於開始時間";
       }
     }
   }
+
+  validationErrors.value = errors;
+  return !Object.values(errors).some((error) => error !== "");
 };
 
-const handleSubmit = async () => {
-  validateForm();
-  if (
-    refCoachError.value ||
-    refPlanTypeError.value ||
-    refQuotaError.value ||
-    refTrainingSlotError.value
-  ) {
+/**
+ * 處理表單提交
+ */
+const handleSubmit = async (): Promise<void> => {
+  if (!validateForm()) {
     return;
   }
 
-  if (!refTrainee.value) {
-    refError.value = "找不到學員資料";
+  if (!currentTrainee.value) {
+    console.error("No trainee data available");
     return;
   }
 
-  refLoading.value = true;
   try {
-    const data: ModifyTrainingPlan = {
-      trainee: refTrainee.value.id,
-      coach: refSelectedCoach.value,
-      planType: refPlanType.value,
-      planQuota: refQuota.value,
-      trainingSlot: refTrainingSlots.value,
-      editor: refEditorId.value,
-      id: 0,
+    const data: UpdateTrainingPlan = {
+      trainee: currentTrainee.value.id,
+      coach: selectedCoach.value,
+      planType: planType.value,
+      planQuota: quota.value,
+      trainingTimeSlot: trainingTimeSlots.value,
+      editor: editorId.value,
+      id: editTrainingPlanId.value,
     };
 
-    if (refEditTrainingPlanId.value) {
-      data.id = refEditTrainingPlanId.value;
-      const result = await traineeStore.updateTrainingPlan(data);
-      if (!result) {
-        ElMessage.error("更新失敗");
-        return;
-      }
+    let result: boolean | null = false;
+    if (isEditMode.value) {
+      result = await traineeStore.updateTrainingPlan(data);
     } else {
-      const result = await traineeStore.createTrainingPlan(data);
-      if (!result) {
-        ElMessage.error("新增失敗");
-        return;
-      }
+      result = await traineeStore.createTrainingPlan(data);
     }
 
-    const isEditMode = refEditTrainingPlanId.value != 0;
+    if (!result) {
+      const errorMessage = isEditMode.value ? "更新失敗" : "新增失敗";
+      ElMessage.error(errorMessage);
+      return;
+    }
 
-    refSelectedCoach.value = 0;
-    refPlanType.value = "";
-    refQuota.value = 0;
-    refTrainingSlots.value = [];
-    refEditTrainingPlanId.value = 0;
+    // 重置表單
+    resetForm();
 
-    const trainee = await traineeStore.fetchById(refTrainee.value.id);
-    refTrainee.value = trainee;
+    // 重新載入學員資料
+    const updatedTrainee = await traineeStore.fetchById(
+      currentTrainee.value.id
+    );
+    if (updatedTrainee) {
+      traineeStore.currentTrainee = updatedTrainee;
+    }
 
-    ElMessage.success(isEditMode ? "更新成功" : "新增成功");
-  } catch (err) {
-    refError.value =
-      err instanceof Error ? err.message : "發生錯誤，請稍後再試";
-  } finally {
-    refLoading.value = false;
+    const successMessage = isEditMode.value ? "更新成功" : "新增成功";
+    ElMessage.success(successMessage);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";
+    ElMessage.error(message);
+    console.error("Failed to submit training plan:", err);
   }
 };
 
-const handleEditTrainingPlan = (trainingPlan: TrainingPlan) => {
-  refEditTrainingPlanId.value = trainingPlan.id;
-  refSelectedCoach.value = trainingPlan.coach.id;
-  refPlanType.value = trainingPlan.planType;
-  refQuota.value = trainingPlan.planQuota;
+/**
+ * 重置表單
+ */
+const resetForm = (): void => {
+  selectedCoach.value = 0;
+  planType.value = "";
+  quota.value = 0;
+  trainingTimeSlots.value = [];
+  editTrainingPlanId.value = 0;
+  validationErrors.value = {
+    coach: "",
+    planType: "",
+    quota: "",
+    trainingSlots: "",
+  };
+};
 
-  let slots: TrainingSlot[] = [];
+/**
+ * 處理編輯訓練計畫
+ */
+const handleEditTrainingPlan = (trainingPlan: TrainingPlan): void => {
+  editTrainingPlanId.value = trainingPlan.id;
+  selectedCoach.value = trainingPlan.coach?.id || 0;
+  planType.value = trainingPlan.planType;
+  quota.value = trainingPlan.planQuota;
 
-  if (typeof trainingPlan.trainingSlot === "string") {
-    if (trainingPlan.trainingSlot.trim() === "") {
-      slots = [];
-    } else {
-      try {
-        const parsedSlots = JSON.parse(trainingPlan.trainingSlot);
-        if (Array.isArray(parsedSlots)) {
-          slots = parsedSlots;
-        } else {
-          slots = [];
-        }
-      } catch (error) {
-        console.error("解析 trainingSlot JSON 字串失敗:", error);
-        slots = [];
-      }
-    }
-  } else if (Array.isArray(trainingPlan.trainingSlot)) {
-    slots = trainingPlan.trainingSlot;
-  } else {
-    slots = [];
-  }
-
-  if (slots.length > 0) {
-    const uniqueSlots = slots.filter(
+  if (trainingPlan.trainingTimeSlot.length > 0) {
+    const uniqueSlots = trainingPlan.trainingTimeSlot.filter(
       (slot, index, self) =>
         index ===
         self.findIndex(
@@ -635,30 +682,45 @@ const handleEditTrainingPlan = (trainingPlan: TrainingPlan) => {
             s.end === slot.end
         )
     );
-
-    refTrainingSlots.value = uniqueSlots;
+    trainingTimeSlots.value = uniqueSlots;
   } else {
-    refTrainingSlots.value = [];
+    trainingTimeSlots.value = [];
   }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
-const handleCancelEdit = () => {
-  refEditTrainingPlanId.value = 0;
-  refSelectedCoach.value = 0;
-  refPlanType.value = "";
-  refQuota.value = 0;
-  refTrainingSlots.value = [];
-
-  refCoachError.value = "";
-  refPlanTypeError.value = "";
-  refQuotaError.value = "";
-  refTrainingSlotError.value = "";
-  refError.value = "";
+/**
+ * 處理取消操作
+ */
+const handleCancel = (): void => {
+  if (isEditMode.value) {
+    resetForm();
+  } else {
+    handleBack();
+  }
 };
 
-const back = () => {
-  router.back();
+/**
+ * 處理返回導航
+ */
+const handleBack = (): void => {
+  try {
+    router.back();
+  } catch (error) {
+    console.error("Failed to navigate back:", error);
+  }
 };
+
+/**
+ * 處理訓練記錄更新
+ */
+const handleUpdateTrainingRecords = (records: TrainingRecord[]): void => {
+  trainingRecords.value = records;
+};
+
+onMounted(async (): Promise<void> => {
+  extractRouteParams();
+  await initializeData();
+});
 </script>

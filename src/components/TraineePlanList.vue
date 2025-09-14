@@ -27,11 +27,11 @@
               <div
                 class="badge badge-lg"
                 :class="{
-                  'badge-primary': trainingPlan.planType === 'private',
-                  'badge-secondary': trainingPlan.planType === 'group',
+                  'badge-primary': trainingPlan.planType === 'personal',
+                  'badge-secondary': trainingPlan.planType !== 'personal',
                 }"
               >
-                {{ plan(trainingPlan.planType) }}
+                {{ getPlanTypeLabel(trainingPlan.planType) }}
               </div>
             </div>
 
@@ -52,7 +52,7 @@
                 </svg>
                 <span class="text-sm opacity-80">計畫開始</span>
                 <span class="text-sm font-medium">
-                  {{ formatDateTime(trainingPlan.planStartedAt) }}
+                  {{ formatDateTime(trainingPlan.start) }}
                 </span>
               </div>
               <div class="flex items-center gap-2">
@@ -71,7 +71,7 @@
                 </svg>
                 <span class="text-sm opacity-80">計畫結束</span>
                 <span class="text-sm font-medium">
-                  {{ formatDateTime(trainingPlan.planEndedAt) }}
+                  {{ formatDateTime(trainingPlan.end) }}
                 </span>
               </div>
             </div>
@@ -127,7 +127,7 @@
                 <span class="text-sm opacity-80">指導教練</span>
               </div>
               <div class="text-base font-medium">
-                {{ trainingPlan.coach.name }}
+                {{ trainingPlan.coach?.name || "未指定" }}
               </div>
             </div>
 
@@ -143,13 +143,11 @@
               </div>
               <div class="text-center">
                 <div class="font-semibold text-sm opacity-80">剩餘</div>
-                <div class="font-bold text-lg text-warning">
-                  {{
-                    Math.max(
-                      0,
-                      trainingPlan.planQuota - (trainingPlan.usedQuota || 0)
-                    )
-                  }}
+                <div
+                  class="font-bold text-lg"
+                  :class="getRemainingQuotaClass(trainingPlan)"
+                >
+                  {{ getRemainingQuota(trainingPlan) }}
                 </div>
               </div>
             </div>
@@ -181,58 +179,63 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { TrainingPlan, TrainingSlot } from "../services/trainingPlan";
+import type { TrainingPlan, TrainingTimeSlot } from "../services/trainingPlan";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 defineProps<{
   trainingPlans: TrainingPlan[];
 }>();
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
+/**
+ * 格式化日期時間
+ */
+const formatDateTime = (timestamp: string | undefined): string => {
+  if (!timestamp) return "";
 
-const plan = (planType: TrainingPlan["planType"]): string => {
-  if (!planType) return "";
-  switch (planType) {
-    case "private":
-      return "個人教練";
-    case "group":
-      return "團體";
-    default:
-      return "";
+  try {
+    return dayjs(timestamp).tz("Asia/Taipei").format("YYYY/MM/DD HH:mm");
+  } catch (error) {
+    console.error("Date formatting error:", error);
+    return "日期錯誤";
   }
 };
 
-const formatDateTime = (timestamp: string | undefined): string => {
-  return timestamp
-    ? dayjs(timestamp).tz("Asia/Taipei").format("MM/DD HH:mm")
-    : "";
+/**
+ * 獲取計畫類型標籤
+ */
+const getPlanTypeLabel = (planType: string): string => {
+  if (!planType) return "未知類型";
+
+  const planTypeMap: Record<string, string> = {
+    personal: "個人教練",
+    block: "團體課程",
+    sequential: "開放團體課程",
+  };
+
+  return planTypeMap[planType] || planType;
 };
 
-const getTrainingSlots = (trainingPlan: TrainingPlan): TrainingSlot[] => {
-  if (!trainingPlan?.trainingSlot) {
+/**
+ * 獲取訓練時段列表
+ */
+const getTrainingSlots = (trainingPlan: TrainingPlan): TrainingTimeSlot[] => {
+  if (!trainingPlan?.trainingTimeSlot) {
     return [];
   }
 
-  if (Array.isArray(trainingPlan.trainingSlot)) {
-    return trainingPlan.trainingSlot;
-  }
-
-  if (typeof trainingPlan.trainingSlot === "string") {
-    try {
-      const parsedSlots = JSON.parse(trainingPlan.trainingSlot);
-      if (Array.isArray(parsedSlots)) {
-        return parsedSlots;
-      }
-    } catch (error) {
-      console.error("解析 trainingSlot JSON 字串失敗:", error);
-    }
+  if (Array.isArray(trainingPlan.trainingTimeSlot)) {
+    return trainingPlan.trainingTimeSlot;
   }
 
   return [];
 };
 
-const formatTrainingSlotText = (slot: TrainingSlot): string => {
-  // 防護措施：確保 slot 物件存在且包含必要屬性
+/**
+ * 格式化訓練時段文字
+ */
+const formatTrainingSlotText = (slot: TrainingTimeSlot): string => {
   if (!slot || typeof slot !== "object") {
     return "無效的時段資料";
   }
@@ -248,10 +251,35 @@ const formatTrainingSlotText = (slot: TrainingSlot): string => {
     Thursday: "星期四",
     Friday: "星期五",
     Saturday: "星期六",
-    Sunday: "星期天",
+    Sunday: "星期日",
   };
 
   const dayName = dayOfWeekMap[slot.dayOfWeek] || slot.dayOfWeek;
   return `${dayName} ${slot.start}~${slot.end}`;
+};
+
+/**
+ * 計算剩餘額度
+ */
+const getRemainingQuota = (trainingPlan: TrainingPlan): number => {
+  const usedQuota = trainingPlan.usedQuota || 0;
+  const planQuota = trainingPlan.planQuota;
+
+  return Math.max(0, planQuota - usedQuota);
+};
+
+/**
+ * 獲取剩餘額度的樣式類別
+ */
+const getRemainingQuotaClass = (trainingPlan: TrainingPlan): string => {
+  const remainingQuota = getRemainingQuota(trainingPlan);
+
+  if (remainingQuota === 0) {
+    return "text-error";
+  } else if (remainingQuota <= 2) {
+    return "text-warning";
+  } else {
+    return "text-info";
+  }
 };
 </script>

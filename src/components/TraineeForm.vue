@@ -15,22 +15,16 @@
           </label>
           <input
             type="text"
-            v-model="refTrainee.name"
+            v-model="traineeData.name"
             class="input"
-            :style="{
-              borderColor: refNameError
-                ? 'var(--color-error)'
-                : 'var(--color-input-border)',
-              backgroundColor: 'var(--color-input-bg)',
-              color: 'var(--color-text)',
-            }"
-            @input="validateName"
+            :style="getInputStyle('name')"
+            @input="validateField('name')"
           />
-          <label class="label" v-if="refNameError">
+          <label class="label" v-if="validationErrors.name">
             <span
               class="label-text-alt"
               :style="{ color: 'var(--color-error)' }"
-              >{{ refNameError }}</span
+              >{{ validationErrors.name }}</span
             >
           </label>
         </div>
@@ -39,7 +33,7 @@
             <span class="label-text">性別</span>
           </label>
           <select
-            v-model="refTrainee.gender"
+            v-model="traineeData.gender"
             class="select"
             :style="{
               borderColor: 'var(--color-input-border)',
@@ -57,22 +51,18 @@
           </label>
           <input
             type="date"
-            v-model="refTrainee.birthday"
+            v-model="traineeData.birthday"
             class="input"
-            :class="{ 'input-error': refBirthdayError }"
-            :min="dayjs().subtract(100, 'year').format('YYYY-MM-DD')"
-            :max="dayjs().subtract(10, 'year').format('YYYY-MM-DD')"
-            :placeholder="
-              refTrainee.birthday === '1900-01-01' ? '年/月/日' : ''
-            "
-            :value="
-              refTrainee.birthday === '1900-01-01' ? '' : refTrainee.birthday
-            "
-            @input="validateBirthday"
+            :class="{ 'input-error': validationErrors.birthday }"
+            :min="getMinBirthday()"
+            :max="getMaxBirthday()"
+            :placeholder="getBirthdayPlaceholder()"
+            :value="getBirthdayValue()"
+            @input="validateField('birthday')"
           />
-          <label class="label" v-if="refBirthdayError">
+          <label class="label" v-if="validationErrors.birthday">
             <span class="label-text-alt text-error">{{
-              refBirthdayError
+              validationErrors.birthday
             }}</span>
           </label>
         </div>
@@ -82,15 +72,17 @@
           </label>
           <input
             type="tel"
-            v-model="refFormattedPhone"
+            v-model="formattedPhone"
             class="input"
-            :class="{ 'input-error': refPhoneError }"
+            :class="{ 'input-error': validationErrors.phone }"
             placeholder="09XX-XXX-XXX"
             maxlength="12"
-            @input="(e: Event) => validatePhone((e.target as HTMLInputElement).value)"
+            @input="handlePhoneInput"
           />
-          <label class="label" v-if="refPhoneError">
-            <span class="label-text-alt text-error">{{ refPhoneError }}</span>
+          <label class="label" v-if="validationErrors.phone">
+            <span class="label-text-alt text-error">{{
+              validationErrors.phone
+            }}</span>
           </label>
         </div>
         <div class="form-control">
@@ -99,16 +91,18 @@
           </label>
           <input
             type="number"
-            v-model.number="refTrainee.height"
+            v-model.number="traineeData.height"
             class="input"
-            :class="{ 'input-error': refHeightError }"
+            :class="{ 'input-error': validationErrors.height }"
             min="100.0"
             max="250.0"
             step="0.1"
-            @input="validateHeight"
+            @input="validateField('height')"
           />
-          <label class="label" v-if="refHeightError">
-            <span class="label-text-alt text-error">{{ refHeightError }}</span>
+          <label class="label" v-if="validationErrors.height">
+            <span class="label-text-alt text-error">{{
+              validationErrors.height
+            }}</span>
           </label>
         </div>
         <div class="form-control">
@@ -117,23 +111,25 @@
           </label>
           <input
             type="number"
-            v-model.number="refTrainee.weight"
+            v-model.number="traineeData.weight"
             class="input"
-            :class="{ 'input-error': refWeightError }"
+            :class="{ 'input-error': validationErrors.weight }"
             min="30.0"
             max="300.0"
             step="0.1"
-            @input="validateWeight"
+            @input="validateField('weight')"
           />
-          <label class="label" v-if="refWeightError">
-            <span class="label-text-alt text-error">{{ refWeightError }}</span>
+          <label class="label" v-if="validationErrors.weight">
+            <span class="label-text-alt text-error">{{
+              validationErrors.weight
+            }}</span>
           </label>
         </div>
         <div class="form-control">
           <label class="label">
             <span class="label-text">BMI</span>
           </label>
-          <input type="text" :value="calculateBMI" class="input" disabled />
+          <input type="text" :value="calculatedBMI" class="input" disabled />
         </div>
       </div>
       <div class="card-actions justify-end mt-4">
@@ -144,7 +140,7 @@
             color: '#fff',
             borderColor: 'var(--color-primary)',
           }"
-          @click="onSubmit"
+          @click="handleSubmit"
         >
           儲存
         </button>
@@ -156,7 +152,7 @@
             color: 'var(--color-primary)',
             borderColor: 'var(--color-primary)',
           }"
-          @click="onBack"
+          @click="handleBack"
         >
           返回
         </button>
@@ -168,7 +164,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import dayjs from "dayjs";
-import { Trainee } from "../services/trainee";
+import type { Trainee } from "../services/trainee";
 
 interface Props {
   trainee: Trainee;
@@ -182,136 +178,249 @@ const emit = defineEmits<{
   (e: "back"): void;
 }>();
 
-const refTrainee = ref<Trainee>({} as Trainee);
+// 表單資料
+const traineeData = ref<Trainee>({} as Trainee);
+const formattedPhone = ref<string>("");
 
-const refPhoneError = ref<string>("");
-const refFormattedPhone = ref<string>("");
-const refBirthdayError = ref<string>("");
-const refHeightError = ref<string>("");
-const refWeightError = ref<string>("");
-const refNameError = ref<string>("");
+// 驗證錯誤狀態
+const validationErrors = ref({
+  name: "",
+  birthday: "",
+  phone: "",
+  height: "",
+  weight: "",
+});
 
+/**
+ * 獲取輸入框樣式
+ */
+const getInputStyle = (fieldName: keyof typeof validationErrors.value) => {
+  const hasError = validationErrors.value[fieldName];
+  return {
+    borderColor: hasError ? "var(--color-error)" : "var(--color-input-border)",
+    backgroundColor: "var(--color-input-bg)",
+    color: "var(--color-text)",
+  };
+};
+
+/**
+ * 獲取最小生日（100年前）
+ */
+const getMinBirthday = (): string => {
+  return dayjs().subtract(100, "year").format("YYYY-MM-DD");
+};
+
+/**
+ * 獲取最大生日（10年前）
+ */
+const getMaxBirthday = (): string => {
+  return dayjs().subtract(10, "year").format("YYYY-MM-DD");
+};
+
+/**
+ * 獲取生日佔位符
+ */
+const getBirthdayPlaceholder = (): string => {
+  return traineeData.value.birthday === "1900-01-01" ? "年/月/日" : "";
+};
+
+/**
+ * 獲取生日值
+ */
+const getBirthdayValue = (): string => {
+  return traineeData.value.birthday === "1900-01-01"
+    ? ""
+    : traineeData.value.birthday;
+};
+
+/**
+ * 驗證姓名
+ */
+const validateName = (): void => {
+  if (!traineeData.value.name || traineeData.value.name.trim() === "") {
+    validationErrors.value.name = "請輸入姓名";
+    return;
+  }
+  validationErrors.value.name = "";
+};
+
+/**
+ * 驗證生日
+ */
+const validateBirthday = (): void => {
+  if (
+    !traineeData.value.birthday ||
+    traineeData.value.birthday === "1900-01-01"
+  ) {
+    validationErrors.value.birthday = "請選擇生日";
+    return;
+  }
+  validationErrors.value.birthday = "";
+};
+
+/**
+ * 驗證手機號碼
+ */
 const validatePhone = (value: string): void => {
   const phone = value.replace(/\D/g, "");
 
   if (!phone) {
-    refPhoneError.value = "請輸入手機號碼";
+    validationErrors.value.phone = "請輸入手機號碼";
     return;
   }
 
   if (!phone.startsWith("09")) {
-    refPhoneError.value = "手機號碼必須以 09 開頭";
+    validationErrors.value.phone = "手機號碼必須以 09 開頭";
     return;
   }
+
   if (phone.length !== 10) {
-    refPhoneError.value = "手機號碼必須為 10 位數字";
+    validationErrors.value.phone = "手機號碼必須為 10 位數字";
     return;
   }
 
-  refPhoneError.value = "";
-  refFormattedPhone.value = phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3");
+  validationErrors.value.phone = "";
+  formattedPhone.value = phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3");
 };
 
-const validateBirthday = (): void => {
-  if (
-    !refTrainee.value.birthday ||
-    refTrainee.value.birthday === "1900-01-01"
-  ) {
-    refBirthdayError.value = "請選擇生日";
-    return;
-  }
-  refBirthdayError.value = "";
-};
-
+/**
+ * 驗證身高
+ */
 const validateHeight = (): void => {
-  const height = refTrainee.value.height;
+  const height = traineeData.value.height;
   if (!height) {
-    refHeightError.value = "請輸入身高";
+    validationErrors.value.height = "請輸入身高";
     return;
   }
   if (height < 100.0 || height > 250.0) {
-    refHeightError.value = "身高必須在 100.0 到 250.0 公分之間";
+    validationErrors.value.height = "身高必須在 100.0 到 250.0 公分之間";
   } else {
-    refHeightError.value = "";
+    validationErrors.value.height = "";
   }
 };
 
+/**
+ * 驗證體重
+ */
 const validateWeight = (): void => {
-  const weight = refTrainee.value.weight;
+  const weight = traineeData.value.weight;
   if (!weight) {
-    refWeightError.value = "請輸入體重";
+    validationErrors.value.weight = "請輸入體重";
     return;
   }
   if (weight < 30.0 || weight > 300.0) {
-    refWeightError.value = "體重必須在 30.0 到 300.0 公斤之間";
+    validationErrors.value.weight = "體重必須在 30.0 到 300.0 公斤之間";
   } else {
-    refWeightError.value = "";
+    validationErrors.value.weight = "";
   }
 };
 
-const validateName = (): void => {
-  if (!refTrainee.value.name || refTrainee.value.name.trim() === "") {
-    refNameError.value = "請輸入姓名";
-    return;
+/**
+ * 統一驗證函數
+ */
+const validateField = (
+  fieldName: keyof typeof validationErrors.value
+): void => {
+  switch (fieldName) {
+    case "name":
+      validateName();
+      break;
+    case "birthday":
+      validateBirthday();
+      break;
+    case "phone":
+      validatePhone(traineeData.value.phone);
+      break;
+    case "height":
+      validateHeight();
+      break;
+    case "weight":
+      validateWeight();
+      break;
   }
-  refNameError.value = "";
 };
 
-watch(refFormattedPhone, (value: string) => {
-  refTrainee.value.phone = value.replace(/\D/g, "");
+/**
+ * 處理手機號碼輸入
+ */
+const handlePhoneInput = (event: Event): void => {
+  const target = event.target as HTMLInputElement;
+  validatePhone(target.value);
+};
+
+/**
+ * 計算 BMI
+ */
+const calculatedBMI = computed<string>(() => {
+  if (!traineeData.value.height || !traineeData.value.weight) return "未知";
+  const heightInMeters = traineeData.value.height / 100;
+  const bmi = traineeData.value.weight / (heightInMeters * heightInMeters);
+  return bmi.toFixed(2);
 });
 
-onMounted(() => {
-  refTrainee.value = props.trainee;
+/**
+ * 檢查表單是否有效
+ */
+const isFormValid = (): boolean => {
+  return (
+    !Object.values(validationErrors.value).some((error) => error !== "") &&
+    traineeData.value.phone !== ""
+  );
+};
 
-  if (refTrainee.value.phone) {
-    refFormattedPhone.value = refTrainee.value.phone.replace(
+/**
+ * 處理表單提交
+ */
+const handleSubmit = (): void => {
+  // 驗證所有欄位
+  validateField("name");
+  validateField("birthday");
+  validateField("phone");
+  validateField("height");
+  validateField("weight");
+
+  if (!isFormValid()) {
+    if (!traineeData.value.phone) {
+      validationErrors.value.phone = "請輸入手機號碼";
+    }
+    return;
+  }
+
+  const data: Trainee = {
+    ...traineeData.value,
+    birthday:
+      traineeData.value.birthday === "1900-01-01"
+        ? "1900-01-01"
+        : dayjs(traineeData.value.birthday).format("YYYY-MM-DD"),
+    phone: traineeData.value.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3"),
+    height: Number(Number(traineeData.value.height).toFixed(1)),
+    weight: Number(Number(traineeData.value.weight).toFixed(1)),
+  };
+
+  emit("save", data);
+};
+
+/**
+ * 處理返回按鈕
+ */
+const handleBack = (): void => {
+  emit("back");
+};
+
+// 監聽格式化手機號碼變化
+watch(formattedPhone, (value: string) => {
+  traineeData.value.phone = value.replace(/\D/g, "");
+});
+
+// 初始化
+onMounted(() => {
+  traineeData.value = props.trainee;
+
+  if (traineeData.value.phone) {
+    formattedPhone.value = traineeData.value.phone.replace(
       /(\d{4})(\d{3})(\d{3})/,
       "$1-$2-$3"
     );
   }
 });
-
-const calculateBMI = computed<string>(() => {
-  if (!refTrainee.value.height || !refTrainee.value.weight) return "未知";
-  const heightInMeters = refTrainee.value.height / 100;
-  const bmi = refTrainee.value.weight / (heightInMeters * heightInMeters);
-  return bmi.toFixed(2);
-});
-
-const onSubmit = (): void => {
-  validateName();
-  validateBirthday();
-  validatePhone(refTrainee.value.phone);
-  validateHeight();
-  validateWeight();
-  if (
-    refNameError.value ||
-    refBirthdayError.value ||
-    refPhoneError.value ||
-    refHeightError.value ||
-    refWeightError.value ||
-    !refTrainee.value.phone
-  ) {
-    if (!refTrainee.value.phone) {
-      refPhoneError.value = "請輸入手機號碼";
-    }
-    return;
-  }
-  const data: Trainee = {
-    ...refTrainee.value,
-    birthday:
-      refTrainee.value.birthday === "1900-01-01"
-        ? "1900-01-01"
-        : dayjs(refTrainee.value.birthday).format("YYYY-MM-DD"),
-    phone: refTrainee.value.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3"),
-    height: Number(Number(refTrainee.value.height).toFixed(1)),
-    weight: Number(Number(refTrainee.value.weight).toFixed(1)),
-  };
-  emit("save", data);
-};
-
-const onBack = (): void => {
-  emit("back");
-};
 </script>

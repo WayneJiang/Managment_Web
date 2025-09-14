@@ -64,17 +64,9 @@
               </div>
               <div
                 class="badge badge-lg"
-                :class="{
-                  'badge-primary':
-                    trainee.trainingPlan[0]?.planType === 'private',
-                  'badge-secondary':
-                    trainee.trainingPlan[0]?.planType === 'group',
-                  'badge-error':
-                    !trainee.trainingPlan[0]?.planType ||
-                    trainee.trainingPlan[0].planType === '',
-                }"
+                :class="getPlanTypeClass(trainee.trainingPlan[0]?.planType)"
               >
-                {{ plan(trainee.trainingPlan[0]?.planType) }}
+                {{ getPlanTypeLabel(trainee.trainingPlan[0]?.planType) }}
               </div>
             </div>
 
@@ -99,11 +91,11 @@
               </div>
               <div class="text-base font-medium">
                 <span
-                  :class="{
-                    'text-error': !trainee.trainingPlan[0]?.coach?.name,
-                  }"
+                  :class="
+                    getCoachNameClass(trainee.trainingPlan[0]?.coach?.name)
+                  "
                 >
-                  {{ trainee.trainingPlan[0]?.coach.name || "未指定" }}
+                  {{ trainee.trainingPlan[0]?.coach?.name || "未指定" }}
                 </span>
               </div>
             </div>
@@ -167,26 +159,8 @@
                 >
               </div>
               <div class="text-lg font-bold">
-                <span
-                  :class="{
-                    'text-error':
-                      !trainee.trainingPlan[0]?.planQuota ||
-                      !trainee.trainingPlan[0]?.usedQuota,
-                    'text-info':
-                      trainee.trainingPlan[0]?.planQuota &&
-                      trainee.trainingPlan[0]?.usedQuota !== undefined,
-                  }"
-                >
-                  {{
-                    trainee.trainingPlan[0]?.planQuota &&
-                    trainee.trainingPlan[0]?.usedQuota !== undefined
-                      ? Math.max(
-                          0,
-                          trainee.trainingPlan[0].planQuota -
-                            trainee.trainingPlan[0].usedQuota
-                        )
-                      : "未設定"
-                  }}
+                <span :class="getRemainingQuotaClass(trainee.trainingPlan[0])">
+                  {{ getRemainingQuota(trainee.trainingPlan[0]) }}
                 </span>
               </div>
             </div>
@@ -236,9 +210,9 @@
                   color: '#fff',
                   borderColor: '#f97316',
                 }"
-                @click="onUpdate(trainee)"
+                @click="handleUpdate(trainee)"
               >
-                更新資料
+                資料
               </button>
               <button
                 class="btn btn-sm flex-1"
@@ -247,9 +221,9 @@
                   color: '#fff',
                   borderColor: '#f97316',
                 }"
-                @click="onAdjust(trainee)"
+                @click="handleAdjust(trainee)"
               >
-                調整計畫
+                計畫
               </button>
             </div>
           </div>
@@ -278,8 +252,8 @@
 
 <script setup lang="ts">
 import { defineEmits } from "vue";
-import { Trainee } from "../services/trainee";
-import { TrainingPlan, TrainingSlot } from "../services/trainingPlan";
+import type { Trainee } from "../services/trainee";
+import type { TrainingPlan, TrainingTimeSlot } from "../services/trainingPlan";
 
 interface Props {
   trainees: Trainee[];
@@ -287,47 +261,70 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const plan = (planType: TrainingPlan["planType"]): string => {
-  if (!planType || planType === "") {
-    return "未指定";
-  }
+const emit = defineEmits<{
+  (e: "update", trainee: Trainee): void;
+  (e: "adjust", trainee: Trainee): void;
+}>();
 
-  switch (planType) {
-    case "private":
-      return "個人教練";
-    case "group":
-      return "團體";
-    default:
-      return "未指定";
-  }
+/**
+ * 獲取計畫類型標籤
+ */
+const getPlanTypeLabel = (planType: string | undefined): string => {
+  if (!planType) return "未設定";
+
+  const planTypeMap: Record<string, string> = {
+    personal: "個人教練",
+    block: "團體課程",
+    sequential: "開放團體課程",
+    group: "團體課程",
+  };
+
+  return planTypeMap[planType] || planType;
 };
 
+/**
+ * 獲取計畫類型的樣式類別
+ */
+const getPlanTypeClass = (planType: string | undefined): string => {
+  if (!planType || planType === "") {
+    return "badge-error";
+  }
+
+  if (planType === "personal") {
+    return "badge-primary";
+  }
+
+  return "badge-secondary";
+};
+
+/**
+ * 獲取教練姓名的樣式類別
+ */
+const getCoachNameClass = (coachName: string | undefined): string => {
+  return coachName ? "" : "text-error";
+};
+
+/**
+ * 獲取訓練時段列表
+ */
 const getTrainingSlots = (
   trainingPlan: TrainingPlan | undefined
-): TrainingSlot[] => {
-  if (!trainingPlan?.trainingSlot) {
+): TrainingTimeSlot[] => {
+  if (!trainingPlan?.trainingTimeSlot) {
     return [];
   }
 
-  if (Array.isArray(trainingPlan.trainingSlot)) {
-    return trainingPlan.trainingSlot;
-  }
-
-  if (typeof trainingPlan.trainingSlot === "string") {
-    try {
-      const parsedSlots = JSON.parse(trainingPlan.trainingSlot);
-      if (Array.isArray(parsedSlots)) {
-        return parsedSlots;
-      }
-    } catch (error) {
-      console.error("解析 trainingSlot JSON 字串失敗:", error);
-    }
+  if (Array.isArray(trainingPlan.trainingTimeSlot)) {
+    return trainingPlan.trainingTimeSlot;
   }
 
   return [];
 };
 
-const formatTrainingSlotText = (slot: TrainingSlot): string => {
+/**
+ * 格式化訓練時段文字
+ */
+const formatTrainingSlotText = (slot: TrainingTimeSlot): string => {
   if (!slot || typeof slot !== "object") {
     return "無效的時段資料";
   }
@@ -350,19 +347,50 @@ const formatTrainingSlotText = (slot: TrainingSlot): string => {
   return `${dayName} ${slot.start}~${slot.end}`;
 };
 
-const emit = defineEmits<{
-  (e: "update", trainee: Trainee): void;
-  (e: "adjust", trainee: Trainee): void;
-}>();
+/**
+ * 計算剩餘額度
+ */
+const getRemainingQuota = (
+  trainingPlan: TrainingPlan | undefined
+): string | number => {
+  if (!trainingPlan?.planQuota || trainingPlan.usedQuota === undefined) {
+    return "未設定";
+  }
 
-const onUpdate = (trainee: Trainee): void => {
-  emit("update", trainee);
+  const remainingQuota = Math.max(
+    0,
+    trainingPlan.planQuota - trainingPlan.usedQuota
+  );
+  return remainingQuota;
 };
 
-const onAdjust = (trainee: Trainee): void => {
-  emit("adjust", trainee);
+/**
+ * 獲取剩餘額度的樣式類別
+ */
+const getRemainingQuotaClass = (
+  trainingPlan: TrainingPlan | undefined
+): string => {
+  if (!trainingPlan?.planQuota || trainingPlan.usedQuota === undefined) {
+    return "text-error";
+  }
+
+  const remainingQuota = Math.max(
+    0,
+    trainingPlan.planQuota - trainingPlan.usedQuota
+  );
+
+  if (remainingQuota === 0) {
+    return "text-error";
+  } else if (remainingQuota <= 2) {
+    return "text-warning";
+  } else {
+    return "text-info";
+  }
 };
 
+/**
+ * 獲取團體訓練夥伴
+ */
 const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
   if (
     !currentTrainee.trainingPlan[0] ||
@@ -388,7 +416,7 @@ const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
       return false;
     }
 
-    if (traineePlan.coach.id !== currentPlan.coach.id) {
+    if (traineePlan.coach?.id !== currentPlan.coach?.id) {
       return false;
     }
 
@@ -404,11 +432,21 @@ const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
       )
     );
 
-    if (currentSlots !== traineeSlots) {
-      return false;
-    }
-
-    return true;
+    return currentSlots === traineeSlots;
   });
+};
+
+/**
+ * 處理更新按鈕點擊
+ */
+const handleUpdate = (trainee: Trainee): void => {
+  emit("update", trainee);
+};
+
+/**
+ * 處理調整按鈕點擊
+ */
+const handleAdjust = (trainee: Trainee): void => {
+  emit("adjust", trainee);
 };
 </script>

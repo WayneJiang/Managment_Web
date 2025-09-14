@@ -21,6 +21,11 @@ const routes: RouteRecordRaw[] = [
     name: "TrainingPlan",
     component: () => import("../views/TrainingPlan.vue"),
   },
+  {
+    path: "/opening-course",
+    name: "OpeningCourse",
+    component: () => import("../views/OpeningCourse.vue"),
+  },
 ];
 
 export default routes;

@@ -102,7 +102,7 @@
                     <option value="">請選擇計畫類型</option>
                     <option value="private">個人教練</option>
                     <option value="block">團體課程</option>
-                    <option value="sequential">開放團體課程</option>
+                    <option value="sequential">開放團課</option>
                   </select>
                   <label v-if="validationErrors.planType" class="label">
                     <span

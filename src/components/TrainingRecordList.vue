@@ -597,7 +597,7 @@ const getPlanTypeLabel = (planType: TrainingPlan["planType"]): string => {
     case "block":
       return "團體課程";
     case "sequential":
-      return "開放團體課程";
+      return "開放團課";
     default:
       return "";
   }

@@ -248,7 +248,7 @@ const getPlanTypeLabel = (planType: string): string => {
   const planTypeMap: Record<string, string> = {
     personal: "個人教練",
     block: "團體課程",
-    sequential: "開放團體課程",
+    sequential: "開放團課",
   };
 
   return planTypeMap[planType] || planType;

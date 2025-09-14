@@ -19,12 +19,12 @@ onMounted(() => {
       :style="{ backgroundColor: 'var(--color-primary)', color: '#fff' }"
       class="py-4 w-full"
     >
-      <div class="container mx-auto px-4 lg:px-8">
+      <div class="container mx-auto px-2 lg:px-4">
         <h1 class="text-2xl font-bold">好！來健身 管理資訊平台</h1>
       </div>
     </header>
     <main class="py-6 w-full">
-      <div class="container mx-auto px-4 lg:px-8">
+      <div class="container mx-auto px-2 lg:px-4">
         <router-view />
       </div>
     </main>
@@ -35,7 +35,7 @@ onMounted(() => {
         color: 'var(--color-text-secondary)',
       }"
     >
-      <div class="container mx-auto px-4 lg:px-8 text-center">
+      <div class="container mx-auto px-2 lg:px-4 text-center">
         <p>&copy; {{ new Date().getFullYear() }} 管理資訊平台</p>
       </div>
     </footer>
@@ -50,8 +50,8 @@ onMounted(() => {
 
 @media (min-width: 1024px) {
   .container {
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 

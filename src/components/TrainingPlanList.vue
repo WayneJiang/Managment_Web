@@ -41,7 +41,7 @@
               </svg>
               <span class="text-sm opacity-80">計畫開始</span>
               <span class="text-sm font-medium">
-                {{ formatDateTime(trainingPlan.planStartedAt) }}
+                {{ formatDateTime(trainingPlan.start) }}
               </span>
             </div>
             <div class="flex items-center gap-2">
@@ -60,7 +60,7 @@
               </svg>
               <span class="text-sm opacity-80">計畫結束</span>
               <span class="text-sm font-medium">
-                {{ formatDateTime(trainingPlan.planEndedAt) }}
+                {{ formatDateTime(trainingPlan.end) }}
               </span>
             </div>
           </div>

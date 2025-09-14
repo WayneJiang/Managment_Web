@@ -7,9 +7,9 @@
     }"
   >
     <div class="card-body">
-      <div class="flex justify-between items-center">
-        <div class="flex items-center gap-4">
-          <h2 class="card-title text-2xl">簽到歷史記錄</h2>
+      <div class="flex justify-between items-start">
+        <div class="flex flex-col gap-4">
+          <h2 class="card-title text-2xl">簽到記錄</h2>
           <!-- 月份選擇器 -->
           <div class="form-control">
             <select
@@ -82,9 +82,6 @@
                 ></path>
               </svg>
               <h3 class="text-xl font-bold">{{ formatDateHeader(date) }}</h3>
-              <div class="badge badge-outline">
-                {{ dayRecords.length }} 筆記錄
-              </div>
             </div>
 
             <!-- 時間段列表 -->
@@ -92,7 +89,7 @@
               <div
                 v-for="(record, index) in dayRecords"
                 :key="index"
-                class="flex items-center justify-between p-3 rounded-lg"
+                class="flex flex-col gap-3 p-3 rounded-lg"
                 :style="{
                   backgroundColor: 'var(--color-bg)',
                   border: '1px solid var(--color-border)',
@@ -671,7 +668,7 @@ const handleExportToPdf = async (): Promise<void> => {
     doc.setFont("NotoSansTC");
 
     doc.setFontSize(20);
-    doc.text("簽到歷史記錄", 14, 20);
+    doc.text("簽到記錄", 14, 20);
 
     let currentY = 30;
 

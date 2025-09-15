@@ -8,12 +8,6 @@
       }"
     >
       <div class="card-body text-center">
-        <h1
-          class="text-3xl font-bold"
-          :style="{ color: 'var(--color-primary)' }"
-        >
-          管理資訊平台
-        </h1>
         <LoadingState :loading="isLoading" :error="errorMessage || ''" />
         <p v-if="!isLoading && !errorMessage && socialId" class="mt-4">
           正在檢查身份...

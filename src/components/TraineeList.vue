@@ -516,6 +516,55 @@ const hasGroupPlan = (trainee: Trainee): boolean => {
 };
 
 /**
+ * 比較兩個訓練時段陣列是否相同
+ */
+const compareTrainingSlots = (
+  slots1: TrainingTimeSlot[],
+  slots2: TrainingTimeSlot[]
+): boolean => {
+  if (slots1.length !== slots2.length) {
+    return false;
+  }
+
+  // 排序後比較每個時段
+  const sortedSlots1 = [...slots1].sort((a, b) =>
+    a.dayOfWeek.localeCompare(b.dayOfWeek)
+  );
+  const sortedSlots2 = [...slots2].sort((a, b) =>
+    a.dayOfWeek.localeCompare(b.dayOfWeek)
+  );
+
+  return sortedSlots1.every((slot1, index) => {
+    const slot2 = sortedSlots2[index];
+    return (
+      slot1.dayOfWeek === slot2.dayOfWeek &&
+      slot1.start === slot2.start &&
+      slot1.end === slot2.end
+    );
+  });
+};
+
+/**
+ * 檢查兩個訓練計畫是否為相同的團體課程
+ */
+const isSameGroupPlan = (plan1: TrainingPlan, plan2: TrainingPlan): boolean => {
+  // 基本條件檢查
+  if (
+    plan1.planType !== "Block" ||
+    plan2.planType !== "Block" ||
+    plan1.coach?.id !== plan2.coach?.id
+  ) {
+    return false;
+  }
+
+  // 比較訓練時段
+  const slots1 = getTrainingSlots(plan1);
+  const slots2 = getTrainingSlots(plan2);
+
+  return compareTrainingSlots(slots1, slots2);
+};
+
+/**
  * 獲取團體課程夥伴
  */
 const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
@@ -537,28 +586,11 @@ const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
       }
 
       // 檢查該學員是否有相同的團體計畫
-      const matchingPlan = trainee.trainingPlan.find(
-        (plan) =>
-          plan.planType === "Block" && plan.coach?.id === currentPlan.coach?.id
+      const matchingPlan = trainee.trainingPlan.find((plan) =>
+        isSameGroupPlan(currentPlan, plan)
       );
 
-      if (!matchingPlan) {
-        return false;
-      }
-
-      const currentSlots = JSON.stringify(
-        getTrainingSlots(currentPlan).sort((a, b) =>
-          a.dayOfWeek.localeCompare(b.dayOfWeek)
-        )
-      );
-
-      const traineeSlots = JSON.stringify(
-        getTrainingSlots(matchingPlan).sort((a, b) =>
-          a.dayOfWeek.localeCompare(b.dayOfWeek)
-        )
-      );
-
-      return currentSlots === traineeSlots;
+      return !!matchingPlan;
     });
 
     // 避免重複添加相同的夥伴

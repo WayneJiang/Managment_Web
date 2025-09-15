@@ -90,14 +90,14 @@
               <div
                 v-for="(record, index) in dayRecords"
                 :key="index"
-                class="flex flex-col gap-3 p-3 rounded-lg"
+                class="flex flex-col gap-3 p-3 rounded-lg text-center"
                 :style="{
                   backgroundColor: 'var(--color-bg)',
                   border: '1px solid var(--color-border)',
                 }"
               >
                 <!-- 時間 -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center gap-3">
                   <div class="text-lg font-bold text-primary">
                     {{ formatTime(record.createdDate) }}
                   </div>
@@ -121,7 +121,7 @@
                 </div>
 
                 <!-- 教練資訊 -->
-                <div class="flex items-center gap-2">
+                <div class="flex items-center justify-center gap-2">
                   <svg
                     class="w-4 h-4 opacity-70"
                     fill="none"
@@ -147,7 +147,7 @@
                 </div>
 
                 <!-- 操作按鈕 -->
-                <div class="flex items-center gap-2">
+                <div class="flex items-center justify-center gap-2">
                   <div
                     v-if="isCoach"
                     class="btn btn-sm btn-outline btn-primary cursor-pointer"

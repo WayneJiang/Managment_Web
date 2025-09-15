@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { Coach } from "./coach";
-import { Trainee, UpdateTrainee } from "./trainee";
+import { SearchTrainee, Trainee, UpdateTrainee } from "./trainee";
 import { Viewer } from "./viewer";
 import { TrainingRecord, UpdateTrainingRecord } from "./trainingRecord";
 import {
@@ -47,6 +47,16 @@ export const api = {
   async getByTraineeId(id: number): Promise<Trainee> {
     try {
       return (await axios.get(`/trainee/info/${id}`)).data;
+    } catch (error) {
+      console.error("API 請求失敗:", error);
+      throw new Error(error.response?.data?.message || "無法獲取資訊");
+    }
+  },
+
+  async getSearchTrainee(searchTrainee: SearchTrainee): Promise<Trainee[]> {
+    try {
+      return (await axios.get(`/trainee/search}`, { params: searchTrainee }))
+        .data;
     } catch (error) {
       console.error("API 請求失敗:", error);
       throw new Error(error.response?.data?.message || "無法獲取資訊");

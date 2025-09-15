@@ -29,8 +29,13 @@
               <div
                 class="badge badge-lg"
                 :class="{
-                  'badge-primary': trainingPlan.planType === 'personal',
-                  'badge-secondary': trainingPlan.planType !== 'personal',
+                  'badge-primary': trainingPlan.planType === 'Personal',
+                  'badge-success': trainingPlan.planType === 'Block',
+                  'badge-warning': trainingPlan.planType === 'Sequential',
+                  'badge-secondary':
+                    trainingPlan.planType !== 'Personal' &&
+                    trainingPlan.planType !== 'Block' &&
+                    trainingPlan.planType !== 'Sequential',
                 }"
               >
                 {{ getPlanTypeLabel(trainingPlan.planType) }}
@@ -126,10 +131,46 @@
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                   ></path>
                 </svg>
-                <span class="text-sm opacity-80">指導教練</span>
+                <span class="text-sm opacity-80">負責教練</span>
               </div>
               <div class="text-base font-medium">
                 {{ trainingPlan.coach?.name || "未指定" }}
+              </div>
+            </div>
+
+            <!-- 團隊課程夥伴欄位 -->
+            <div v-if="trainingPlan.planType === 'Block'" class="mb-4">
+              <div class="flex items-center gap-2 mb-2">
+                <svg
+                  class="w-4 h-4 opacity-70"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  ></path>
+                </svg>
+                <span class="font-semibold text-sm opacity-80"
+                  >團隊課程夥伴</span
+                >
+              </div>
+              <div class="space-y-1">
+                <div
+                  v-if="getGroupMembers(trainingPlan).length > 0"
+                  v-for="member in getGroupMembers(trainingPlan)"
+                  :key="member.id"
+                  class="text-sm p-2 rounded bg-base-200"
+                  :style="{ backgroundColor: 'var(--color-border)' }"
+                >
+                  {{ member.name }}
+                </div>
+                <div v-else class="text-sm italic text-error">
+                  目前沒有其他夥伴
+                </div>
               </div>
             </div>
 
@@ -140,7 +181,7 @@
               <div class="text-center">
                 <div class="font-semibold text-sm opacity-80">總額度</div>
                 <div class="font-bold text-lg">
-                  {{ trainingPlan.planQuota }}
+                  {{ trainingPlan.quota }}
                 </div>
               </div>
               <div class="text-center">
@@ -182,12 +223,15 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import type { TrainingPlan, TrainingTimeSlot } from "../services/trainingPlan";
+import type { Trainee } from "../services/trainee";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-defineProps<{
+const props = defineProps<{
   trainingPlans: TrainingPlan[];
+  trainees?: Trainee[];
+  currentTrainee?: Trainee;
 }>();
 
 /**
@@ -211,9 +255,9 @@ const getPlanTypeLabel = (planType: string): string => {
   if (!planType) return "未知類型";
 
   const planTypeMap: Record<string, string> = {
-    personal: "個人教練",
-    block: "團體課程",
-    sequential: "開放團課",
+    Personal: "個人教練",
+    Block: "團體課程",
+    Sequential: "開放團課",
   };
 
   return planTypeMap[planType] || planType;
@@ -264,10 +308,10 @@ const formatTrainingSlotText = (slot: TrainingTimeSlot): string => {
  * 計算剩餘額度
  */
 const getRemainingQuota = (trainingPlan: TrainingPlan): number => {
-  const usedQuota = trainingPlan.usedQuota || 0;
-  const planQuota = trainingPlan.planQuota;
+  const trainingRecordCount = trainingPlan.trainingRecord?.length || 0;
+  const planQuota = trainingPlan.quota;
 
-  return Math.max(0, planQuota - usedQuota);
+  return Math.max(0, planQuota - trainingRecordCount);
 };
 
 /**
@@ -283,5 +327,60 @@ const getRemainingQuotaClass = (trainingPlan: TrainingPlan): string => {
   } else {
     return "text-info";
   }
+};
+
+/**
+ * 獲取團體課程夥伴
+ */
+const getGroupMembers = (currentPlan: TrainingPlan): Trainee[] => {
+  if (
+    !props.trainees ||
+    !props.currentTrainee ||
+    currentPlan.planType !== "Block"
+  ) {
+    return [];
+  }
+
+  const groupMembers: Trainee[] = [];
+
+  // 尋找有相同團體計畫的夥伴
+  const members = props.trainees.filter((trainee) => {
+    if (trainee.id === props.currentTrainee?.id) {
+      return false;
+    }
+
+    // 檢查該學員是否有相同的團體計畫
+    const matchingPlan = trainee.trainingPlan.find(
+      (plan) =>
+        plan.planType === "Block" && plan.coach?.id === currentPlan.coach?.id
+    );
+
+    if (!matchingPlan) {
+      return false;
+    }
+
+    const currentSlots = JSON.stringify(
+      getTrainingSlots(currentPlan).sort((a, b) =>
+        a.dayOfWeek.localeCompare(b.dayOfWeek)
+      )
+    );
+
+    const traineeSlots = JSON.stringify(
+      getTrainingSlots(matchingPlan).sort((a, b) =>
+        a.dayOfWeek.localeCompare(b.dayOfWeek)
+      )
+    );
+
+    return currentSlots === traineeSlots;
+  });
+
+  // 避免重複添加相同的夥伴
+  members.forEach((member) => {
+    if (!groupMembers.find((existing) => existing.id === member.id)) {
+      groupMembers.push(member);
+    }
+  });
+
+  return groupMembers;
 };
 </script>

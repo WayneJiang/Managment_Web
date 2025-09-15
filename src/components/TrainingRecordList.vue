@@ -33,13 +33,14 @@
           </div>
         </div>
         <button
+          type="button"
           class="btn"
           :style="{
             backgroundColor: 'var(--color-primary)',
             color: '#fff',
             borderColor: 'var(--color-primary)',
           }"
-          @click="handleExportToPdf"
+          @click.prevent="handleExportToPdf"
           :disabled="trainingRecords.length === 0 || isLoading"
         >
           <span
@@ -104,9 +105,15 @@
                     class="badge"
                     :class="{
                       'badge-primary':
-                        record.trainingPlan?.planType === 'personal',
+                        record.trainingPlan?.planType === 'Personal',
+                      'badge-success':
+                        record.trainingPlan?.planType === 'Block',
+                      'badge-warning':
+                        record.trainingPlan?.planType === 'Sequential',
                       'badge-secondary':
-                        record.trainingPlan?.planType !== 'personal',
+                        record.trainingPlan?.planType !== 'Personal' &&
+                        record.trainingPlan?.planType !== 'Block' &&
+                        record.trainingPlan?.planType !== 'Sequential',
                     }"
                   >
                     {{ getPlanTypeLabel(record.trainingPlan?.planType) }}
@@ -128,6 +135,7 @@
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                     ></path>
                   </svg>
+                  <span class="text-sm opacity-70">負責教練：</span>
                   <span
                     class="font-medium"
                     :class="{
@@ -140,14 +148,18 @@
 
                 <!-- 操作按鈕 -->
                 <div class="flex items-center gap-2">
-                  <button
+                  <div
                     v-if="isCoach"
-                    class="btn btn-sm btn-outline btn-primary"
-                    @click="handleEditRecord(record)"
+                    class="btn btn-sm btn-outline btn-primary cursor-pointer"
+                    @click.stop.prevent="handleEditRecord(record)"
                     :style="{
                       borderColor: 'var(--color-primary)',
                       color: 'var(--color-primary)',
                     }"
+                    role="button"
+                    tabindex="0"
+                    @keydown.enter="handleEditRecord(record)"
+                    @keydown.space.prevent="handleEditRecord(record)"
                   >
                     <svg
                       class="w-4 h-4"
@@ -163,11 +175,12 @@
                       ></path>
                     </svg>
                     編輯
-                  </button>
+                  </div>
                   <button
                     v-if="isCoach"
+                    type="button"
                     class="btn btn-sm btn-outline btn-error"
-                    @click="handleDeleteRecord(record)"
+                    @click.stop.prevent="handleDeleteRecord(record)"
                     :style="{
                       borderColor: 'var(--color-error)',
                       color: 'var(--color-error)',
@@ -214,167 +227,188 @@
     </div>
 
     <!-- 編輯訓練記錄模態框 -->
-    <div v-if="showEditModal" class="modal modal-open">
+    <div
+      class="modal"
+      :class="{ 'modal-open': showEditModal }"
+      @click.self="handleCancelEdit"
+    >
       <div
         class="modal-box"
         :style="{
           backgroundColor: 'var(--color-card-bg)',
           color: 'var(--color-text)',
         }"
+        @click.stop
       >
         <h3 class="font-bold text-lg mb-4">編輯訓練記錄</h3>
-
-        <div class="form-control mb-4">
-          <label class="label">
-            <span class="label-text font-semibold">訓練計畫</span>
-          </label>
-          <select
-            v-model="editingRecord.trainingPlan"
-            class="select select-bordered w-full"
-            :class="{ 'select-error': validationErrors.trainingPlan }"
-            :style="{
-              backgroundColor: 'var(--color-input-bg)',
-              borderColor: validationErrors.trainingPlan
-                ? 'var(--color-error)'
-                : 'var(--color-input-border)',
-              color: 'var(--color-text)',
-            }"
-          >
-            <option value="">請選擇訓練計畫</option>
-            <option
-              v-for="trainingPlan in availableTrainingPlans"
-              :key="trainingPlan.id"
-              :value="trainingPlan.id"
+        <form @submit.prevent="handleSaveEditRecord" @click.stop>
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-semibold">訓練計畫</span>
+            </label>
+            <select
+              v-model="editingRecord.trainingPlan"
+              class="select select-bordered w-full"
+              :class="{ 'select-error': validationErrors.trainingPlan }"
+              :style="{
+                backgroundColor: 'var(--color-input-bg)',
+                borderColor: validationErrors.trainingPlan
+                  ? 'var(--color-error)'
+                  : 'var(--color-input-border)',
+                color: 'var(--color-text)',
+              }"
             >
-              {{ trainingPlan.coach?.name || "未指定教練" }} -
-              {{ getPlanTypeLabel(trainingPlan.planType) }} ({{
-                trainingPlan.planQuota
-              }}堂)
-            </option>
-          </select>
-          <label v-if="validationErrors.trainingPlan" class="label">
-            <span
-              class="label-text-alt"
-              :style="{ color: 'var(--color-error)' }"
-              >{{ validationErrors.trainingPlan }}</span
-            >
-          </label>
-        </div>
-
-        <div class="form-control mb-4">
-          <label class="label">
-            <span class="label-text font-semibold">簽到時間</span>
-          </label>
-          <div class="grid grid-cols-2 gap-4">
-            <!-- 日期選擇 -->
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-sm opacity-80">日期</span>
-              </label>
-              <input
-                type="date"
-                v-model="editingDate"
-                class="input input-bordered w-full"
-                :class="{ 'input-error': validationErrors.date }"
-                :style="{
-                  backgroundColor: 'var(--color-input-bg)',
-                  borderColor: validationErrors.date
-                    ? 'var(--color-error)'
-                    : 'var(--color-input-border)',
-                  color: 'var(--color-text)',
-                }"
-              />
-              <label v-if="validationErrors.date" class="label">
-                <span
-                  class="label-text-alt"
-                  :style="{ color: 'var(--color-error)' }"
-                  >{{ validationErrors.date }}</span
-                >
-              </label>
-            </div>
-            <!-- 時間選擇 -->
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-sm opacity-80">時間</span>
-              </label>
-              <select
-                v-model="editingTime"
-                class="select select-bordered w-full"
-                :class="{ 'select-error': validationErrors.time }"
-                :style="{
-                  backgroundColor: 'var(--color-input-bg)',
-                  borderColor: validationErrors.time
-                    ? 'var(--color-error)'
-                    : 'var(--color-input-border)',
-                  color: 'var(--color-text)',
-                }"
-                required
+              <option
+                v-for="trainingPlan in availableTrainingPlans"
+                :key="trainingPlan.id"
+                :value="trainingPlan.id"
               >
-                <option
-                  v-for="timeOption in timeOptions"
-                  :key="timeOption.value"
-                  :value="timeOption.value"
+                {{ trainingPlan.coach?.name || "未指定教練" }} -
+                {{ getPlanTypeLabel(trainingPlan.planType) }}
+                ({{ trainingPlan.quota }}堂，剩餘{{
+                  (trainingPlan.quota || 0) -
+                  (trainingPlan.trainingRecord?.length || 0)
+                }}堂)
+              </option>
+              <option
+                v-if="availableTrainingPlans.length === 0"
+                value=""
+                disabled
+              >
+                沒有可用的訓練計畫（所有計畫額度已用完）
+              </option>
+            </select>
+            <label v-if="validationErrors.trainingPlan" class="label">
+              <span
+                class="label-text-alt"
+                :style="{ color: 'var(--color-error)' }"
+                >{{ validationErrors.trainingPlan }}</span
+              >
+            </label>
+          </div>
+
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-semibold">簽到時間</span>
+            </label>
+            <div class="grid grid-cols-2 gap-4">
+              <!-- 日期選擇 -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-sm opacity-80">日期</span>
+                </label>
+                <input
+                  type="date"
+                  v-model="editingDate"
+                  class="input input-bordered w-full"
+                  :class="{ 'input-error': validationErrors.date }"
+                  :style="{
+                    backgroundColor: 'var(--color-input-bg)',
+                    borderColor: validationErrors.date
+                      ? 'var(--color-error)'
+                      : 'var(--color-input-border)',
+                    color: 'var(--color-text)',
+                  }"
+                />
+                <label v-if="validationErrors.date" class="label">
+                  <span
+                    class="label-text-alt"
+                    :style="{ color: 'var(--color-error)' }"
+                    >{{ validationErrors.date }}</span
+                  >
+                </label>
+              </div>
+              <!-- 時間選擇 -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-sm opacity-80">時間</span>
+                </label>
+                <select
+                  v-model="editingTime"
+                  class="select select-bordered w-full"
+                  :class="{ 'select-error': validationErrors.time }"
+                  :style="{
+                    backgroundColor: 'var(--color-input-bg)',
+                    borderColor: validationErrors.time
+                      ? 'var(--color-error)'
+                      : 'var(--color-input-border)',
+                    color: 'var(--color-text)',
+                  }"
+                  required
                 >
-                  {{ timeOption.label }}
-                </option>
-              </select>
-              <label v-if="validationErrors.time" class="label">
-                <span
-                  class="label-text-alt"
-                  :style="{ color: 'var(--color-error)' }"
-                  >{{ validationErrors.time }}</span
-                >
-              </label>
+                  <option
+                    v-for="timeOption in timeOptions"
+                    :key="timeOption.value"
+                    :value="timeOption.value"
+                  >
+                    {{ timeOption.label }}
+                  </option>
+                </select>
+                <label v-if="validationErrors.time" class="label">
+                  <span
+                    class="label-text-alt"
+                    :style="{ color: 'var(--color-error)' }"
+                    >{{ validationErrors.time }}</span
+                  >
+                </label>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="modal-action">
-          <button
-            class="btn btn-primary"
-            @click="handleSaveEditRecord"
-            :disabled="isLoading"
-            :style="{
-              backgroundColor: 'var(--color-primary)',
-              borderColor: 'var(--color-primary)',
-              color: 'white',
-            }"
-          >
-            <span v-if="isLoading" class="loading loading-spinner"></span>
-            儲存
-          </button>
-          <button
-            class="btn btn-ghost"
-            @click="handleCancelEdit"
-            :disabled="isLoading"
-            :style="{
-              backgroundColor: 'var(--color-button-bg)',
-              borderColor: 'var(--color-button-border)',
-              color: 'var(--color-text)',
-            }"
-          >
-            取消
-          </button>
-        </div>
+          <div class="modal-action">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              :disabled="isLoading"
+              :style="{
+                backgroundColor: 'var(--color-primary)',
+                borderColor: 'var(--color-primary)',
+                color: 'white',
+              }"
+            >
+              <span v-if="isLoading" class="loading loading-spinner"></span>
+              儲存
+            </button>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              @click.prevent="handleCancelEdit"
+              :disabled="isLoading"
+              :style="{
+                backgroundColor: 'var(--color-button-bg)',
+                borderColor: 'var(--color-button-border)',
+                color: 'var(--color-text)',
+              }"
+            >
+              取消
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
     <!-- 刪除確認模態框 -->
-    <div v-if="showDeleteModal" class="modal modal-open">
+    <div
+      class="modal"
+      :class="{ 'modal-open': showDeleteModal }"
+      @click.self="handleCancelDelete"
+    >
       <div
         class="modal-box"
         :style="{
           backgroundColor: 'var(--color-card-bg)',
           color: 'var(--color-text)',
         }"
+        @click.stop
       >
         <h3 class="font-bold text-lg mb-4">刪除訓練記錄</h3>
         <p class="mb-4">您確定要刪除這筆訓練記錄嗎？此操作無法復原。</p>
 
         <div class="modal-action">
           <button
+            type="button"
             class="btn btn-error"
-            @click="handleConfirmDeleteRecord"
+            @click.prevent="handleConfirmDeleteRecord"
             :disabled="isLoading"
             :style="{
               backgroundColor: 'var(--color-error)',
@@ -386,8 +420,9 @@
             確認
           </button>
           <button
+            type="button"
             class="btn btn-ghost"
-            @click="handleCancelDelete"
+            @click.prevent="handleCancelDelete"
             :disabled="isLoading"
             :style="{
               backgroundColor: 'var(--color-button-bg)',
@@ -426,6 +461,7 @@ const props = defineProps<{
   coachId: number;
   traineeId: number;
   trainingRecords: TrainingRecord[];
+  trainingPlans?: TrainingPlan[];
 }>();
 
 const emit = defineEmits<{
@@ -589,11 +625,11 @@ const groupedRecords = computed(() => {
 const getPlanTypeLabel = (planType: TrainingPlan["planType"]): string => {
   if (!planType) return "";
   switch (planType) {
-    case "personal":
+    case "Personal":
       return "個人教練";
-    case "block":
+    case "Block":
       return "團體課程";
-    case "sequential":
+    case "Sequential":
       return "開放團課";
     default:
       return "";
@@ -634,7 +670,11 @@ const validateEditForm = (): boolean => {
     time: "",
   };
 
-  if (!editingRecord.value.trainingPlan) {
+  // 只有在有可用計畫時才要求選擇訓練計畫
+  if (
+    availableTrainingPlans.value.length > 0 &&
+    !editingRecord.value.trainingPlan
+  ) {
     errors.trainingPlan = "請選擇訓練計畫";
   }
 
@@ -682,8 +722,7 @@ const handleExportToPdf = async (): Promise<void> => {
         formatTime(record.createdDate),
         getPlanTypeLabel(record.trainingPlan?.planType),
         record.trainingPlan?.coach?.name || "未指定",
-        record.trainingPlan?.planQuota?.toString() || "",
-        record.trainingPlan?.usedQuota?.toString() || "",
+        record.trainingPlan?.quota?.toString() || "",
       ]);
 
       autoTable(doc, {
@@ -729,13 +768,18 @@ const handleExportToPdf = async (): Promise<void> => {
 /**
  * 處理編輯訓練記錄
  */
-const handleEditRecord = async (record: TrainingRecord): Promise<void> => {
+const handleEditRecord = (record: TrainingRecord): void => {
   try {
-    const trainee = await traineeStore.fetchById(props.traineeId);
-    if (trainee?.trainingPlan) {
-      availableTrainingPlans.value = trainee.trainingPlan;
-    }
+    // 直接設置編輯記錄
+    editingRecord.value = {
+      id: record.id,
+      trainee: props.traineeId,
+      trainingPlan: record.trainingPlan?.id || 0,
+      date: "",
+      editor: props.coachId,
+    };
 
+    // 設置當前時間
     const currentDateTime = dayjs().tz("Asia/Taipei");
     editingDate.value = currentDateTime.format("YYYY-MM-DD");
 
@@ -746,18 +790,17 @@ const handleEditRecord = async (record: TrainingRecord): Promise<void> => {
       .format("HH:mm");
     editingTime.value = adjustedTime;
 
-    editingRecord.value = {
-      id: record.id,
-      trainee: props.traineeId,
-      trainingPlan: record.trainingPlan?.id || 0,
-      date: "",
-      editor: props.coachId,
-    };
+    if (props.trainingPlans && props.trainingPlans.length > 0) {
+      // 只顯示還有剩餘額度的訓練計畫
+      availableTrainingPlans.value = props.trainingPlans.filter(
+        (plan) => (plan.quota || 0) - (plan.trainingRecord?.length || 0) > 0
+      );
+    }
 
     showEditModal.value = true;
   } catch (error) {
-    console.error("Failed to load training plans:", error);
-    ElMessage.error("獲取訓練計畫失敗，請稍後再試");
+    console.error("Failed to handle edit record:", error);
+    ElMessage.error("開啟編輯失敗，請稍後再試");
   }
 };
 

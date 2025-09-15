@@ -45,7 +45,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import OpeningCourseWeekView from "../components/OpeningCourseWeekView.vue";
 import OpeningCourseForm from "../components/OpeningCourseForm.vue";
@@ -58,7 +57,6 @@ import type {
 import type { Coach } from "../services/coach";
 import { useCoachStore } from "../stores/coach";
 
-const router = useRouter();
 const coachStore = useCoachStore();
 
 const refCourses = ref<OpeningCourse[]>([]);

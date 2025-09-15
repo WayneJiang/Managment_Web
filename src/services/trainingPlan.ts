@@ -13,8 +13,7 @@ export interface TrainingPlan {
   end: string;
   planType: string;
   trainingTimeSlot: TrainingTimeSlot[] | [];
-  planQuota: number;
-  usedQuota?: number;
+  quota: number;
   coach?: Coach;
   editor: Coach;
   trainingRecord: TrainingRecord[];
@@ -23,9 +22,9 @@ export interface TrainingPlan {
 export interface UpdateTrainingPlan {
   id: number;
   planType: string;
-  planQuota: number;
   trainee: number;
   coach: number;
+  quota: number;
   editor: number;
   trainingTimeSlot: TrainingTimeSlot[];
 }

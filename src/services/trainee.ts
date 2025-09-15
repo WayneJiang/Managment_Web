@@ -10,6 +10,7 @@ export interface Trainee {
   phone: string;
   height: number;
   weight: number;
+  note: string;
   trainingPlan: TrainingPlan[];
   trainingRecord: TrainingRecord[];
 }
@@ -21,4 +22,5 @@ export interface UpdateTrainee {
   phone: string;
   height: number;
   weight: number;
+  note: string;
 }

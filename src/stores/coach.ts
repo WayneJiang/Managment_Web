@@ -28,7 +28,7 @@ export const useCoachStore = defineStore("coach", {
   }),
 
   actions: {
-    async fetchById(id: number): Promise<Coach | null> {
+    async fetchCoachById(id: number): Promise<Coach | null> {
       this.loading = true;
       this.error = null;
 

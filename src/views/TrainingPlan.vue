@@ -20,10 +20,20 @@
         }"
       >
         <div class="card-body">
-          <h2 class="card-title text-2xl">
-            {{ isEditMode ? "編輯" : "新增" }}
-            {{ currentTrainee.name }} 的訓練計畫
-          </h2>
+          <div class="flex items-center gap-3">
+            <h2 class="card-title text-2xl">
+              {{ isEditMode ? "編輯" : "新增" }}
+              {{ currentTrainee.name }} 的訓練計畫
+            </h2>
+            <div
+              class="badge badge-sm"
+              :class="
+                getAgeTagClass(getAgeTag(calculateAge(currentTrainee.birthday)))
+              "
+            >
+              {{ getAgeTag(calculateAge(currentTrainee.birthday)) }}
+            </div>
+          </div>
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-4">
               <div
@@ -99,10 +109,9 @@
                       color: 'var(--color-text)',
                     }"
                   >
-                    <option value="">請選擇計畫類型</option>
-                    <option value="private">個人教練</option>
-                    <option value="block">團體課程</option>
-                    <option value="sequential">開放團課</option>
+                    <option value="Personal">個人教練</option>
+                    <option value="Block">團體課程</option>
+                    <option value="Sequential">開放團課</option>
                   </select>
                   <label v-if="validationErrors.planType" class="label">
                     <span
@@ -375,6 +384,7 @@
         </div>
       </div>
       <div
+        v-if="showPlans"
         class="card shadow-xl w-full"
         :style="{
           backgroundColor: 'var(--color-card-bg)',
@@ -392,8 +402,10 @@
 
       <!-- 訓練記錄列表 -->
       <TrainingRecordList
+        v-if="showRecords"
         :traineeId="currentTrainee.id"
         :trainingRecords="trainingRecords"
+        :trainingPlans="currentTrainee.trainingPlan"
         :coachId="editorId"
         @update-records="handleUpdateTrainingRecords"
       />
@@ -406,10 +418,10 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import { ElMessage } from "element-plus";
+import dayjs from "dayjs";
 import LoadingState from "../components/LoadingState.vue";
 import TrainingPlanList from "../components/TrainingPlanList.vue";
 import TrainingRecordList from "../components/TrainingRecordList.vue";
-import type { Trainee } from "../services/trainee";
 import type { Coach } from "../services/coach";
 import type {
   TrainingPlan,
@@ -435,6 +447,8 @@ const trainingTimeSlots = ref<TrainingTimeSlot[]>([]);
 const editTrainingPlanId = ref<number>(0);
 const editorId = ref<number>(0);
 const trainingRecords = ref<TrainingRecord[]>([]);
+const showRecords = ref<boolean>(true); // 預設顯示簽到紀錄
+const showPlans = ref<boolean>(true); // 預設顯示歷史計畫
 
 // 驗證錯誤狀態
 const validationErrors = ref({
@@ -446,6 +460,68 @@ const validationErrors = ref({
 
 // 計算屬性
 const isEditMode = computed(() => editTrainingPlanId.value !== 0);
+
+/**
+ * 計算學員年紀
+ */
+const calculateAge = (birthday: string): number => {
+  if (!birthday || birthday === "1900-01-01") {
+    return 0;
+  }
+  return dayjs().diff(dayjs(birthday), "year");
+};
+
+/**
+ * 根據年紀獲取年紀標籤
+ */
+const getAgeTag = (age: number): string => {
+  if (age === 0) {
+    return "未知";
+  }
+
+  if (age >= 6 && age <= 11) {
+    return "兒童期";
+  } else if (age >= 12 && age <= 17) {
+    return "青少年";
+  } else if (age >= 18 && age <= 29) {
+    return "青年";
+  } else if (age >= 30 && age <= 44) {
+    return "青壯年";
+  } else if (age >= 45 && age <= 59) {
+    return "中年";
+  } else if (age >= 60 && age <= 64) {
+    return "中老年";
+  } else if (age >= 65) {
+    return "老年";
+  } else {
+    return "兒童";
+  }
+};
+
+/**
+ * 根據年紀標籤獲取對應的樣式類別
+ */
+const getAgeTagClass = (ageTag: string): string => {
+  switch (ageTag) {
+    case "兒童期":
+    case "兒童":
+      return "badge-primary";
+    case "青少年":
+      return "badge-secondary";
+    case "青年":
+      return "badge-accent";
+    case "青壯年":
+      return "badge-info";
+    case "中年":
+      return "badge-warning";
+    case "中老年":
+      return "badge-error";
+    case "老年":
+      return "badge-neutral";
+    default:
+      return "badge-ghost";
+  }
+};
 
 // 選項資料
 const dayOptions = [
@@ -469,6 +545,8 @@ const timeOptions = Array.from({ length: 24 }, (_, i) => {
 const extractRouteParams = (): void => {
   const routeState = history.state;
   editorId.value = Number(routeState?.editor) || 0;
+  showRecords.value = routeState?.showRecords !== false; // 預設為 true，除非明確設為 false
+  showPlans.value = routeState?.showPlans !== false; // 預設為 true，除非明確設為 false
 };
 
 /**
@@ -484,7 +562,7 @@ const initializeData = async (): Promise<void> => {
     }
 
     const [trainee, coachesData] = await Promise.all([
-      traineeStore.fetchById(traineeId),
+      traineeStore.fetchTraineeById(traineeId),
       traineeStore.fetchCoaches(),
     ]);
 
@@ -606,7 +684,7 @@ const handleSubmit = async (): Promise<void> => {
       trainee: currentTrainee.value.id,
       coach: selectedCoach.value,
       planType: planType.value,
-      planQuota: quota.value,
+      quota: quota.value,
       trainingTimeSlot: trainingTimeSlots.value,
       editor: editorId.value,
       id: editTrainingPlanId.value,
@@ -629,7 +707,7 @@ const handleSubmit = async (): Promise<void> => {
     resetForm();
 
     // 重新載入學員資料
-    const updatedTrainee = await traineeStore.fetchById(
+    const updatedTrainee = await traineeStore.fetchTraineeById(
       currentTrainee.value.id
     );
     if (updatedTrainee) {
@@ -669,7 +747,7 @@ const handleEditTrainingPlan = (trainingPlan: TrainingPlan): void => {
   editTrainingPlanId.value = trainingPlan.id;
   selectedCoach.value = trainingPlan.coach?.id || 0;
   planType.value = trainingPlan.planType;
-  quota.value = trainingPlan.planQuota;
+  quota.value = trainingPlan.quota;
 
   if (trainingPlan.trainingTimeSlot.length > 0) {
     const uniqueSlots = trainingPlan.trainingTimeSlot.filter(

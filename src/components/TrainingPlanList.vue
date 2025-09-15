@@ -16,8 +16,13 @@
             <div
               class="badge badge-lg"
               :class="{
-                'badge-primary': trainingPlan.planType === 'personal',
-                'badge-secondary': trainingPlan.planType !== 'personal',
+                'badge-primary': trainingPlan.planType === 'Personal',
+                'badge-success': trainingPlan.planType === 'Block',
+                'badge-warning': trainingPlan.planType === 'Sequential',
+                'badge-secondary':
+                  trainingPlan.planType !== 'Personal' &&
+                  trainingPlan.planType !== 'Block' &&
+                  trainingPlan.planType !== 'Sequential',
               }"
             >
               {{ getPlanTypeLabel(trainingPlan.planType) }}
@@ -80,7 +85,7 @@
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 ></path>
               </svg>
-              <span class="font-semibold text-sm opacity-80">指導教練</span>
+              <span class="font-semibold text-sm opacity-80">負責教練</span>
             </div>
             <div class="text-base font-medium">
               {{ trainingPlan.coach?.name || "未指定" }}
@@ -127,7 +132,7 @@
             <div class="text-center">
               <div class="font-semibold text-sm opacity-80">總額度</div>
               <div class="font-bold text-lg">
-                {{ trainingPlan.planQuota }}
+                {{ trainingPlan.quota }}
               </div>
             </div>
             <div class="text-center">
@@ -136,7 +141,7 @@
                 class="font-bold text-lg"
                 :class="getUsedQuotaClass(trainingPlan)"
               >
-                {{ trainingPlan.usedQuota || 0 }}
+                {{ trainingPlan.trainingRecord?.length || 0 }}
               </div>
             </div>
             <div class="text-center">
@@ -217,7 +222,7 @@ import type { TrainingPlan, TrainingTimeSlot } from "../services/trainingPlan";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const props = defineProps<{
+defineProps<{
   trainingPlans: TrainingPlan[];
 }>();
 
@@ -246,9 +251,9 @@ const getPlanTypeLabel = (planType: string): string => {
   if (!planType) return "未知類型";
 
   const planTypeMap: Record<string, string> = {
-    personal: "個人教練",
-    block: "團體課程",
-    sequential: "開放團課",
+    Personal: "個人教練",
+    Block: "團體課程",
+    Sequential: "開放團課",
   };
 
   return planTypeMap[planType] || planType;
@@ -258,8 +263,8 @@ const getPlanTypeLabel = (planType: string): string => {
  * 獲取已使用額度的樣式類別
  */
 const getUsedQuotaClass = (trainingPlan: TrainingPlan): string => {
-  const usedQuota = trainingPlan.usedQuota || 0;
-  const planQuota = trainingPlan.planQuota;
+  const usedQuota = trainingPlan.trainingRecord?.length || 0;
+  const planQuota = trainingPlan.quota;
 
   if (usedQuota < planQuota) {
     return "text-success";
@@ -274,8 +279,8 @@ const getUsedQuotaClass = (trainingPlan: TrainingPlan): string => {
  * 計算剩餘額度
  */
 const getRemainingQuota = (trainingPlan: TrainingPlan): number => {
-  const usedQuota = trainingPlan.usedQuota || 0;
-  const planQuota = trainingPlan.planQuota;
+  const planQuota = trainingPlan.quota || 0;
+  const usedQuota = trainingPlan.trainingRecord?.length || 0;
 
   return Math.max(0, planQuota - usedQuota);
 };

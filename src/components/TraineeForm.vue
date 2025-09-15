@@ -41,8 +41,8 @@
               color: 'var(--color-text)',
             }"
           >
-            <option value="male">男</option>
-            <option value="female">女</option>
+            <option value="Male">男</option>
+            <option value="Female">女</option>
           </select>
         </div>
         <div class="form-control">
@@ -132,6 +132,39 @@
           <input type="text" :value="calculatedBMI" class="input" disabled />
         </div>
       </div>
+
+      <!-- Note 欄位 -->
+      <div class="form-control mt-4">
+        <label class="label">
+          <span class="label-text">備註</span>
+          <span class="label-text-alt" :class="getNoteCharacterCountClass()">
+            {{ getNoteCharacterCount() }}/100
+          </span>
+        </label>
+        <textarea
+          v-model="traineeData.note"
+          class="textarea textarea-bordered"
+          :class="{ 'textarea-error': validationErrors.note }"
+          :style="{
+            borderColor: validationErrors.note
+              ? 'var(--color-error)'
+              : 'var(--color-input-border)',
+            backgroundColor: 'var(--color-input-bg)',
+            color: 'var(--color-text)',
+          }"
+          placeholder="請輸入備註（最多100字）..."
+          rows="3"
+          maxlength="100"
+          @input="validateField('note')"
+        ></textarea>
+        <label class="label" v-if="validationErrors.note">
+          <span
+            class="label-text-alt"
+            :style="{ color: 'var(--color-error)' }"
+            >{{ validationErrors.note }}</span
+          >
+        </label>
+      </div>
       <div class="card-actions justify-end mt-4">
         <button
           class="btn"
@@ -189,6 +222,7 @@ const validationErrors = ref({
   phone: "",
   height: "",
   weight: "",
+  note: "",
 });
 
 /**
@@ -316,6 +350,18 @@ const validateWeight = (): void => {
 };
 
 /**
+ * 驗證備註
+ */
+const validateNote = (): void => {
+  const note = traineeData.value.note || "";
+  if (note.length > 100) {
+    validationErrors.value.note = "備註不能超過100字";
+  } else {
+    validationErrors.value.note = "";
+  }
+};
+
+/**
  * 統一驗證函數
  */
 const validateField = (
@@ -336,6 +382,9 @@ const validateField = (
       break;
     case "weight":
       validateWeight();
+      break;
+    case "note":
+      validateNote();
       break;
   }
 };
@@ -359,12 +408,34 @@ const calculatedBMI = computed<string>(() => {
 });
 
 /**
+ * 獲取備註字數
+ */
+const getNoteCharacterCount = (): number => {
+  return (traineeData.value.note || "").length;
+};
+
+/**
+ * 獲取備註字數計數的樣式類別
+ */
+const getNoteCharacterCountClass = (): string => {
+  const count = getNoteCharacterCount();
+  if (count > 100) {
+    return "text-error";
+  } else if (count > 80) {
+    return "text-warning";
+  } else {
+    return "text-base-content opacity-70";
+  }
+};
+
+/**
  * 檢查表單是否有效
  */
 const isFormValid = (): boolean => {
   return (
     !Object.values(validationErrors.value).some((error) => error !== "") &&
-    traineeData.value.phone !== ""
+    traineeData.value.phone !== "" &&
+    (traineeData.value.note || "").length <= 100
   );
 };
 
@@ -378,10 +449,14 @@ const handleSubmit = (): void => {
   validateField("phone");
   validateField("height");
   validateField("weight");
+  validateField("note");
 
   if (!isFormValid()) {
     if (!traineeData.value.phone) {
       validationErrors.value.phone = "請輸入手機號碼";
+    }
+    if ((traineeData.value.note || "").length > 100) {
+      validationErrors.value.note = "備註不能超過100字";
     }
     return;
   }
@@ -395,6 +470,7 @@ const handleSubmit = (): void => {
     phone: traineeData.value.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3"),
     height: Number(Number(traineeData.value.height).toFixed(1)),
     weight: Number(Number(traineeData.value.weight).toFixed(1)),
+    note: traineeData.value.note || "",
   };
 
   emit("save", data);

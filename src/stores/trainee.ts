@@ -24,7 +24,7 @@ export const useTraineeStore = defineStore("trainee", {
   }),
 
   actions: {
-    async fetchById(id: number): Promise<Trainee | null> {
+    async fetchTraineeById(id: number): Promise<Trainee | null> {
       this.loading = true;
       this.error = null;
 
@@ -37,6 +37,25 @@ export const useTraineeStore = defineStore("trainee", {
           error instanceof Error ? error.message : "無法獲取學員資料";
         this.error = errorMessage;
         console.error("Failed to fetch student:", error);
+        return null;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async fetchTrainees(): Promise<Trainee[] | null> {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await api.getTrainees();
+        this.trainees = response;
+        return this.trainees;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "無法獲取學員列表";
+        this.error = errorMessage;
+        console.error("Failed to fetch trainees:", error);
         return null;
       } finally {
         this.loading = false;

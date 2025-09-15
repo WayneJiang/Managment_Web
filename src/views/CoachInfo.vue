@@ -20,7 +20,7 @@
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
             ></path>
           </svg>
-          開放團課
+          管理開放團課
         </button>
       </div>
     </div>
@@ -67,7 +67,10 @@ const initializeData = async (): Promise<void> => {
     }
 
     // 並行載入教練和學員資料
-    await Promise.all([coachStore.fetchById(coachId), coachStore.fetchAll()]);
+    await Promise.all([
+      coachStore.fetchCoachById(coachId),
+      coachStore.fetchAll(),
+    ]);
 
     if (!currentCoach.value) {
       throw new Error("無法獲取教練資料");
@@ -91,7 +94,10 @@ const navigateToUpdate = (trainee: Trainee): void => {
       state: {
         id: trainee.id,
         coach: true,
+        coachId: currentCoach.value?.id || -1, // 傳遞教練 ID
         register: false,
+        showRecords: true,
+        showPlans: false,
       },
     });
   } catch (error) {
@@ -114,6 +120,8 @@ const navigateToAdjust = (trainee: Trainee): void => {
       state: {
         editor: currentCoach.value.id,
         id: trainee.id,
+        showRecords: false,
+        showPlans: true,
       },
     });
   } catch (error) {

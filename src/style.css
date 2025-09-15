@@ -137,7 +137,7 @@ button:focus-visible {
 /* Responsive Table: 卡片式表格 for mobile */
 @media (max-width: 640px) {
   table.responsive-table, .table.responsive-table {
-    display: block;
+    display: Block;
     width: 100%;
     border: 0;
   }
@@ -145,11 +145,11 @@ button:focus-visible {
     display: none;
   }
   table.responsive-table tbody, .table.responsive-table tbody {
-    display: block;
+    display: Block;
     width: 100%;
   }
   table.responsive-table tr, .table.responsive-table tr {
-    display: block;
+    display: Block;
     margin-bottom: 1.5rem;
     border: 1px solid var(--color-border);
     border-radius: 0.5rem;

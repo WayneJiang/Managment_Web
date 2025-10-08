@@ -1,5 +1,5 @@
-import { TrainingPlan } from "./trainingPlan";
-import { TrainingRecord } from "./trainingRecord";
+import { TrainingPlan } from "./training-plan";
+import { TrainingRecord } from "./training-record";
 
 export interface Trainee {
   id: number;

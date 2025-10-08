@@ -5,8 +5,9 @@ import type { Coach } from "../services/coach";
 import {
   TrainingRecord,
   UpdateTrainingRecord,
-} from "../services/trainingRecord";
-import { UpdateTrainingPlan } from "../services/trainingPlan";
+  CreateTrainingRecord,
+} from "../services/training-record";
+import { UpdateTrainingPlan } from "../services/training-plan";
 
 interface TraineeState {
   trainees: Trainee[];
@@ -209,6 +210,26 @@ export const useTraineeStore = defineStore("trainee", {
           error instanceof Error ? error.message : "無法刪除訓練記錄";
         this.error = errorMessage;
         console.error("Failed to delete training record:", error);
+        return null;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async createTrainingRecord(
+      createTrainingRecord: CreateTrainingRecord
+    ): Promise<boolean | null> {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await api.createTrainingRecord(createTrainingRecord);
+        return Boolean(response);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "無法建立訓練記錄";
+        this.error = errorMessage;
+        console.error("Failed to create training record:", error);
         return null;
       } finally {
         this.loading = false;

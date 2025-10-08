@@ -26,6 +26,11 @@ const routes: RouteRecordRaw[] = [
     name: "OpeningCourse",
     component: () => import("../views/OpeningCourse.vue"),
   },
+  {
+    path: "/line-callback",
+    name: "LineCallback",
+    component: () => import("../views/LineCallback.vue"),
+  },
 ];
 
 export default routes;

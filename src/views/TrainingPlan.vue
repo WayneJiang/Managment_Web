@@ -427,8 +427,8 @@ import type {
   TrainingPlan,
   UpdateTrainingPlan,
   TrainingTimeSlot,
-} from "../services/trainingPlan";
-import type { TrainingRecord } from "../services/trainingRecord";
+} from "../services/training-plan";
+import type { TrainingRecord } from "../services/training-record";
 
 const router = useRouter();
 const traineeStore = useTraineeStore();
@@ -534,9 +534,15 @@ const dayOptions = [
   { value: "Sunday", label: "星期日" },
 ];
 
-const timeOptions = Array.from({ length: 24 }, (_, i) => {
-  const hour = i.toString().padStart(2, "0");
-  return { value: `${hour}:00`, label: `${hour}:00` };
+const timeOptions = Array.from({ length: 48 }, (_, i) => {
+  const hour = Math.floor(i / 2)
+    .toString()
+    .padStart(2, "0");
+  const minute = (i % 2) * 30;
+  return {
+    value: `${hour}:${minute.toString().padStart(2, "0")}`,
+    label: `${hour}:${minute.toString().padStart(2, "0")}`,
+  };
 });
 
 /**
@@ -572,8 +578,6 @@ const initializeData = async (): Promise<void> => {
 
     coaches.value = coachesData || [];
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";
-    console.error("Failed to initialize training plan data:", err);
     // Store 會自動處理錯誤狀態
   }
 };
@@ -595,7 +599,7 @@ const addTrainingSlot = (): void => {
   trainingTimeSlots.value.push({
     dayOfWeek: "",
     start: "09:00",
-    end: "10:00",
+    end: "09:30",
   });
 };
 
@@ -611,10 +615,15 @@ const removeTrainingSlot = (index: number): void => {
  */
 const getEndTimeOptions = (startTime: string) => {
   if (!startTime) return timeOptions;
-  const startHour = parseInt(startTime.split(":")[0]);
+
+  // 將開始時間轉換為分鐘數以便比較
+  const [startHour, startMinute] = startTime.split(":").map(Number);
+  const startTotalMinutes = startHour * 60 + startMinute;
+
   return timeOptions.filter((time) => {
-    const timeHour = parseInt(time.value.split(":")[0]);
-    return timeHour > startHour;
+    const [timeHour, timeMinute] = time.value.split(":").map(Number);
+    const timeTotalMinutes = timeHour * 60 + timeMinute;
+    return timeTotalMinutes > startTotalMinutes;
   });
 };
 
@@ -652,9 +661,14 @@ const validateForm = (): boolean => {
     } else {
       const hasInvalidTimeRange = trainingTimeSlots.value.some((slot) => {
         if (!slot.start || !slot.end) return false;
-        const startHour = parseInt(slot.start.split(":")[0]);
-        const endHour = parseInt(slot.end.split(":")[0]);
-        return endHour <= startHour;
+
+        // 將時間轉換為分鐘數以便比較
+        const [startHour, startMinute] = slot.start.split(":").map(Number);
+        const [endHour, endMinute] = slot.end.split(":").map(Number);
+        const startTotalMinutes = startHour * 60 + startMinute;
+        const endTotalMinutes = endHour * 60 + endMinute;
+
+        return endTotalMinutes <= startTotalMinutes;
       });
       if (hasInvalidTimeRange) {
         errors.trainingSlots = "結束時間必須晚於開始時間";
@@ -675,7 +689,6 @@ const handleSubmit = async (): Promise<void> => {
   }
 
   if (!currentTrainee.value) {
-    console.error("No trainee data available");
     return;
   }
 
@@ -719,7 +732,6 @@ const handleSubmit = async (): Promise<void> => {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";
     ElMessage.error(message);
-    console.error("Failed to submit training plan:", err);
   }
 };
 
@@ -786,7 +798,7 @@ const handleBack = (): void => {
   try {
     router.back();
   } catch (error) {
-    console.error("Failed to navigate back:", error);
+    // 導航失敗，靜默處理
   }
 };
 

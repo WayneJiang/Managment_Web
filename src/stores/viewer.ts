@@ -6,6 +6,8 @@ interface ViewerState {
   error: string | null;
   coach: boolean;
   trainee: boolean;
+  lineUserId: string | null;
+  socialId: string | null;
 }
 
 export const useViewerStore = defineStore("viewer", {
@@ -14,6 +16,8 @@ export const useViewerStore = defineStore("viewer", {
     error: null,
     coach: false,
     trainee: false,
+    lineUserId: null,
+    socialId: null,
   }),
 
   getters: {
@@ -22,9 +26,17 @@ export const useViewerStore = defineStore("viewer", {
   },
 
   actions: {
+    /**
+     * 設定 socialId
+     */
+    setSocialId(socialId: string): void {
+      this.socialId = socialId;
+    },
+
     async fetchBySocialId(socialId: string): Promise<number | null> {
       this.loading = true;
       this.error = null;
+      this.socialId = socialId;
 
       try {
         const response = await api.getBySocialId(socialId);

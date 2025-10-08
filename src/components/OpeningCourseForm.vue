@@ -197,8 +197,8 @@ import type {
   OpeningCourse,
   CreateOpeningCourse,
   UpdateOpeningCourse,
-} from "../services/openoingCourse";
-import { DayOfWeek } from "../services/openoingCourse";
+} from "../services/opening-course";
+import { DayOfWeek } from "../services/opening-course";
 import type { Coach } from "../services/coach";
 
 interface Props {
@@ -248,19 +248,30 @@ const formData = ref<{
   note: "",
 });
 
-// 24小時制時間選項
-const timeOptions = Array.from({ length: 24 }, (_, i) => {
-  const hour = i.toString().padStart(2, "0");
-  return { value: `${hour}:00`, label: `${hour}:00` };
+// 24小時制時間選項（半小時間隔）
+const timeOptions = Array.from({ length: 48 }, (_, i) => {
+  const hour = Math.floor(i / 2)
+    .toString()
+    .padStart(2, "0");
+  const minute = (i % 2) * 30;
+  return {
+    value: `${hour}:${minute.toString().padStart(2, "0")}`,
+    label: `${hour}:${minute.toString().padStart(2, "0")}`,
+  };
 });
 
 // 根據開始時間取得結束時間選項
 const getEndTimeOptions = (startTime: string) => {
   if (!startTime) return timeOptions;
-  const startHour = parseInt(startTime.split(":")[0]);
+
+  // 將開始時間轉換為分鐘數以便比較
+  const [startHour, startMinute] = startTime.split(":").map(Number);
+  const startTotalMinutes = startHour * 60 + startMinute;
+
   return timeOptions.filter((time) => {
-    const timeHour = parseInt(time.value.split(":")[0]);
-    return timeHour > startHour;
+    const [timeHour, timeMinute] = time.value.split(":").map(Number);
+    const timeTotalMinutes = timeHour * 60 + timeMinute;
+    return timeTotalMinutes > startTotalMinutes;
   });
 };
 
@@ -439,7 +450,6 @@ const handleSubmit = async (): Promise<void> => {
     closeModal();
   } catch (error) {
     // 錯誤會顯示在欄位下方
-    console.error("表單提交錯誤:", error);
     // 只有在發生錯誤時才重置提交狀態
     isSubmitting.value = false;
   }

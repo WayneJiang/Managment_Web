@@ -284,10 +284,9 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { defineEmits } from "vue";
 import dayjs from "dayjs";
 import type { Trainee } from "../services/trainee";
-import type { TrainingPlan, TrainingTimeSlot } from "../services/trainingPlan";
+import type { TrainingPlan, TrainingTimeSlot } from "../services/training-plan";
 
 interface Props {
   trainees: Trainee[];

@@ -53,7 +53,7 @@ import type {
   OpeningCourse,
   CreateOpeningCourse,
   UpdateOpeningCourse,
-} from "../services/openoingCourse";
+} from "../services/opening-course";
 import type { Coach } from "../services/coach";
 import { useCoachStore } from "../stores/coach";
 

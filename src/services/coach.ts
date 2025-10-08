@@ -1,4 +1,4 @@
-import { TrainingPlan } from "./trainingPlan";
+import { TrainingPlan } from "./training-plan";
 
 export interface Coach {
   id: number;

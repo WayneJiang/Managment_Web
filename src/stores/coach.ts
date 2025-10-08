@@ -6,7 +6,7 @@ import {
   OpeningCourse,
   CreateOpeningCourse,
   UpdateOpeningCourse,
-} from "../services/openoingCourse";
+} from "../services/opening-course";
 
 interface CoachState {
   trainees: Trainee[];
@@ -40,7 +40,6 @@ export const useCoachStore = defineStore("coach", {
         const errorMessage =
           error instanceof Error ? error.message : "無法獲取教練資料";
         this.error = errorMessage;
-        console.error("Failed to fetch coach:", error);
         return null;
       } finally {
         this.loading = false;
@@ -59,7 +58,6 @@ export const useCoachStore = defineStore("coach", {
         const errorMessage =
           error instanceof Error ? error.message : "無法獲取學員列表";
         this.error = errorMessage;
-        console.error("Failed to fetch trainees:", error);
         return [];
       } finally {
         this.loading = false;
@@ -78,7 +76,6 @@ export const useCoachStore = defineStore("coach", {
         const errorMessage =
           error instanceof Error ? error.message : "無法獲取教練列表";
         this.error = errorMessage;
-        console.error("Failed to fetch coaches:", error);
         return [];
       } finally {
         this.loading = false;
@@ -97,7 +94,6 @@ export const useCoachStore = defineStore("coach", {
         const errorMessage =
           error instanceof Error ? error.message : "無法獲取公開課程列表";
         this.error = errorMessage;
-        console.error("Failed to fetch openingCourses:", error);
         return [];
       } finally {
         this.loading = false;
@@ -117,7 +113,6 @@ export const useCoachStore = defineStore("coach", {
         const errorMessage =
           error instanceof Error ? error.message : "無法建立公開課程";
         this.error = errorMessage;
-        console.error("Failed to create opening course:", error);
         return false;
       } finally {
         this.loading = false;
@@ -137,7 +132,6 @@ export const useCoachStore = defineStore("coach", {
         const errorMessage =
           error instanceof Error ? error.message : "無法更新公開課程";
         this.error = errorMessage;
-        console.error("Failed to update opening course:", error);
         return false;
       } finally {
         this.loading = false;
@@ -155,7 +149,6 @@ export const useCoachStore = defineStore("coach", {
         const errorMessage =
           error instanceof Error ? error.message : "無法刪除公開課程";
         this.error = errorMessage;
-        console.error("Failed to delete opening course:", error);
         return false;
       } finally {
         this.loading = false;

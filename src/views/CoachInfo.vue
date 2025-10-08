@@ -76,8 +76,6 @@ const initializeData = async (): Promise<void> => {
       throw new Error("無法獲取教練資料");
     }
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";
-    console.error("Failed to initialize coach data:", err);
     // Store 會自動處理錯誤狀態，這裡不需要額外處理
   }
 };
@@ -101,7 +99,7 @@ const navigateToUpdate = (trainee: Trainee): void => {
       },
     });
   } catch (error) {
-    console.error("Failed to navigate to trainee update:", error);
+    // 導航失敗，靜默處理
   }
 };
 
@@ -125,7 +123,7 @@ const navigateToAdjust = (trainee: Trainee): void => {
       },
     });
   } catch (error) {
-    console.error("Failed to navigate to training plan:", error);
+    // 導航失敗，靜默處理
   }
 };
 
@@ -138,7 +136,7 @@ const navigateToOpeningCourse = (): void => {
       path: "/opening-course",
     });
   } catch (error) {
-    console.error("Failed to navigate to opening course:", error);
+    // 導航失敗，靜默處理
   }
 };
 </script>

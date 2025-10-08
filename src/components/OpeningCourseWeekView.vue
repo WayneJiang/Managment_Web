@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import type { OpeningCourse } from "../services/openoingCourse";
+import type { OpeningCourse } from "../services/opening-course";
 
 interface Props {
   courses: OpeningCourse[];

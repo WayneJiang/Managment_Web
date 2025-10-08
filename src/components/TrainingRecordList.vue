@@ -32,23 +32,52 @@
             </select>
           </div>
         </div>
-        <button
-          type="button"
-          class="btn"
-          :style="{
-            backgroundColor: 'var(--color-primary)',
-            color: '#fff',
-            borderColor: 'var(--color-primary)',
-          }"
-          @click.prevent="handleExportToPdf"
-          :disabled="trainingRecords.length === 0 || isLoading"
-        >
-          <span
-            v-if="isExporting"
-            class="loading loading-spinner loading-sm"
-          ></span>
-          匯出 PDF
-        </button>
+        <div class="flex gap-2">
+          <button
+            v-if="isCoach"
+            type="button"
+            class="btn btn-primary"
+            :style="{
+              backgroundColor: 'var(--color-primary)',
+              color: '#fff',
+              borderColor: 'var(--color-primary)',
+            }"
+            @click.prevent="handleCreateRecord"
+            :disabled="isLoading"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              ></path>
+            </svg>
+            新增簽到
+          </button>
+          <button
+            type="button"
+            class="btn"
+            :style="{
+              backgroundColor: 'var(--color-primary)',
+              color: '#fff',
+              borderColor: 'var(--color-primary)',
+            }"
+            @click.prevent="handleExportToPdf"
+            :disabled="trainingRecords.length === 0 || isLoading"
+          >
+            <span
+              v-if="isExporting"
+              class="loading loading-spinner loading-sm"
+            ></span>
+            匯出 PDF
+          </button>
+        </div>
       </div>
 
       <!-- 日曆列表 -->
@@ -82,7 +111,15 @@
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 ></path>
               </svg>
-              <h3 class="text-xl font-bold">{{ formatDateHeader(date) }}</h3>
+              <h3 class="text-xl font-bold">
+                {{ formatDateHeader(date) }}
+                <span
+                  v-if="dayRecords.some((record) => record.editor)"
+                  class="text-sm text-warning ml-2"
+                >
+                  (編輯者: {{ dayRecords.find((record) => record.editor)?.editor?.name || '未知' }})
+                </span>
+              </h3>
             </div>
 
             <!-- 時間段列表 -->
@@ -323,27 +360,52 @@
                 <label class="label">
                   <span class="label-text text-sm opacity-80">時間</span>
                 </label>
-                <select
-                  v-model="editingTime"
-                  class="select select-bordered w-full"
-                  :class="{ 'select-error': validationErrors.time }"
-                  :style="{
-                    backgroundColor: 'var(--color-input-bg)',
-                    borderColor: validationErrors.time
-                      ? 'var(--color-error)'
-                      : 'var(--color-input-border)',
-                    color: 'var(--color-text)',
-                  }"
-                  required
-                >
-                  <option
-                    v-for="timeOption in timeOptions"
-                    :key="timeOption.value"
-                    :value="timeOption.value"
+                <div class="grid grid-cols-2 gap-2">
+                  <!-- 小時選擇 -->
+                  <select
+                    v-model="editingHour"
+                    class="select select-bordered w-full"
+                    :class="{ 'select-error': validationErrors.time }"
+                    :style="{
+                      backgroundColor: 'var(--color-input-bg)',
+                      borderColor: validationErrors.time
+                        ? 'var(--color-error)'
+                        : 'var(--color-input-border)',
+                      color: 'var(--color-text)',
+                    }"
+                    required
                   >
-                    {{ timeOption.label }}
-                  </option>
-                </select>
+                    <option
+                      v-for="hourOption in hourOptions"
+                      :key="hourOption.value"
+                      :value="hourOption.value"
+                    >
+                      {{ hourOption.label }}
+                    </option>
+                  </select>
+                  <!-- 分鐘選擇 -->
+                  <select
+                    v-model="editingMinute"
+                    class="select select-bordered w-full"
+                    :class="{ 'select-error': validationErrors.time }"
+                    :style="{
+                      backgroundColor: 'var(--color-input-bg)',
+                      borderColor: validationErrors.time
+                        ? 'var(--color-error)'
+                        : 'var(--color-input-border)',
+                      color: 'var(--color-text)',
+                    }"
+                    required
+                  >
+                    <option
+                      v-for="minuteOption in minuteOptions"
+                      :key="minuteOption.value"
+                      :value="minuteOption.value"
+                    >
+                      {{ minuteOption.label }}
+                    </option>
+                  </select>
+                </div>
                 <label v-if="validationErrors.time" class="label">
                   <span
                     class="label-text-alt"
@@ -373,6 +435,192 @@
               type="button"
               class="btn btn-ghost"
               @click.prevent="handleCancelEdit"
+              :disabled="isLoading"
+              :style="{
+                backgroundColor: 'var(--color-button-bg)',
+                borderColor: 'var(--color-button-border)',
+                color: 'var(--color-text)',
+              }"
+            >
+              取消
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 新增訓練記錄模態框 -->
+    <div
+      class="modal"
+      :class="{ 'modal-open': showCreateModal }"
+      @click.self="handleCancelCreate"
+    >
+      <div
+        class="modal-box"
+        :style="{
+          backgroundColor: 'var(--color-card-bg)',
+          color: 'var(--color-text)',
+        }"
+        @click.stop
+      >
+        <h3 class="font-bold text-lg mb-4">新增簽到記錄</h3>
+        <form @submit.prevent="handleSaveCreateRecord" @click.stop>
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-semibold">訓練計畫</span>
+            </label>
+            <select
+              v-model="creatingRecord.trainingPlan"
+              class="select select-bordered w-full"
+              :class="{ 'select-error': validationErrors.trainingPlan }"
+              :style="{
+                backgroundColor: 'var(--color-input-bg)',
+                borderColor: validationErrors.trainingPlan
+                  ? 'var(--color-error)'
+                  : 'var(--color-input-border)',
+                color: 'var(--color-text)',
+              }"
+            >
+              <option
+                v-for="trainingPlan in availableTrainingPlans"
+                :key="trainingPlan.id"
+                :value="trainingPlan.id"
+              >
+                {{ trainingPlan.coach?.name || "未指定教練" }} -
+                {{ getPlanTypeLabel(trainingPlan.planType) }}
+                ({{ trainingPlan.quota }}堂，剩餘{{
+                  (trainingPlan.quota || 0) -
+                  (trainingPlan.trainingRecord?.length || 0)
+                }}堂)
+              </option>
+              <option
+                v-if="availableTrainingPlans.length === 0"
+                value=""
+                disabled
+              >
+                沒有可用的訓練計畫（所有計畫額度已用完）
+              </option>
+            </select>
+            <label v-if="validationErrors.trainingPlan" class="label">
+              <span
+                class="label-text-alt"
+                :style="{ color: 'var(--color-error)' }"
+                >{{ validationErrors.trainingPlan }}</span
+              >
+            </label>
+          </div>
+
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-semibold">簽到時間</span>
+            </label>
+            <div class="grid grid-cols-2 gap-4">
+              <!-- 日期選擇 -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-sm opacity-80">日期</span>
+                </label>
+                <input
+                  type="date"
+                  v-model="creatingDate"
+                  class="input input-bordered w-full"
+                  :class="{ 'input-error': validationErrors.date }"
+                  :style="{
+                    backgroundColor: 'var(--color-input-bg)',
+                    borderColor: validationErrors.date
+                      ? 'var(--color-error)'
+                      : 'var(--color-input-border)',
+                    color: 'var(--color-text)',
+                  }"
+                />
+                <label v-if="validationErrors.date" class="label">
+                  <span
+                    class="label-text-alt"
+                    :style="{ color: 'var(--color-error)' }"
+                    >{{ validationErrors.date }}</span
+                  >
+                </label>
+              </div>
+              <!-- 時間選擇 -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text text-sm opacity-80">時間</span>
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                  <!-- 小時選擇 -->
+                  <select
+                    v-model="creatingHour"
+                    class="select select-bordered w-full"
+                    :class="{ 'select-error': validationErrors.time }"
+                    :style="{
+                      backgroundColor: 'var(--color-input-bg)',
+                      borderColor: validationErrors.time
+                        ? 'var(--color-error)'
+                        : 'var(--color-input-border)',
+                      color: 'var(--color-text)',
+                    }"
+                    required
+                  >
+                    <option
+                      v-for="hourOption in hourOptions"
+                      :key="hourOption.value"
+                      :value="hourOption.value"
+                    >
+                      {{ hourOption.label }}
+                    </option>
+                  </select>
+                  <!-- 分鐘選擇 -->
+                  <select
+                    v-model="creatingMinute"
+                    class="select select-bordered w-full"
+                    :class="{ 'select-error': validationErrors.time }"
+                    :style="{
+                      backgroundColor: 'var(--color-input-bg)',
+                      borderColor: validationErrors.time
+                        ? 'var(--color-error)'
+                        : 'var(--color-input-border)',
+                      color: 'var(--color-text)',
+                    }"
+                    required
+                  >
+                    <option
+                      v-for="minuteOption in minuteOptions"
+                      :key="minuteOption.value"
+                      :value="minuteOption.value"
+                    >
+                      {{ minuteOption.label }}
+                    </option>
+                  </select>
+                </div>
+                <label v-if="validationErrors.time" class="label">
+                  <span
+                    class="label-text-alt"
+                    :style="{ color: 'var(--color-error)' }"
+                    >{{ validationErrors.time }}</span
+                  >
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-action">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              :disabled="isLoading"
+              :style="{
+                backgroundColor: 'var(--color-primary)',
+                borderColor: 'var(--color-primary)',
+                color: 'white',
+              }"
+            >
+              <span v-if="isLoading" class="loading loading-spinner"></span>
+              新增
+            </button>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              @click.prevent="handleCancelCreate"
               :disabled="isLoading"
               :style="{
                 backgroundColor: 'var(--color-button-bg)',
@@ -449,8 +697,9 @@ import { ElMessage } from "element-plus";
 import type {
   TrainingRecord,
   UpdateTrainingRecord,
-} from "../services/trainingRecord";
-import type { TrainingPlan } from "../services/trainingPlan";
+  CreateTrainingRecord,
+} from "../services/training-record";
+import type { TrainingPlan } from "../services/training-plan";
 import { useTraineeStore } from "../stores/trainee";
 import { useViewerStore } from "../stores/viewer";
 
@@ -478,6 +727,7 @@ const isCoach = computed(() => viewerStore.isCoach);
 const isLoading = ref<boolean>(false);
 const selectedMonth = ref<string>("");
 const showEditModal = ref<boolean>(false);
+const showCreateModal = ref<boolean>(false);
 const showDeleteModal = ref<boolean>(false);
 const isExporting = ref<boolean>(false);
 const editingRecord = ref<UpdateTrainingRecord>({
@@ -487,10 +737,22 @@ const editingRecord = ref<UpdateTrainingRecord>({
   date: "",
   editor: 0,
 });
+const creatingRecord = ref<CreateTrainingRecord>({
+  trainee: 0,
+  trainingPlan: 0,
+  date: undefined,
+  editor: 0,
+});
 const deletingRecord = ref<TrainingRecord | null>(null);
 const availableTrainingPlans = ref<TrainingPlan[]>([]);
 const editingDate = ref<string>("");
 const editingTime = ref<string>("");
+const editingHour = ref<string>("");
+const editingMinute = ref<string>("");
+const creatingDate = ref<string>("");
+const creatingTime = ref<string>("");
+const creatingHour = ref<string>("");
+const creatingMinute = ref<string>("");
 
 // 驗證錯誤狀態
 const validationErrors = ref({
@@ -504,30 +766,34 @@ const validationErrors = ref({
  */
 const initializeDefaultTime = (): void => {
   const currentTime = dayjs().tz("Asia/Taipei");
-  const minutes = currentTime.minute();
-  const adjustedMinutes = Math.round(minutes / 30) * 30;
-  const adjustedTime = currentTime.minute(adjustedMinutes).format("HH:mm");
-  editingTime.value = adjustedTime;
+  const formattedTime = currentTime.format("HH:mm");
+  editingTime.value = formattedTime;
+  editingHour.value = currentTime.format("HH");
+  editingMinute.value = "00";
 };
 
 /**
- * 24小時制時間選項
+ * 小時選項（0-23）
  */
-const timeOptions = computed(() => {
+const hourOptions = computed(() => {
   const options: Array<{ value: string; label: string }> = [];
-
   for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, "0")}:${minute
-        .toString()
-        .padStart(2, "0")}`;
-      options.push({
-        value: timeString,
-        label: timeString,
-      });
-    }
+    const hourString = hour.toString().padStart(2, "0");
+    options.push({
+      value: hourString,
+      label: hourString,
+    });
   }
+  return options;
+});
 
+/**
+ * 分鐘選項（0、30）
+ */
+const minuteOptions = computed(() => {
+  const options: Array<{ value: string; label: string }> = [];
+  options.push({ value: "00", label: "00" });
+  options.push({ value: "30", label: "30" });
   return options;
 });
 
@@ -648,16 +914,11 @@ const formatTime = (dateTimeString: string): string => {
  */
 const formatDateHeader = (dateString: string): string => {
   const date = dayjs(dateString);
-  const today = dayjs();
 
   const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
   const weekday = weekdays[date.day()];
 
-  if (date.isSame(today, "day")) {
-    return `今天 ${date.format("MM/DD")} (週${weekday})`;
-  } else {
-    return `${date.format("YYYY/MM/DD")} (週${weekday})`;
-  }
+  return `${date.format("YYYY/MM/DD")} (週${weekday})`;
 };
 
 /**
@@ -682,7 +943,7 @@ const validateEditForm = (): boolean => {
     errors.date = "請選擇日期";
   }
 
-  if (!editingTime.value) {
+  if (!editingHour.value || !editingMinute.value) {
     errors.time = "請選擇時間";
   }
 
@@ -782,13 +1043,9 @@ const handleEditRecord = (record: TrainingRecord): void => {
     // 設置當前時間
     const currentDateTime = dayjs().tz("Asia/Taipei");
     editingDate.value = currentDateTime.format("YYYY-MM-DD");
-
-    const minutes = currentDateTime.minute();
-    const adjustedMinutes = Math.round(minutes / 30) * 30;
-    const adjustedTime = currentDateTime
-      .minute(adjustedMinutes)
-      .format("HH:mm");
-    editingTime.value = adjustedTime;
+    editingTime.value = currentDateTime.format("HH:mm");
+    editingHour.value = currentDateTime.format("HH");
+    editingMinute.value = "00";
 
     if (props.trainingPlans && props.trainingPlans.length > 0) {
       // 只顯示還有剩餘額度的訓練計畫
@@ -812,8 +1069,9 @@ const handleSaveEditRecord = async (): Promise<void> => {
     return;
   }
 
-  const combinedDateTime = `${editingDate.value}T${editingTime.value}`;
-  editingRecord.value.date = combinedDateTime;
+  const combinedTime = `${editingHour.value}:${editingMinute.value}`;
+  const combinedDateTime = `${editingDate.value}T${combinedTime}`;
+  editingRecord.value.date = dayjs(combinedDateTime).tz("Asia/Taipei").format();
 
   try {
     const result = await traineeStore.updateTrainingRecord(editingRecord.value);
@@ -843,7 +1101,128 @@ const handleCancelEdit = (): void => {
     editor: 0,
   };
   editingDate.value = "";
+  editingTime.value = "";
+  editingHour.value = "";
+  editingMinute.value = "";
   initializeDefaultTime();
+  validationErrors.value = {
+    trainingPlan: "",
+    date: "",
+    time: "",
+  };
+};
+
+/**
+ * 處理新增簽到記錄
+ */
+const handleCreateRecord = (): void => {
+  try {
+    // 設置建立記錄
+    creatingRecord.value = {
+      trainee: props.traineeId,
+      trainingPlan: 0,
+      date: undefined,
+      editor: props.coachId,
+    };
+
+    // 設置當前時間
+    const currentDateTime = dayjs().tz("Asia/Taipei");
+    creatingDate.value = currentDateTime.format("YYYY-MM-DD");
+    creatingTime.value = currentDateTime.format("HH:mm");
+    creatingHour.value = currentDateTime.format("HH");
+    creatingMinute.value = "00";
+
+    if (props.trainingPlans && props.trainingPlans.length > 0) {
+      // 只顯示還有剩餘額度的訓練計畫
+      availableTrainingPlans.value = props.trainingPlans.filter(
+        (plan) => (plan.quota || 0) - (plan.trainingRecord?.length || 0) > 0
+      );
+    }
+
+    showCreateModal.value = true;
+  } catch (error) {
+    console.error("Failed to handle create record:", error);
+    ElMessage.error("開啟新增失敗，請稍後再試");
+  }
+};
+
+/**
+ * 驗證建立表單
+ */
+const validateCreateForm = (): boolean => {
+  const errors = {
+    trainingPlan: "",
+    date: "",
+    time: "",
+  };
+
+  // 只有在有可用計畫時才要求選擇訓練計畫
+  if (
+    availableTrainingPlans.value.length > 0 &&
+    !creatingRecord.value.trainingPlan
+  ) {
+    errors.trainingPlan = "請選擇訓練計畫";
+  }
+
+  if (!creatingDate.value) {
+    errors.date = "請選擇日期";
+  }
+
+  if (!creatingHour.value || !creatingMinute.value) {
+    errors.time = "請選擇時間";
+  }
+
+  validationErrors.value = errors;
+  return !Object.values(errors).some((error) => error !== "");
+};
+
+/**
+ * 處理儲存新增的訓練記錄
+ */
+const handleSaveCreateRecord = async (): Promise<void> => {
+  if (!validateCreateForm()) {
+    return;
+  }
+
+  const combinedTime = `${creatingHour.value}:${creatingMinute.value}`;
+  const combinedDateTime = `${creatingDate.value}T${combinedTime}`;
+  creatingRecord.value.date = dayjs(combinedDateTime)
+    .tz("Asia/Taipei")
+    .toDate();
+
+  try {
+    const result = await traineeStore.createTrainingRecord(
+      creatingRecord.value
+    );
+
+    if (result) {
+      ElMessage.success("新增成功");
+      showCreateModal.value = false;
+      await loadTrainingRecords();
+    } else {
+      ElMessage.error("新增失敗");
+    }
+  } catch (error) {
+    console.error("Failed to create training record:", error);
+    ElMessage.error("新增失敗，請稍後再試");
+  }
+};
+
+/**
+ * 處理取消新增
+ */
+const handleCancelCreate = (): void => {
+  showCreateModal.value = false;
+  creatingRecord.value = {
+    trainee: 0,
+    trainingPlan: 0,
+    date: undefined,
+    editor: 0,
+  };
+  creatingDate.value = "";
+  creatingTime.value = "";
+  creatingHour.value = "";
+  creatingMinute.value = "";
   validationErrors.value = {
     trainingPlan: "",
     date: "",
@@ -893,6 +1272,12 @@ const handleCancelDelete = (): void => {
 onMounted(async (): Promise<void> => {
   selectedMonth.value = dayjs().format("YYYY/MM");
   initializeDefaultTime();
+  // 初始化新增簽到紀錄的時間
+  const currentDateTime = dayjs().tz("Asia/Taipei");
+  creatingDate.value = currentDateTime.format("YYYY-MM-DD");
+  creatingTime.value = currentDateTime.format("HH:mm");
+  creatingHour.value = currentDateTime.format("HH");
+  creatingMinute.value = "00";
   await loadTrainingRecords();
 });
 </script>

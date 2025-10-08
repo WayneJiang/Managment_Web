@@ -2,73 +2,66 @@
 
 import axios from "axios";
 import { Coach } from "./coach";
-import { SearchTrainee, Trainee, UpdateTrainee } from "./trainee";
+import { Trainee, UpdateTrainee } from "./trainee";
 import { Viewer } from "./viewer";
-import { TrainingRecord, UpdateTrainingRecord } from "./trainingRecord";
+import {
+  TrainingRecord,
+  UpdateTrainingRecord,
+  CreateTrainingRecord,
+} from "./training-record";
 import {
   OpeningCourse,
   CreateOpeningCourse,
   UpdateOpeningCourse,
-} from "./openoingCourse";
-import { UpdateTrainingPlan } from "./trainingPlan";
+} from "./opening-course";
+import { UpdateTrainingPlan } from "./training-plan";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-axios.defaults.baseURL = API_BASE_URL;
-axios.defaults.headers.common["ngrok-skip-browser-warning"] = "true";
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "ngrok-skip-browser-warning": "true",
+  },
+});
 
 export const api = {
   async getBySocialId(socialId: string): Promise<Viewer> {
     try {
-      return (await axios.get(`/view/${socialId}`)).data;
+      return (await apiClient.get(`/view/${socialId}`)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
   async getByCoachId(id: number): Promise<Coach> {
     try {
-      return (await axios.get(`/coach/info/${id}`)).data;
+      return (await apiClient.get(`/coach/info/${id}`)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
   async getTrainees(): Promise<Trainee[]> {
     try {
-      return (await axios.get(`/trainees`)).data;
+      return (await apiClient.get(`/trainees`)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
   async getByTraineeId(id: number): Promise<Trainee> {
     try {
-      return (await axios.get(`/trainee/info/${id}`)).data;
+      return (await apiClient.get(`/trainee/info/${id}`)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
-    }
-  },
-
-  async getSearchTrainee(searchTrainee: SearchTrainee): Promise<Trainee[]> {
-    try {
-      return (await axios.get(`/trainee/search}`, { params: searchTrainee }))
-        .data;
-    } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
   async getCoaches(): Promise<Coach[]> {
     try {
-      return (await axios.get(`/coaches`)).data;
+      return (await apiClient.get(`/coaches`)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
@@ -77,11 +70,10 @@ export const api = {
     updateTrainee: UpdateTrainee
   ): Promise<boolean> {
     try {
-      return (await axios.post(`/trainee/info/${socialId}`, updateTrainee))
+      return (await apiClient.post(`/trainee/info/${socialId}`, updateTrainee))
         .data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
@@ -90,10 +82,9 @@ export const api = {
     updateTrainee: UpdateTrainee
   ): Promise<boolean> {
     try {
-      return (await axios.patch(`/trainee/info/${id}`, updateTrainee)).data;
+      return (await apiClient.patch(`/trainee/info/${id}`, updateTrainee)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
@@ -101,10 +92,9 @@ export const api = {
     updateTrainingPlan: UpdateTrainingPlan
   ): Promise<boolean> {
     try {
-      return (await axios.post(`/trainingPlan`, updateTrainingPlan)).data;
+      return (await apiClient.post(`/trainingPlan`, updateTrainingPlan)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
@@ -112,13 +102,12 @@ export const api = {
     updateTrainingPlan: UpdateTrainingPlan
   ): Promise<boolean> {
     try {
-      return await axios.patch(
+      return await apiClient.patch(
         `/trainingPlan/${updateTrainingPlan.id}`,
         updateTrainingPlan
       );
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
@@ -128,7 +117,7 @@ export const api = {
   ): Promise<TrainingRecord[]> {
     try {
       return (
-        await axios.get(`/trainingRecord`, {
+        await apiClient.get(`/trainingRecord`, {
           params: {
             trainee,
             yearMonth,
@@ -136,17 +125,15 @@ export const api = {
         })
       ).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
   async getOpeningCourses(): Promise<OpeningCourse[]> {
     try {
-      return (await axios.get(`/openingCourses`)).data;
+      return (await apiClient.get(`/openingCourses`)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法獲取資訊");
+      throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
   },
 
@@ -154,10 +141,9 @@ export const api = {
     createOpeningCourse: CreateOpeningCourse
   ): Promise<boolean> {
     try {
-      return (await axios.post(`/openingCourse`, createOpeningCourse)).data;
+      return (await apiClient.post(`/openingCourse`, createOpeningCourse)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法建立開課");
+      throw new Error((error as any).response?.data?.message || "無法建立開課");
     }
   },
 
@@ -166,23 +152,21 @@ export const api = {
   ): Promise<boolean> {
     try {
       return (
-        await axios.patch(
+        await apiClient.patch(
           `/openingCourse/${updateOpeningCourse.id}`,
           updateOpeningCourse
         )
       ).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法更新開課");
+      throw new Error((error as any).response?.data?.message || "無法更新開課");
     }
   },
 
   async deleteOpeningCourse(id: number): Promise<boolean> {
     try {
-      return (await axios.delete(`/openingCourse/${id}`)).data;
+      return (await apiClient.delete(`/openingCourse/${id}`)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法刪除開課");
+      throw new Error((error as any).response?.data?.message || "無法刪除開課");
     }
   },
 
@@ -191,23 +175,38 @@ export const api = {
   ): Promise<boolean> {
     try {
       return (
-        await axios.patch(
+        await apiClient.patch(
           `/trainingRecord/${updateTrainingRecord.id}`,
           updateTrainingRecord
         )
       ).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法更新訓練記錄");
+      throw new Error(
+        (error as any).response?.data?.message || "無法更新訓練記錄"
+      );
     }
   },
 
   async deleteTrainingRecord(id: number): Promise<boolean> {
     try {
-      return (await axios.delete(`/trainingRecord/${id}`)).data;
+      return (await apiClient.delete(`/trainingRecord/${id}`)).data;
     } catch (error) {
-      console.error("API 請求失敗:", error);
-      throw new Error(error.response?.data?.message || "無法刪除訓練記錄");
+      throw new Error(
+        (error as any).response?.data?.message || "無法刪除訓練記錄"
+      );
+    }
+  },
+
+  async createTrainingRecord(
+    createTrainingRecord: CreateTrainingRecord
+  ): Promise<boolean> {
+    try {
+      return (await apiClient.post(`/trainingRecord`, createTrainingRecord))
+        .data;
+    } catch (error) {
+      throw new Error(
+        (error as any).response?.data?.message || "無法建立訓練記錄"
+      );
     }
   },
 };

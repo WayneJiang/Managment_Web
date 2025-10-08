@@ -1,11 +1,13 @@
 import { Trainee } from "./trainee";
-import { TrainingPlan } from "./trainingPlan";
+import { TrainingPlan } from "./training-plan";
+import { Coach } from "./coach";
 
 export interface TrainingRecord {
   id: number;
   trainee: Trainee;
   trainingPlan: TrainingPlan;
   createdDate: string;
+  editor?: Coach;
 }
 
 /**
@@ -16,5 +18,15 @@ export interface UpdateTrainingRecord {
   trainee: number;
   trainingPlan: number;
   date: string;
+  editor: number;
+}
+
+/**
+ * 建立訓練記錄的請求資料
+ */
+export interface CreateTrainingRecord {
+  trainee: number;
+  trainingPlan: number;
+  date?: Date;
   editor: number;
 }

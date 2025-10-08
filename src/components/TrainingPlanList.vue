@@ -217,7 +217,7 @@
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import type { TrainingPlan, TrainingTimeSlot } from "../services/trainingPlan";
+import type { TrainingPlan, TrainingTimeSlot } from "../services/training-plan";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -239,7 +239,6 @@ const formatDateTime = (timestamp: string | undefined): string => {
   try {
     return dayjs(timestamp).tz("Asia/Taipei").format("MM/DD HH:mm");
   } catch (error) {
-    console.error("Date formatting error:", error);
     return "日期錯誤";
   }
 };

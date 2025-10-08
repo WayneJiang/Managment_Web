@@ -38,7 +38,7 @@ import TraineeForm from "../components/TraineeForm.vue";
 import TrainingRecordList from "../components/TrainingRecordList.vue";
 import TraineePlanList from "../components/TraineePlanList.vue";
 import type { Trainee, UpdateTrainee } from "../services/trainee";
-import type { TrainingRecord } from "../services/trainingRecord";
+import type { TrainingRecord } from "../services/training-record";
 
 const router = useRouter();
 const traineeStore = useTraineeStore();
@@ -115,7 +115,6 @@ const initializeTraineeData = async (): Promise<void> => {
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";
-    console.error("Failed to initialize trainee data:", err);
     // Store 會自動處理錯誤狀態
   }
 };
@@ -150,7 +149,6 @@ const handleSave = async (updateTrainee: UpdateTrainee): Promise<void> => {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";
     ElMessage.error(message);
-    console.error("Failed to save trainee:", err);
   }
 };
 
@@ -161,7 +159,7 @@ const handleBack = (): void => {
   try {
     router.back();
   } catch (error) {
-    console.error("Failed to navigate back:", error);
+    // 導航失敗，靜默處理
   }
 };
 

@@ -1,5 +1,5 @@
 import { Coach } from "./coach";
-import { TrainingRecord } from "./trainingRecord";
+import { TrainingRecord } from "./training-record";
 
 export interface TrainingTimeSlot {
   dayOfWeek: string;

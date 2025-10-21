@@ -7,6 +7,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import("../views/Home.vue"),
   },
   {
+    path: "/bind",
+    name: "CoachBind",
+    component: () => import("../views/CoachBind.vue"),
+  },
+  {
     path: "/trainee/info",
     name: "TraineeInfo",
     component: () => import("../views/TraineeInfo.vue"),

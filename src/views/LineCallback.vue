@@ -1,15 +1,3 @@
-<!--
-  LINE登入回調頁面組件
-  
-  此組件負責處理LINE OAuth登入流程的回調處理：
-  1. 接收LINE授權碼
-  2. 交換access token
-  3. 獲取用戶資料
-  4. 更新用戶狀態並跳轉到主頁面
-  
-  @author Management Web Team
-  @version 1.0.0
--->
 <template>
   <!-- 全螢幕居中容器 -->
   <div class="w-full min-h-screen flex items-center justify-center">
@@ -37,17 +25,14 @@
 </template>
 
 <script setup lang="ts">
-// Vue 3 Composition API 相關匯入
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import type { Router } from "vue-router";
-
-// 業務邏輯相關匯入
 import { useViewerStore } from "../stores/viewer";
+import { useCoachStore } from "../stores/coach";
 import { createLineLoginService } from "../services/line-login";
+import { getLineStateFromUrl } from "../utils/line-state";
 import { lineApi } from "../services/api-line";
-
-// 組件相關匯入
 import LoadingState from "../components/LoadingState.vue";
 
 // 初始化 Vue Router 實例
@@ -55,6 +40,7 @@ const router: Router = useRouter();
 
 // 初始化用戶狀態管理 store
 const viewerStore = useViewerStore();
+const coachStore = useCoachStore();
 
 // 初始化 LINE 登入服務
 const lineLoginService = createLineLoginService();
@@ -117,32 +103,104 @@ const handleLineCallback = async (): Promise<void> => {
  * 導航到主頁面
  *
  * 此函數負責處理登入成功後的用戶狀態更新和頁面跳轉：
- * 1. 將LINE用戶的social ID儲存到store
- * 2. 根據social ID獲取系統中的用戶資料
- * 3. 驗證用戶是否已註冊
- * 4. 跳轉到主頁面
+ * 1. 檢查登入目的（從 state 參數）
+ * 2. 根據不同目的執行不同的處理流程
  *
  * @param socialId - LINE用戶的唯一識別碼
  * @throws {Error} 當用戶未註冊或獲取用戶資料失敗時拋出錯誤
  */
 const navigateToMainPage = async (socialId: string): Promise<void> => {
+  // 檢查登入目的
+  const state = getLineStateFromUrl();
+
+  // 處理綁定教練帳號
+  if (state?.purpose === "bind-coach" && state.data?.coachId) {
+    await handleBindCoach(socialId, state.data.coachId);
+    return;
+  }
+
+  // 步驟1：將LINE用戶的social ID儲存到viewer store
+  viewerStore.setSocialId(socialId);
+
+  // 步驟2：根據social ID從後端獲取用戶資料
+  const userId = await viewerStore.fetchBySocialId(socialId);
+
+  // 步驟3：驗證用戶是否已在系統中註冊
+  if (userId === null) {
+    throw new Error("無法獲取用戶資料，請確認您已註冊");
+  }
+
+  // 步驟4：根據用戶角色直接導航到對應頁面
+  if (viewerStore.isTrainee) {
+    router.push({
+      path: "/trainee/info",
+      state: {
+        id: userId,
+        coach: false,
+        register: false,
+      },
+    });
+  } else if (viewerStore.isCoach) {
+    router.push({
+      path: "/coach",
+      state: {
+        id: userId,
+        coach: true,
+      },
+    });
+  } else {
+    // 新使用者，導航到註冊頁面
+    router.push({
+      path: "/trainee/info",
+      state: {
+        id: viewerStore.socialId,
+        coach: false,
+        register: true,
+      },
+    });
+  }
+};
+
+/**
+ * 處理綁定教練帳號
+ *
+ * @param socialId - LINE用戶的唯一識別碼
+ * @param coachId - 教練ID
+ */
+const handleBindCoach = async (
+  socialId: string,
+  coachId: number
+): Promise<void> => {
   try {
-    // 步驟1：將LINE用戶的social ID儲存到viewer store
-    viewerStore.setSocialId(socialId);
-
-    // 步驟2：根據social ID從後端獲取用戶資料
-    const userId = await viewerStore.fetchBySocialId(socialId);
-
-    // 步驟3：驗證用戶是否已在系統中註冊
-    if (userId === null) {
-      throw new Error("無法獲取用戶資料，請確認您已註冊");
+    // 載入教練資料
+    const coach = await coachStore.fetchCoachById(coachId);
+    if (!coach) {
+      throw new Error("未找到教練資料");
     }
 
-    // 步驟4：跳轉到應用程式主頁面
-    router.push(`/`);
+    // 更新教練的 socialId
+    const success = await coachStore.updateCoach({
+      id: coachId,
+      name: coach.name,
+      coachType: coach.coachType || "Team",
+      socialId: socialId,
+    });
+
+    if (!success) {
+      throw new Error("綁定失敗，請稍後再試");
+    }
+
+    // 綁定成功，導航到教練頁面
+    router.push({
+      path: "/coach",
+      state: {
+        id: coachId,
+        coach: true,
+        bindSuccess: true,
+      },
+    });
   } catch (error) {
-    // 重新拋出錯誤，讓上層函數處理
-    throw new Error(error instanceof Error ? error.message : "頁面跳轉失敗");
+    throw new Error(error instanceof Error ? error.message : "綁定教練失敗");
   }
 };
 

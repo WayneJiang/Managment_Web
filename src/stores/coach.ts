@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { api } from "../services/api";
 import { Trainee } from "../services/trainee";
-import { Coach } from "../services/coach";
+import { Coach, CreateCoach, UpdateCoach } from "../services/coach";
 import {
   OpeningCourse,
   CreateOpeningCourse,
@@ -148,6 +148,71 @@ export const useCoachStore = defineStore("coach", {
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "無法刪除公開課程";
+        this.error = errorMessage;
+        return false;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async createCoach(createCoach: CreateCoach): Promise<boolean> {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        console.log("Creating coach with data:", createCoach);
+        const response = await api.createCoach(createCoach);
+        if (response) {
+          // 重新載入教練列表
+          await this.fetchCoaches();
+        }
+        return response;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "無法建立教練";
+        this.error = errorMessage;
+        console.error("Create coach error:", error);
+        return false;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async updateCoach(updateCoach: UpdateCoach): Promise<boolean> {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await api.updateCoach(updateCoach);
+        if (response) {
+          // 重新載入教練列表
+          await this.fetchCoaches();
+        }
+        return response;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "無法更新教練";
+        this.error = errorMessage;
+        return false;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async deleteCoach(id: number): Promise<boolean> {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const response = await api.deleteCoach(id);
+        if (response) {
+          // 重新載入教練列表
+          await this.fetchCoaches();
+        }
+        return response;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "無法刪除教練";
         this.error = errorMessage;
         return false;
       } finally {

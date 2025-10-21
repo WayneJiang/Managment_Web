@@ -245,6 +245,7 @@
                 編輯資料
               </button>
               <button
+                v-if="canManagePlan"
                 class="btn btn-sm flex-1"
                 :style="{
                   backgroundColor: '#f97316',
@@ -290,9 +291,12 @@ import type { TrainingPlan, TrainingTimeSlot } from "../services/training-plan";
 
 interface Props {
   trainees: Trainee[];
+  canManagePlan?: boolean; // 是否可以管理計畫，預設為 true
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  canManagePlan: true,
+});
 
 const emit = defineEmits<{
   (e: "update", trainee: Trainee): void;

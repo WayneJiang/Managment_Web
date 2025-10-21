@@ -407,6 +407,7 @@
         :trainingRecords="trainingRecords"
         :trainingPlans="currentTrainee.trainingPlan"
         :coachId="editorId"
+        :canEditRecords="canEditRecords"
         @update-records="handleUpdateTrainingRecords"
       />
     </div>
@@ -417,6 +418,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
+import { useCoachStore } from "../stores/coach";
 import { ElMessage } from "element-plus";
 import dayjs from "dayjs";
 import LoadingState from "../components/LoadingState.vue";
@@ -432,6 +434,7 @@ import type { TrainingRecord } from "../services/training-record";
 
 const router = useRouter();
 const traineeStore = useTraineeStore();
+const coachStore = useCoachStore();
 
 // 使用 store 的狀態，而不是本地 ref
 const currentTrainee = computed(() => traineeStore.currentTrainee);
@@ -460,6 +463,17 @@ const validationErrors = ref({
 
 // 計算屬性
 const isEditMode = computed(() => editTrainingPlanId.value !== 0);
+
+/**
+ * 檢查當前教練是否為 Founder
+ */
+const canEditRecords = computed(() => {
+  if (editorId.value === 0 || editorId.value === -1) {
+    return false;
+  }
+  const currentCoach = coachStore.coaches.find((coach) => coach.id === editorId.value);
+  return currentCoach?.coachType === "Founder";
+});
 
 /**
  * 計算學員年紀
@@ -534,11 +548,11 @@ const dayOptions = [
   { value: "Sunday", label: "星期日" },
 ];
 
-const timeOptions = Array.from({ length: 48 }, (_, i) => {
-  const hour = Math.floor(i / 2)
+const timeOptions = Array.from({ length: 144 }, (_, i) => {
+  const hour = Math.floor(i / 6)
     .toString()
     .padStart(2, "0");
-  const minute = (i % 2) * 30;
+  const minute = (i % 6) * 10;
   return {
     value: `${hour}:${minute.toString().padStart(2, "0")}`,
     label: `${hour}:${minute.toString().padStart(2, "0")}`,
@@ -570,6 +584,7 @@ const initializeData = async (): Promise<void> => {
     const [trainee, coachesData] = await Promise.all([
       traineeStore.fetchTraineeById(traineeId),
       traineeStore.fetchCoaches(),
+      coachStore.fetchCoaches(), // 載入教練列表以判斷權限
     ]);
 
     if (!trainee) {

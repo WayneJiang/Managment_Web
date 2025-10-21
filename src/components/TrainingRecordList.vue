@@ -34,7 +34,7 @@
         </div>
         <div class="flex gap-2">
           <button
-            v-if="isCoach"
+            v-if="isCoach && canEditRecords"
             type="button"
             class="btn btn-primary"
             :style="{
@@ -186,7 +186,7 @@
                 <!-- 操作按鈕 -->
                 <div class="flex items-center justify-center gap-2">
                   <div
-                    v-if="isCoach"
+                    v-if="isCoach && canEditRecords"
                     class="btn btn-sm btn-outline btn-primary cursor-pointer"
                     @click.stop.prevent="handleEditRecord(record)"
                     :style="{
@@ -214,7 +214,7 @@
                     編輯
                   </div>
                   <button
-                    v-if="isCoach"
+                    v-if="isCoach && canEditRecords"
                     type="button"
                     class="btn btn-sm btn-outline btn-error"
                     @click.stop.prevent="handleDeleteRecord(record)"
@@ -687,7 +687,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, withDefaults } from "vue";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -701,17 +701,21 @@ import type {
 } from "../services/training-record";
 import type { TrainingPlan } from "../services/training-plan";
 import { useTraineeStore } from "../stores/trainee";
-import { useViewerStore } from "../stores/viewer";
 
 const traineeStore = useTraineeStore();
-const viewerStore = useViewerStore();
 
-const props = defineProps<{
-  coachId: number;
-  traineeId: number;
-  trainingRecords: TrainingRecord[];
-  trainingPlans?: TrainingPlan[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    coachId: number;
+    traineeId: number;
+    trainingRecords: TrainingRecord[];
+    trainingPlans?: TrainingPlan[];
+    canEditRecords?: boolean;
+  }>(),
+  {
+    canEditRecords: false,
+  }
+);
 
 const emit = defineEmits<{
   "update-records": [records: TrainingRecord[]];
@@ -720,8 +724,8 @@ const emit = defineEmits<{
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// 使用 store 的狀態
-const isCoach = computed(() => viewerStore.isCoach);
+// 判斷是否為教練模式（根據 coachId 是否有效）
+const isCoach = computed(() => props.coachId > 0);
 
 // 本地狀態管理
 const isLoading = ref<boolean>(false);
@@ -788,12 +792,17 @@ const hourOptions = computed(() => {
 });
 
 /**
- * 分鐘選項（0、30）
+ * 分鐘選項（10分鐘間隔）
  */
 const minuteOptions = computed(() => {
   const options: Array<{ value: string; label: string }> = [];
-  options.push({ value: "00", label: "00" });
-  options.push({ value: "30", label: "30" });
+  for (let minute = 0; minute < 60; minute += 10) {
+    const minuteString = minute.toString().padStart(2, "0");
+    options.push({
+      value: minuteString,
+      label: minuteString,
+    });
+  }
   return options;
 });
 

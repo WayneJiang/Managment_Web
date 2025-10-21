@@ -22,6 +22,7 @@
         :trainingRecords="currentMonthRecords"
         :trainingPlans="currentTrainee.trainingPlan"
         :coachId="isCoach ? coachId : -1"
+        :canEditRecords="canEditRecords"
         @update-records="handleUpdateRecords"
       />
     </div>
@@ -32,6 +33,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
+import { useCoachStore } from "../stores/coach";
 import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TraineeForm from "../components/TraineeForm.vue";
@@ -42,6 +44,7 @@ import type { TrainingRecord } from "../services/training-record";
 
 const router = useRouter();
 const traineeStore = useTraineeStore();
+const coachStore = useCoachStore();
 
 // 使用 store 的狀態，而不是本地 ref
 const currentTrainee = computed(() => traineeStore.currentTrainee);
@@ -57,6 +60,17 @@ const currentMonthRecords = ref<TrainingRecord[]>([]);
 const showRecords = ref<boolean>(true); // 預設顯示簽到紀錄
 const showPlans = ref<boolean>(true); // 預設顯示歷史計畫
 const allTrainees = ref<Trainee[]>([]);
+
+/**
+ * 檢查當前教練是否為 Founder
+ */
+const canEditRecords = computed(() => {
+  if (!isCoach.value || coachId.value === -1) {
+    return false;
+  }
+  const currentCoach = coachStore.coaches.find((coach) => coach.id === coachId.value);
+  return currentCoach?.coachType === "Founder";
+});
 
 /**
  * 從路由狀態中提取參數
@@ -94,6 +108,7 @@ const createDefaultTrainee = (): Trainee => ({
 const initializeTraineeData = async (): Promise<void> => {
   try {
     if (!isRegister.value) {
+      // 並行載入學員資料
       const [trainee, trainees] = await Promise.all([
         traineeStore.fetchTraineeById(Number(traineeId.value)),
         traineeStore.fetchTrainees(),
@@ -104,6 +119,11 @@ const initializeTraineeData = async (): Promise<void> => {
       }
 
       allTrainees.value = trainees || [];
+
+      // 如果是教練模式，也載入教練列表以判斷權限
+      if (isCoach.value) {
+        await coachStore.fetchCoaches();
+      }
     } else {
       // 對於註冊模式，設定預設的學員物件並清除載入狀態
       traineeStore.currentTrainee = createDefaultTrainee();
@@ -115,7 +135,7 @@ const initializeTraineeData = async (): Promise<void> => {
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";
-    // Store 會自動處理錯誤狀態
+    ElMessage.error(message);
   }
 };
 

@@ -57,6 +57,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useViewerStore } from "../stores/viewer";
 import { createLineLoginService } from "../services/line-login";
+import { encodeLineState } from "../utils/line-state";
 import LoadingState from "../components/LoadingState.vue";
 import type { Router } from "vue-router";
 
@@ -162,8 +163,11 @@ const handleLineLogin = (): void => {
   try {
     isLineLoginLoading.value = true;
 
+    // 生成一般登入的 state
+    const state = encodeLineState("normal");
+
     // 生成LINE登入URL並跳轉
-    const loginUrl = lineLoginService.generateLoginUrl();
+    const loginUrl = lineLoginService.generateLoginUrl(state);
     window.location.href = loginUrl;
   } catch (error) {
     isLineLoginLoading.value = false;

@@ -248,12 +248,12 @@ const formData = ref<{
   note: "",
 });
 
-// 24小時制時間選項（半小時間隔）
-const timeOptions = Array.from({ length: 48 }, (_, i) => {
-  const hour = Math.floor(i / 2)
+// 24小時制時間選項（10分鐘間隔）
+const timeOptions = Array.from({ length: 144 }, (_, i) => {
+  const hour = Math.floor(i / 6)
     .toString()
     .padStart(2, "0");
-  const minute = (i % 2) * 30;
+  const minute = (i % 6) * 10;
   return {
     value: `${hour}:${minute.toString().padStart(2, "0")}`,
     label: `${hour}:${minute.toString().padStart(2, "0")}`,

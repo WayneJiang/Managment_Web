@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 import axios from "axios";
-import { Coach } from "./coach";
+import { Coach, CreateCoach, UpdateCoach } from "./coach";
 import { Trainee, UpdateTrainee } from "./trainee";
 import { Viewer } from "./viewer";
 import {
@@ -207,6 +207,33 @@ export const api = {
       throw new Error(
         (error as any).response?.data?.message || "無法建立訓練記錄"
       );
+    }
+  },
+
+  async createCoach(createCoach: CreateCoach): Promise<boolean> {
+    try {
+      const response = await apiClient.post(`/coach`, createCoach);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "無法建立教練");
+    }
+  },
+
+  async updateCoach(updateCoach: UpdateCoach): Promise<boolean> {
+    try {
+      return (
+        await apiClient.patch(`/coach/${updateCoach.id}`, updateCoach)
+      ).data;
+    } catch (error) {
+      throw new Error((error as any).response?.data?.message || "無法更新教練");
+    }
+  },
+
+  async deleteCoach(id: number): Promise<boolean> {
+    try {
+      return (await apiClient.delete(`/coach/${id}`)).data;
+    } catch (error) {
+      throw new Error((error as any).response?.data?.message || "無法刪除教練");
     }
   },
 };

@@ -38,7 +38,7 @@
                     'badge-accent': coach.coachType === 'Team',
                   }"
                 >
-                  {{ coach.coachType }}
+                  {{ getCoachTypeLabel(coach.coachType) }}
                 </span>
                 <span v-else class="badge badge-ghost">未設定</span>
               </td>
@@ -124,9 +124,9 @@
               }"
             >
               <option value="">請選擇類型</option>
-              <option value="Founder">Founder</option>
-              <option value="Partner">Partner</option>
-              <option value="Team">Team</option>
+              <option value="Founder">創辦人</option>
+              <option value="Partner">合作教練</option>
+              <option value="Team">旗下教練</option>
             </select>
             <label v-if="errors.coachType" class="label">
               <span
@@ -212,6 +212,17 @@ const formData = ref<{
 });
 
 const isEdit = computed(() => !!editingCoach.value);
+
+// 取得教練類型的繁體中文標籤
+function getCoachTypeLabel(type: CoachType | undefined): string {
+  if (!type) return "";
+  const labels: Record<CoachType, string> = {
+    Founder: "創辦人",
+    Partner: "合作教練",
+    Team: "旗下教練",
+  };
+  return labels[type] || type;
+}
 
 // 清除所有錯誤
 const clearErrors = (): void => {

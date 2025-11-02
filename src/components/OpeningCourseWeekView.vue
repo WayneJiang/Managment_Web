@@ -68,7 +68,7 @@
               時段：{{ course.start }} - {{ course.end }}
             </div>
             <div class="text-sm opacity-90 mt-1">
-              教練：{{ course.coach.name }}
+              教練：{{ course.coach?.name || '未指定' }}
             </div>
             <div v-if="course.note" class="text-xs opacity-75 mt-1">
               {{ course.note }}

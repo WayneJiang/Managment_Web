@@ -339,7 +339,7 @@ watch(
     if (newCourse) {
       formData.value = {
         name: newCourse.name,
-        coachId: newCourse.coach.id.toString(),
+        coachId: newCourse.coach?.id?.toString() || "",
         dayOfWeek: newCourse.dayOfWeek,
         start: newCourse.start,
         end: newCourse.end,

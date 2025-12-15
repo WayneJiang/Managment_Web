@@ -165,10 +165,10 @@ export const useTraineeStore = defineStore("trainee", {
 
     async fetchTrainingRecord(
       id: number,
-      yearMonth: string
-    ): Promise<TrainingRecord[] | null> {
+      page: number
+    ): Promise<{ data: TrainingRecord[]; totalPages: number; currentPage: number } | null> {
       try {
-        const response = await api.getByTrainingRecord(id, yearMonth);
+        const response = await api.getByTrainingRecord(id, page);
         return response;
       } catch (error) {
         const errorMessage =

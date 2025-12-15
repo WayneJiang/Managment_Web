@@ -38,7 +38,7 @@
                     'badge-accent': coach.coachType === 'Team',
                   }"
                 >
-                  {{ getCoachTypeLabel(coach.coachType) }}
+                  {{ getCoachTypeLabel(coach) }}
                 </span>
                 <span v-else class="badge badge-ghost">未設定</span>
               </td>
@@ -214,14 +214,20 @@ const formData = ref<{
 const isEdit = computed(() => !!editingCoach.value);
 
 // 取得教練類型的繁體中文標籤
-function getCoachTypeLabel(type: CoachType | undefined): string {
-  if (!type) return "";
+function getCoachTypeLabel(coach: Coach): string {
+  if (!coach.coachType) return "";
+
+  // 根據教練 ID 顯示特定標籤
+  if (coach.id === 1) return "共同創辦人";
+  if (coach.id === 2) return "創辦人";
+
+  // 預設標籤
   const labels: Record<CoachType, string> = {
     Founder: "創辦人",
     Partner: "合作教練",
     Team: "旗下教練",
   };
-  return labels[type] || type;
+  return labels[coach.coachType] || coach.coachType;
 }
 
 // 清除所有錯誤
@@ -316,7 +322,6 @@ const handleSubmit = async (): Promise<void> => {
         coachType: formData.value.coachType as CoachType,
         socialId: editingCoach.value.socialId,
       };
-      console.log("Update coach data:", updateData);
       emit("update", updateData);
     } else {
       // 建立模式
@@ -324,7 +329,6 @@ const handleSubmit = async (): Promise<void> => {
         name: formData.value.name.trim(),
         coachType: formData.value.coachType as CoachType,
       };
-      console.log("Create coach data:", createData);
       emit("create", createData);
     }
 

@@ -8,30 +8,7 @@
   >
     <div class="card-body">
       <div class="flex justify-between items-start">
-        <div class="flex flex-col gap-4">
-          <h2 class="card-title text-2xl">簽到記錄</h2>
-          <!-- 月份選擇器 -->
-          <div class="form-control">
-            <select
-              v-model="selectedMonth"
-              @change="handleMonthChange"
-              class="select select-bordered w-full max-w-xs"
-              :style="{
-                backgroundColor: 'var(--color-bg)',
-                color: 'var(--color-text)',
-                borderColor: 'var(--color-border)',
-              }"
-            >
-              <option
-                v-for="monthOption in monthOptions"
-                :key="monthOption.value"
-                :value="monthOption.value"
-              >
-                {{ monthOption.label }}
-              </option>
-            </select>
-          </div>
-        </div>
+        <h2 class="card-title text-2xl">簽到記錄</h2>
         <div class="flex gap-2">
           <button
             v-if="isCoach && canEditRecords"
@@ -260,6 +237,70 @@
           ></path>
         </svg>
         <p class="text-lg opacity-70">目前沒有簽到記錄</p>
+      </div>
+
+      <!-- 分頁控制 -->
+      <div
+        v-if="trainingRecords.length > 0 || currentPage > 0"
+        class="flex justify-center items-center gap-4 mt-6"
+      >
+        <button
+          v-if="currentPage > 0"
+          type="button"
+          class="btn btn-primary"
+          :style="{
+            backgroundColor: 'var(--color-primary)',
+            color: '#fff',
+            borderColor: 'var(--color-primary)',
+          }"
+          @click.prevent="handlePreviousPage"
+          :disabled="isLoading"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            ></path>
+          </svg>
+          上一頁
+        </button>
+
+        <span class="text-sm opacity-70">第 {{ currentPage + 1 }} 頁</span>
+
+        <button
+          v-if="hasMoreRecords"
+          type="button"
+          class="btn btn-primary"
+          :style="{
+            backgroundColor: 'var(--color-primary)',
+            color: '#fff',
+            borderColor: 'var(--color-primary)',
+          }"
+          @click.prevent="handleNextPage"
+          :disabled="isLoading"
+        >
+          下一頁
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            ></path>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -729,7 +770,9 @@ const isCoach = computed(() => props.coachId > 0);
 
 // 本地狀態管理
 const isLoading = ref<boolean>(false);
-const selectedMonth = ref<string>("");
+const currentPage = ref<number>(0);
+const totalPages = ref<number>(0);
+const hasMoreRecords = ref<boolean>(true);
 const showEditModal = ref<boolean>(false);
 const showCreateModal = ref<boolean>(false);
 const showDeleteModal = ref<boolean>(false);
@@ -807,41 +850,21 @@ const minuteOptions = computed(() => {
 });
 
 /**
- * 生成月份選項（過去12個月到當月）
- */
-const monthOptions = computed(() => {
-  const options: Array<{ value: string; label: string }> = [];
-  const currentDate = dayjs();
-
-  for (let i = 12; i >= 1; i--) {
-    const date = currentDate.subtract(i, "month");
-    options.push({
-      value: date.format("YYYY/MM"),
-      label: date.format("YYYY/MM"),
-    });
-  }
-
-  options.push({
-    value: currentDate.format("YYYY/MM"),
-    label: currentDate.format("YYYY/MM"),
-  });
-
-  return options;
-});
-
-/**
  * 載入訓練記錄資料
  */
 const loadTrainingRecords = async (): Promise<void> => {
   try {
     isLoading.value = true;
-    const records = await traineeStore.fetchTrainingRecord(
+    const response = await traineeStore.fetchTrainingRecord(
       props.traineeId,
-      selectedMonth.value
+      currentPage.value
     );
 
-    if (records) {
-      emit("update-records", records);
+    if (response) {
+      emit("update-records", response.data);
+      totalPages.value = response.totalPages;
+      // 判斷是否有更多記錄：當前頁碼 + 1 < 總頁數
+      hasMoreRecords.value = currentPage.value + 1 < response.totalPages;
     }
   } catch (error) {
     console.error("Failed to load training records:", error);
@@ -854,10 +877,23 @@ const loadTrainingRecords = async (): Promise<void> => {
 };
 
 /**
- * 處理月份變更
+ * 處理上一頁
  */
-const handleMonthChange = async (): Promise<void> => {
-  await loadTrainingRecords();
+const handlePreviousPage = async (): Promise<void> => {
+  if (currentPage.value > 0) {
+    currentPage.value--;
+    await loadTrainingRecords();
+  }
+};
+
+/**
+ * 處理下一頁
+ */
+const handleNextPage = async (): Promise<void> => {
+  if (hasMoreRecords.value) {
+    currentPage.value++;
+    await loadTrainingRecords();
+  }
 };
 
 /**
@@ -1279,7 +1315,6 @@ const handleCancelDelete = (): void => {
 };
 
 onMounted(async (): Promise<void> => {
-  selectedMonth.value = dayjs().format("YYYY/MM");
   initializeDefaultTime();
   // 初始化新增簽到紀錄的時間
   const currentDateTime = dayjs().tz("Asia/Taipei");

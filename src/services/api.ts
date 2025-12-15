@@ -5,9 +5,9 @@ import { Coach, CreateCoach, UpdateCoach } from "./coach";
 import { Trainee, UpdateTrainee } from "./trainee";
 import { Viewer } from "./viewer";
 import {
-  TrainingRecord,
   UpdateTrainingRecord,
   CreateTrainingRecord,
+  PageTrainingRecord,
 } from "./training-record";
 import {
   OpeningCourse,
@@ -113,14 +113,14 @@ export const api = {
 
   async getByTrainingRecord(
     trainee: number,
-    yearMonth: string
-  ): Promise<TrainingRecord[]> {
+    page: number
+  ): Promise<PageTrainingRecord> {
     try {
       return (
         await apiClient.get(`/trainingRecord`, {
           params: {
             trainee,
-            yearMonth,
+            page,
           },
         })
       ).data;

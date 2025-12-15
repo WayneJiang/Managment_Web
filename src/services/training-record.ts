@@ -30,3 +30,12 @@ export interface CreateTrainingRecord {
   date?: Date;
   editor: number;
 }
+
+/**
+ * 訓練記錄分頁回傳資料
+ */
+export interface PageTrainingRecord {
+  data: TrainingRecord[];
+  totalPages: number;
+  currentPage: number;
+}

@@ -60,6 +60,13 @@
         @update="navigateToUpdate"
         @adjust="navigateToAdjust"
       />
+
+      <!-- 教練列表區塊（僅 Founder 可見） -->
+      <CoachDisplayList
+        v-if="isFounder"
+        :coaches="filteredCoaches"
+        @view-trainees="handleViewTrainees"
+      />
     </div>
 
     <!-- 教練列表 Modal -->
@@ -70,6 +77,14 @@
       @create="handleCreateCoach"
       @update="handleUpdateCoach"
     />
+
+    <!-- 教練負責學員 Modal -->
+    <CoachTraineesModal
+      :is-open="isCoachTraineesModalOpen"
+      :coach="selectedCoach"
+      :trainees="trainees"
+      @close="closeCoachTraineesModal"
+    />
   </div>
 </template>
 
@@ -78,16 +93,20 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useCoachStore } from "../stores/coach";
 import TraineeList from "../components/TraineeList.vue";
+import CoachDisplayList from "../components/CoachListView.vue";
 import LoadingState from "../components/LoadingState.vue";
-import CoachListModal from "../components/CoachList.vue";
+import CoachListModal from "../components/CoachListManage.vue";
+import CoachTraineesModal from "../components/CoachTraineesView.vue";
 import type { Trainee } from "../services/trainee";
-import type { CreateCoach, UpdateCoach } from "../services/coach";
+import type { Coach, CreateCoach, UpdateCoach } from "../services/coach";
 
 const router = useRouter();
 const coachStore = useCoachStore();
 
 // Modal 狀態
 const isCoachListModalOpen = ref<boolean>(false);
+const isCoachTraineesModalOpen = ref<boolean>(false);
+const selectedCoach = ref<Coach | null>(null);
 
 // 使用 store 的狀態，而不是本地 ref
 const currentCoach = computed(() => coachStore.currentCoach);
@@ -139,6 +158,7 @@ const initializeData = async (): Promise<void> => {
     await Promise.all([
       coachStore.fetchCoachById(coachId),
       coachStore.fetchAll(),
+      coachStore.fetchCoaches(),
     ]);
 
     if (!currentCoach.value) {
@@ -243,5 +263,21 @@ const handleUpdateCoach = async (data: UpdateCoach): Promise<void> => {
   if (success) {
     // 成功後不需要手動關閉 modal，CoachListModal 會自動處理
   }
+};
+
+/**
+ * 查看教練負責的學員資訊
+ */
+const handleViewTrainees = (coach: Coach): void => {
+  selectedCoach.value = coach;
+  isCoachTraineesModalOpen.value = true;
+};
+
+/**
+ * 關閉教練學員 Modal
+ */
+const closeCoachTraineesModal = (): void => {
+  isCoachTraineesModalOpen.value = false;
+  selectedCoach.value = null;
 };
 </script>

@@ -160,7 +160,6 @@ export const useCoachStore = defineStore("coach", {
       this.error = null;
 
       try {
-        console.log("Creating coach with data:", createCoach);
         const response = await api.createCoach(createCoach);
         if (response) {
           // 重新載入教練列表

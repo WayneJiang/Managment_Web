@@ -27,7 +27,7 @@
           </svg>
           管理教練
         </button>
-        <!-- 只有 Founder 可以使用管理開放團課功能 -->
+        <!-- 只有 Founder 可以使用管理團體課程功能 -->
         <button
           v-if="isFounder"
           @click="navigateToOpeningCourse"
@@ -46,7 +46,7 @@
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
             ></path>
           </svg>
-          管理公開課程
+          管理團體課程
         </button>
       </div>
     </div>
@@ -217,7 +217,7 @@ const navigateToAdjust = (trainee: Trainee): void => {
 };
 
 /**
- * 導航到公開課程頁面
+ * 導航到團體課程頁面
  */
 const navigateToOpeningCourse = (): void => {
   try {

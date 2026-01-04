@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">公開課程管理</h1>
+      <h1 class="text-3xl font-bold">團體課程管理</h1>
       <div class="flex gap-2 mt-2 md:mt-0">
         <button @click="showAddCourseModal" class="btn btn-primary btn-sm">
           <svg

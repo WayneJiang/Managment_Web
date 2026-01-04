@@ -133,8 +133,8 @@
         </div>
       </div>
 
-      <!-- Note 欄位 -->
-      <div class="form-control mt-4">
+      <!-- Note 欄位 - 僅教練可見 -->
+      <div v-if="coach" class="form-control mt-4">
         <label class="label">
           <span class="label-text">備註</span>
           <span class="label-text-alt" :class="getNoteCharacterCountClass()">
@@ -279,16 +279,10 @@ const validateName = (): void => {
 };
 
 /**
- * 驗證生日
+ * 驗證生日（非必填）
  */
 const validateBirthday = (): void => {
-  if (
-    !traineeData.value.birthday ||
-    traineeData.value.birthday === "1900-01-01"
-  ) {
-    validationErrors.value.birthday = "請選擇生日";
-    return;
-  }
+  // 生日為非必填欄位，不做必填驗證
   validationErrors.value.birthday = "";
 };
 
@@ -318,15 +312,12 @@ const validatePhone = (value: string): void => {
 };
 
 /**
- * 驗證身高
+ * 驗證身高（非必填）
  */
 const validateHeight = (): void => {
   const height = traineeData.value.height;
-  if (!height) {
-    validationErrors.value.height = "請輸入身高";
-    return;
-  }
-  if (height < 100.0 || height > 250.0) {
+  // 身高為非必填欄位，但如果有填寫則驗證範圍
+  if (height && (height < 100.0 || height > 250.0)) {
     validationErrors.value.height = "身高必須在 100.0 到 250.0 公分之間";
   } else {
     validationErrors.value.height = "";
@@ -334,15 +325,12 @@ const validateHeight = (): void => {
 };
 
 /**
- * 驗證體重
+ * 驗證體重（非必填）
  */
 const validateWeight = (): void => {
   const weight = traineeData.value.weight;
-  if (!weight) {
-    validationErrors.value.weight = "請輸入體重";
-    return;
-  }
-  if (weight < 30.0 || weight > 300.0) {
+  // 體重為非必填欄位，但如果有填寫則驗證範圍
+  if (weight && (weight < 30.0 || weight > 300.0)) {
     validationErrors.value.weight = "體重必須在 30.0 到 300.0 公斤之間";
   } else {
     validationErrors.value.weight = "";
@@ -464,14 +452,18 @@ const handleSubmit = (): void => {
   const data: Trainee = {
     ...traineeData.value,
     birthday:
-      traineeData.value.birthday === "1900-01-01"
-        ? "1900-01-01"
+      !traineeData.value.birthday || traineeData.value.birthday === "1900-01-01"
+        ? undefined
         : dayjs(traineeData.value.birthday).format("YYYY-MM-DD"),
     phone: traineeData.value.phone.replace(/(\d{4})(\d{3})(\d{3})/, "$1-$2-$3"),
-    height: Number(Number(traineeData.value.height).toFixed(1)),
-    weight: Number(Number(traineeData.value.weight).toFixed(1)),
+    height: traineeData.value.height
+      ? Number(Number(traineeData.value.height).toFixed(1))
+      : undefined,
+    weight: traineeData.value.weight
+      ? Number(Number(traineeData.value.weight).toFixed(1))
+      : undefined,
     note: traineeData.value.note || "",
-  };
+  } as Trainee;
 
   emit("save", data);
 };

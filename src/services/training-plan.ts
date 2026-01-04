@@ -23,7 +23,7 @@ export interface UpdateTrainingPlan {
   id: number;
   planType: string;
   trainee: number;
-  coach: number;
+  coach?: number;
   quota: number;
   editor: number;
   trainingTimeSlot: TrainingTimeSlot[];

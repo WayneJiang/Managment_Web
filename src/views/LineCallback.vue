@@ -34,6 +34,7 @@ import { createLineLoginService } from "../services/line-login";
 import { getLineStateFromUrl } from "../utils/line-state";
 import { lineApi } from "../services/api-line";
 import LoadingState from "../components/LoadingState.vue";
+import { useTraineeStore } from "../stores/trainee";
 
 // 初始化 Vue Router 實例
 const router: Router = useRouter();
@@ -41,6 +42,7 @@ const router: Router = useRouter();
 // 初始化用戶狀態管理 store
 const viewerStore = useViewerStore();
 const coachStore = useCoachStore();
+const traineeStore = useTraineeStore();
 
 // 初始化 LINE 登入服務
 const lineLoginService = createLineLoginService();
@@ -88,7 +90,7 @@ const handleLineCallback = async (): Promise<void> => {
     );
 
     // 步驟5：更新用戶狀態並導航到主頁面
-    await navigateToMainPage(userProfile.sub);
+    await navigateToMainPage(userProfile.sub,userProfile.name);
   } catch (error) {
     // 錯誤處理：將錯誤訊息顯示給用戶
     errorMessage.value =
@@ -109,7 +111,7 @@ const handleLineCallback = async (): Promise<void> => {
  * @param socialId - LINE用戶的唯一識別碼
  * @throws {Error} 當用戶未註冊或獲取用戶資料失敗時拋出錯誤
  */
-const navigateToMainPage = async (socialId: string): Promise<void> => {
+const navigateToMainPage = async (socialId: string,note:string): Promise<void> => {
   // 檢查登入目的
   const state = getLineStateFromUrl();
 
@@ -132,6 +134,19 @@ const navigateToMainPage = async (socialId: string): Promise<void> => {
 
   // 步驟4：根據用戶角色直接導航到對應頁面
   if (viewerStore.isTrainee) {
+    const trainee= await traineeStore.fetchTraineeById(userId);
+    if(trainee){
+      await traineeStore.updateTrainee(
+        userId, 
+        {
+          name:trainee.name,
+          gender:trainee?.gender,
+          phone:trainee.phone,
+          note:`Line 顯示名稱：${note}`
+        }
+      )
+    }
+    
     router.push({
       path: "/trainee/info",
       state: {
@@ -156,6 +171,7 @@ const navigateToMainPage = async (socialId: string): Promise<void> => {
         id: viewerStore.socialId,
         coach: false,
         register: true,
+        note: `Line 顯示名稱：${note}`,
       },
     });
   }

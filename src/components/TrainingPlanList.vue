@@ -70,7 +70,7 @@
             </div>
           </div>
 
-          <div class="mb-4">
+          <div v-if="trainingPlan.planType !== 'Sequential'" class="mb-4">
             <div class="flex items-center gap-2 mb-2">
               <svg
                 class="w-4 h-4 opacity-70"
@@ -92,7 +92,7 @@
             </div>
           </div>
 
-          <div class="mb-4">
+          <div v-if="trainingPlan.planType !== 'Sequential'" class="mb-4">
             <div class="flex items-center gap-2 mb-2">
               <svg
                 class="w-4 h-4 opacity-70"
@@ -251,8 +251,8 @@ const getPlanTypeLabel = (planType: string): string => {
 
   const planTypeMap: Record<string, string> = {
     Personal: "個人教練",
-    Block: "團體課程",
-    Sequential: "開放團課",
+    // Block: "團體課程",
+    Sequential: "團體課程",
   };
 
   return planTypeMap[planType] || planType;

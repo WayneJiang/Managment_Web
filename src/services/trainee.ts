@@ -18,9 +18,9 @@ export interface Trainee {
 export interface UpdateTrainee {
   name: string;
   gender: string;
-  birthday: string;
+  birthday?: string;
   phone: string;
-  height: number;
-  weight: number;
+  height?: number;
+  weight?: number;
   note: string;
 }

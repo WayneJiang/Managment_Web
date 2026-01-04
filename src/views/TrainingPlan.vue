@@ -25,14 +25,6 @@
               {{ isEditMode ? "編輯" : "新增" }}
               {{ currentTrainee.name }} 的訓練計畫
             </h2>
-            <div
-              class="badge badge-sm"
-              :class="
-                getAgeTagClass(getAgeTag(calculateAge(currentTrainee.birthday)))
-              "
-            >
-              {{ getAgeTag(calculateAge(currentTrainee.birthday)) }}
-            </div>
           </div>
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-4">
@@ -110,8 +102,8 @@
                     }"
                   >
                     <option value="Personal">個人教練</option>
-                    <option value="Block">團體課程</option>
-                    <option value="Sequential">開放團課</option>
+                    <option value="Sequential">團體課程</option>
+                    <!-- <option value="Sequential">開放團課</option> -->
                   </select>
                   <label v-if="validationErrors.planType" class="label">
                     <span
@@ -475,68 +467,6 @@ const canEditRecords = computed(() => {
   return currentCoach?.coachType === "Founder";
 });
 
-/**
- * 計算學員年紀
- */
-const calculateAge = (birthday: string): number => {
-  if (!birthday || birthday === "1900-01-01") {
-    return 0;
-  }
-  return dayjs().diff(dayjs(birthday), "year");
-};
-
-/**
- * 根據年紀獲取年紀標籤
- */
-const getAgeTag = (age: number): string => {
-  if (age === 0) {
-    return "未知";
-  }
-
-  if (age >= 6 && age <= 11) {
-    return "兒童期";
-  } else if (age >= 12 && age <= 17) {
-    return "青少年";
-  } else if (age >= 18 && age <= 29) {
-    return "青年";
-  } else if (age >= 30 && age <= 44) {
-    return "青壯年";
-  } else if (age >= 45 && age <= 59) {
-    return "中年";
-  } else if (age >= 60 && age <= 64) {
-    return "中老年";
-  } else if (age >= 65) {
-    return "老年";
-  } else {
-    return "兒童";
-  }
-};
-
-/**
- * 根據年紀標籤獲取對應的樣式類別
- */
-const getAgeTagClass = (ageTag: string): string => {
-  switch (ageTag) {
-    case "兒童期":
-    case "兒童":
-      return "badge-primary";
-    case "青少年":
-      return "badge-secondary";
-    case "青年":
-      return "badge-accent";
-    case "青壯年":
-      return "badge-info";
-    case "中年":
-      return "badge-warning";
-    case "中老年":
-      return "badge-error";
-    case "老年":
-      return "badge-neutral";
-    default:
-      return "badge-ghost";
-  }
-};
-
 // 選項資料
 const dayOptions = [
   { value: "Monday", label: "星期一" },
@@ -653,7 +583,8 @@ const validateForm = (): boolean => {
     trainingSlots: "",
   };
 
-  if (!selectedCoach.value) {
+  // 團體課程不需要選擇教練
+  if (!selectedCoach.value && planType.value !== "Block") {
     errors.coach = "請選擇教練";
   }
 
@@ -665,9 +596,10 @@ const validateForm = (): boolean => {
     errors.quota = "請輸入1-100之間的數字";
   }
 
-  if (trainingTimeSlots.value.length === 0) {
+  // 團體課程不需要設定訓練時段
+  if (trainingTimeSlots.value.length === 0 && planType.value !== "Block") {
     errors.trainingSlots = "請至少設定一個訓練時段";
-  } else {
+  } else if (trainingTimeSlots.value.length > 0) {
     const hasInvalidSlot = trainingTimeSlots.value.some(
       (slot) => !slot.dayOfWeek || !slot.start || !slot.end
     );

@@ -48,8 +48,8 @@ export const lineApi = {
       const axiosError = error as any;
       throw new Error(
         axiosError.response?.data?.message ||
-          axiosError.message ||
-          "LINE登入失敗"
+        axiosError.message ||
+        "LINE登入失敗"
       );
     }
   },

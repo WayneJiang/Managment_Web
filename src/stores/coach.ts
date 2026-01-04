@@ -92,7 +92,7 @@ export const useCoachStore = defineStore("coach", {
         return this.openingCourses;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "無法獲取公開課程列表";
+          error instanceof Error ? error.message : "無法獲取團體課程列表";
         this.error = errorMessage;
         return [];
       } finally {
@@ -111,7 +111,7 @@ export const useCoachStore = defineStore("coach", {
         return response;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "無法建立公開課程";
+          error instanceof Error ? error.message : "無法建立團體課程";
         this.error = errorMessage;
         return false;
       } finally {
@@ -130,7 +130,7 @@ export const useCoachStore = defineStore("coach", {
         return response;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "無法更新公開課程";
+          error instanceof Error ? error.message : "無法更新團體課程";
         this.error = errorMessage;
         return false;
       } finally {
@@ -147,7 +147,7 @@ export const useCoachStore = defineStore("coach", {
         return response;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "無法刪除公開課程";
+          error instanceof Error ? error.message : "無法刪除團體課程";
         this.error = errorMessage;
         return false;
       } finally {

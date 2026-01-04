@@ -56,6 +56,7 @@ const isCoach = ref<boolean>(false);
 const isRegister = ref<boolean>(false);
 const traineeId = ref<string>("");
 const coachId = ref<number>(-1); // 預設為 -1，表示未指定教練
+const lineNote = ref<string>(""); // LINE 顯示名稱
 const currentMonthRecords = ref<TrainingRecord[]>([]);
 const showRecords = ref<boolean>(true); // 預設顯示簽到紀錄
 const showPlans = ref<boolean>(true); // 預設顯示歷史計畫
@@ -81,6 +82,7 @@ const extractRouteParams = (): void => {
   isRegister.value = Boolean(routeState?.register);
   traineeId.value = routeState?.id?.toString() || "";
   coachId.value = Number(routeState?.coachId) || -1; // 從路由狀態中提取教練 ID
+  lineNote.value = routeState?.note || ""; // 從路由狀態中提取 LINE 顯示名稱
   showRecords.value = routeState?.showRecords !== false; // 預設為 true，除非明確設為 false
   showPlans.value = routeState?.showPlans !== false; // 預設為 true，除非明確設為 false
 };
@@ -97,7 +99,7 @@ const createDefaultTrainee = (): Trainee => ({
   height: 0,
   weight: 0,
   phone: "",
-  note: "",
+  note: lineNote.value,
   trainingPlan: [],
   trainingRecord: [],
 });

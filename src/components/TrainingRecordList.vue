@@ -938,10 +938,10 @@ const getPlanTypeLabel = (planType: TrainingPlan["planType"]): string => {
   switch (planType) {
     case "Personal":
       return "個人教練";
-    case "Block":
-      return "團體課程";
+    // case "Block":
+    //   return "團體課程";
     case "Sequential":
-      return "開放團課";
+      return "團體課程";
     default:
       return "";
   }

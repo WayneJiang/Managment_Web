@@ -37,8 +37,10 @@ export interface LineLoginResponse {
  * 包含從 LINE 獲取的基本使用者資訊
  */
 export interface LineUserInfo {
-  /** 使用者的唯一識別碼 */
+  /** 使用者的唯一識別碼 (LINE User ID) */
   sub: string;
+  /** 使用者的顯示名稱 */
+  name: string;
 }
 
 /**
@@ -70,7 +72,7 @@ export class LineLoginService {
       client_id: this.config.channelId,
       redirect_uri: this.config.redirectUri,
       state: state || this.config.state || this.generateRandomState(),
-      scope: "openid",
+      scope: "profile openid",
     });
 
     return `${baseUrl}?${params.toString()}`;

@@ -70,7 +70,11 @@ export const api = {
     updateTrainee: UpdateTrainee
   ): Promise<boolean> {
     try {
-      return (await apiClient.post(`/trainee/info/${socialId}`, updateTrainee))
+      // 過濾掉 undefined 的欄位，避免後端驗證錯誤
+      const filteredData = Object.fromEntries(
+        Object.entries(updateTrainee).filter(([_, v]) => v !== undefined)
+      );
+      return (await apiClient.post(`/trainee/info/${socialId}`, filteredData))
         .data;
     } catch (error) {
       throw new Error((error as any).response?.data?.message || "無法獲取資訊");
@@ -82,7 +86,11 @@ export const api = {
     updateTrainee: UpdateTrainee
   ): Promise<boolean> {
     try {
-      return (await apiClient.patch(`/trainee/info/${id}`, updateTrainee)).data;
+      // 過濾掉 undefined 的欄位，避免後端驗證錯誤
+      const filteredData = Object.fromEntries(
+        Object.entries(updateTrainee).filter(([_, v]) => v !== undefined)
+      );
+      return (await apiClient.patch(`/trainee/info/${id}`, filteredData)).data;
     } catch (error) {
       throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }

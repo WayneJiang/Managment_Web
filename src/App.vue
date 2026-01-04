@@ -36,7 +36,7 @@ onMounted(() => {
       }"
     >
       <div class="container mx-auto px-1 lg:px-2 text-center">
-        <p>&copy; {{ new Date().getFullYear() }} 好！來健身</p>
+        <p>&copy; 好！來健身 版權所有</p>
       </div>
     </footer>
   </div>

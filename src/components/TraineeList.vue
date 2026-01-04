@@ -78,14 +78,6 @@
                 <div class="text-lg sm:text-xl font-bold">
                   {{ trainee.name }}
                 </div>
-                <div
-                  class="badge badge-sm"
-                  :class="
-                    getAgeTagClass(getAgeTag(calculateAge(trainee.birthday)))
-                  "
-                >
-                  {{ getAgeTag(calculateAge(trainee.birthday)) }}
-                </div>
               </div>
             </div>
 
@@ -128,16 +120,16 @@
                     >
                   </div>
 
-                  <!-- 教練資訊 -->
-                  <div class="text-xs mb-1">
+                  <!-- 教練資訊 (團體課程不顯示) -->
+                  <div v-if="plan.planType !== 'Sequential'" class="text-xs mb-1">
                     <span class="opacity-70">教練：</span>
                     <span :class="getCoachNameClass(plan.coach?.name)">
                       {{ plan.coach?.name || "未指定" }}
                     </span>
                   </div>
 
-                  <!-- 訓練時段 -->
-                  <div class="text-xs mb-1">
+                  <!-- 訓練時段 (團體課程不顯示) -->
+                  <div v-if="plan.planType !== 'Sequential'" class="text-xs mb-1">
                     <span class="opacity-70">時段：</span>
                     <div
                       v-if="getTrainingSlots(plan).length > 0"
@@ -169,36 +161,7 @@
               </div>
             </div>
 
-            <div v-if="hasGroupPlan(trainee)" class="mb-4">
-              <div class="flex items-center gap-2 mb-2">
-                <svg
-                  class="w-4 h-4 opacity-70"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  ></path>
-                </svg>
-                <span class="font-semibold text-sm opacity-80"
-                  >團體課程夥伴</span
-                >
-              </div>
-              <div class="space-y-1">
-                <div
-                  v-for="member in getGroupMembers(trainee)"
-                  :key="member.id"
-                  class="text-sm p-2 rounded bg-base-200"
-                  :style="{ backgroundColor: 'var(--color-border)' }"
-                >
-                  {{ member.name }}
-                </div>
-              </div>
-            </div>
+            <!-- 團體課程夥伴區塊已隱藏 -->
 
             <!-- 備註欄位 -->
             <div v-if="trainee.note && trainee.note.trim()" class="mb-4">
@@ -285,7 +248,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import dayjs from "dayjs";
 import type { Trainee } from "../services/trainee";
 import type { TrainingPlan, TrainingTimeSlot } from "../services/training-plan";
 
@@ -307,68 +269,6 @@ const emit = defineEmits<{
  * 搜尋查詢字串
  */
 const searchQuery = ref<string>("");
-
-/**
- * 計算學員年紀
- */
-const calculateAge = (birthday: string): number => {
-  if (!birthday || birthday === "1900-01-01") {
-    return 0;
-  }
-  return dayjs().diff(dayjs(birthday), "year");
-};
-
-/**
- * 根據年紀獲取年紀標籤
- */
-const getAgeTag = (age: number): string => {
-  if (age === 0) {
-    return "未知";
-  }
-
-  if (age >= 6 && age <= 11) {
-    return "兒童期";
-  } else if (age >= 12 && age <= 17) {
-    return "青少年";
-  } else if (age >= 18 && age <= 29) {
-    return "青年";
-  } else if (age >= 30 && age <= 44) {
-    return "青壯年";
-  } else if (age >= 45 && age <= 59) {
-    return "中年";
-  } else if (age >= 60 && age <= 64) {
-    return "中老年";
-  } else if (age >= 65) {
-    return "老年";
-  } else {
-    return "兒童";
-  }
-};
-
-/**
- * 根據年紀標籤獲取對應的樣式類別
- */
-const getAgeTagClass = (ageTag: string): string => {
-  switch (ageTag) {
-    case "兒童期":
-    case "兒童":
-      return "badge-primary";
-    case "青少年":
-      return "badge-secondary";
-    case "青年":
-      return "badge-accent";
-    case "青壯年":
-      return "badge-info";
-    case "中年":
-      return "badge-warning";
-    case "中老年":
-      return "badge-error";
-    case "老年":
-      return "badge-neutral";
-    default:
-      return "badge-ghost";
-  }
-};
 
 /**
  * 過濾後的學員列表
@@ -394,8 +294,8 @@ const getPlanTypeLabel = (planType: string | undefined): string => {
 
   const planTypeMap: Record<string, string> = {
     Personal: "個人教練",
-    Block: "團體課程",
-    Sequential: "開放團課",
+    // Block: "團體課程",
+    Sequential: "團體課程",
   };
 
   return planTypeMap[planType] || planType;
@@ -511,101 +411,103 @@ const getRemainingQuotaClass = (
   }
 };
 
-/**
- * 檢查學員是否有團體訓練計畫
- */
-const hasGroupPlan = (trainee: Trainee): boolean => {
-  return trainee.trainingPlan.some((plan) => plan.planType === "Block");
-};
+// === 團體課程夥伴相關函數已註解 ===
+// /**
+//  * 檢查學員是否有團體訓練計畫
+//  */
+// const hasGroupPlan = (trainee: Trainee): boolean => {
+//   return trainee.trainingPlan.some((plan) => plan.planType === "Block");
+// };
 
-/**
- * 比較兩個訓練時段陣列是否相同
- */
-const compareTrainingSlots = (
-  slots1: TrainingTimeSlot[],
-  slots2: TrainingTimeSlot[]
-): boolean => {
-  if (slots1.length !== slots2.length) {
-    return false;
-  }
+// /**
+//  * 比較兩個訓練時段陣列是否相同
+//  */
+// const compareTrainingSlots = (
+//   slots1: TrainingTimeSlot[],
+//   slots2: TrainingTimeSlot[]
+// ): boolean => {
+//   if (slots1.length !== slots2.length) {
+//     return false;
+//   }
 
-  // 排序後比較每個時段
-  const sortedSlots1 = [...slots1].sort((a, b) =>
-    a.dayOfWeek.localeCompare(b.dayOfWeek)
-  );
-  const sortedSlots2 = [...slots2].sort((a, b) =>
-    a.dayOfWeek.localeCompare(b.dayOfWeek)
-  );
+//   // 排序後比較每個時段
+//   const sortedSlots1 = [...slots1].sort((a, b) =>
+//     a.dayOfWeek.localeCompare(b.dayOfWeek)
+//   );
+//   const sortedSlots2 = [...slots2].sort((a, b) =>
+//     a.dayOfWeek.localeCompare(b.dayOfWeek)
+//   );
 
-  return sortedSlots1.every((slot1, index) => {
-    const slot2 = sortedSlots2[index];
-    return (
-      slot1.dayOfWeek === slot2.dayOfWeek &&
-      slot1.start === slot2.start &&
-      slot1.end === slot2.end
-    );
-  });
-};
+//   return sortedSlots1.every((slot1, index) => {
+//     const slot2 = sortedSlots2[index];
+//     return (
+//       slot1.dayOfWeek === slot2.dayOfWeek &&
+//       slot1.start === slot2.start &&
+//       slot1.end === slot2.end
+//     );
+//   });
+// };
 
-/**
- * 檢查兩個訓練計畫是否為相同的團體課程
- */
-const isSameGroupPlan = (plan1: TrainingPlan, plan2: TrainingPlan): boolean => {
-  // 基本條件檢查
-  if (
-    plan1.planType !== "Block" ||
-    plan2.planType !== "Block" ||
-    plan1.coach?.id !== plan2.coach?.id
-  ) {
-    return false;
-  }
+// /**
+//  * 檢查兩個訓練計畫是否為相同的團體課程
+//  */
+// const isSameGroupPlan = (plan1: TrainingPlan, plan2: TrainingPlan): boolean => {
+//   // 基本條件檢查
+//   if (
+//     plan1.planType !== "Block" ||
+//     plan2.planType !== "Block" ||
+//     plan1.coach?.id !== plan2.coach?.id
+//   ) {
+//     return false;
+//   }
 
-  // 比較訓練時段
-  const slots1 = getTrainingSlots(plan1);
-  const slots2 = getTrainingSlots(plan2);
+//   // 比較訓練時段
+//   const slots1 = getTrainingSlots(plan1);
+//   const slots2 = getTrainingSlots(plan2);
 
-  return compareTrainingSlots(slots1, slots2);
-};
+//   return compareTrainingSlots(slots1, slots2);
+// };
 
-/**
- * 獲取團體課程夥伴
- */
-const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
-  const groupPlans = currentTrainee.trainingPlan.filter(
-    (plan) => plan.planType === "Block"
-  );
+// /**
+//  * 獲取團體課程夥伴
+//  */
+// const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
+//   const groupPlans = currentTrainee.trainingPlan.filter(
+//     (plan) => plan.planType === "Block"
+//   );
 
-  if (groupPlans.length === 0) {
-    return [];
-  }
+//   if (groupPlans.length === 0) {
+//     return [];
+//   }
 
-  const groupMembers: Trainee[] = [];
+//   const groupMembers: Trainee[] = [];
 
-  // 對每個團體計畫尋找夥伴
-  groupPlans.forEach((currentPlan) => {
-    const members = props.trainees.filter((trainee) => {
-      if (trainee.id === currentTrainee.id) {
-        return false;
-      }
+//   // 對每個團體計畫尋找夥伴
+//   groupPlans.forEach((currentPlan) => {
+//     const members = props.trainees.filter((trainee) => {
+//       if (trainee.id === currentTrainee.id) {
+//         return false;
+//       }
 
-      // 檢查該學員是否有相同的團體計畫
-      const matchingPlan = trainee.trainingPlan.find((plan) =>
-        isSameGroupPlan(currentPlan, plan)
-      );
+//       // 檢查該學員是否有相同的團體計畫
+//       const matchingPlan = trainee.trainingPlan.find((plan) =>
+//         isSameGroupPlan(currentPlan, plan)
+//       );
 
-      return !!matchingPlan;
-    });
+//       return !!matchingPlan;
+//     });
 
-    // 避免重複添加相同的夥伴
-    members.forEach((member) => {
-      if (!groupMembers.find((existing) => existing.id === member.id)) {
-        groupMembers.push(member);
-      }
-    });
-  });
+//     // 避免重複添加相同的夥伴
+//     members.forEach((member) => {
+//       if (!groupMembers.find((existing) => existing.id === member.id)) {
+//         groupMembers.push(member);
+//       }
+//     });
+//   });
 
-  return groupMembers;
-};
+//   return groupMembers;
+// };
+// === 團體課程夥伴相關函數註解結束 ===
 
 /**
  * 處理更新按鈕點擊

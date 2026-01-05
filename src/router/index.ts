@@ -46,6 +46,10 @@ const router: Router = createRouter({
 });
 
 router.beforeEach((to) => {
+  if (to.path === "/") {
+    return;
+  }
+
   const requiredState = to.meta.requiresState as string[] | undefined;
 
   if (requiredState && requiredState.length > 0) {

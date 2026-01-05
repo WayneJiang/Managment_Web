@@ -186,7 +186,7 @@ const handleBack = (): void => {
 };
 
 /**
- * 處理訓練記錄更新
+ * 處理訓練紀錄更新
  */
 const handleUpdateRecords = (records: TrainingRecord[]): void => {
   currentMonthRecords.value = records;

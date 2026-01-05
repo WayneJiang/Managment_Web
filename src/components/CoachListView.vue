@@ -122,7 +122,7 @@
           ></path>
         </svg>
         <p class="text-lg opacity-70">
-          {{ searchQuery ? "找不到符合搜尋條件的教練" : "目前沒有教練記錄" }}
+          {{ searchQuery ? "找不到符合搜尋條件的教練" : "目前沒有教練紀錄" }}
         </p>
       </div>
     </div>

@@ -13,7 +13,7 @@ export interface TrainingRecord {
 }
 
 /**
- * 更新訓練記錄的請求資料
+ * 更新訓練紀錄的請求資料
  */
 export interface UpdateTrainingRecord {
   id: number;
@@ -21,20 +21,22 @@ export interface UpdateTrainingRecord {
   trainingPlan: number;
   date: string;
   editor: number;
+  openingCourse?: number;
 }
 
 /**
- * 建立訓練記錄的請求資料
+ * 建立訓練紀錄的請求資料
  */
 export interface CreateTrainingRecord {
   trainee: number;
   trainingPlan: number;
   date?: Date;
   editor: number;
+  openingCourse?: number;
 }
 
 /**
- * 訓練記錄分頁回傳資料
+ * 訓練紀錄分頁回傳資料
  */
 export interface PageTrainingRecord {
   data: TrainingRecord[];

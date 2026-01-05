@@ -8,7 +8,7 @@
   >
     <div class="card-body">
       <div class="flex justify-between items-start">
-        <h2 class="card-title text-2xl">簽到記錄</h2>
+        <h2 class="card-title text-2xl">簽到紀錄</h2>
         <div class="flex gap-2">
           <button
             v-if="isCoach && canEditRecords"
@@ -260,7 +260,7 @@
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           ></path>
         </svg>
-        <p class="text-lg opacity-70">目前沒有簽到記錄</p>
+        <p class="text-lg opacity-70">目前沒有簽到紀錄</p>
       </div>
 
       <!-- 分頁控制 -->
@@ -328,7 +328,7 @@
       </div>
     </div>
 
-    <!-- 編輯訓練記錄模態框 -->
+    <!-- 編輯訓練紀錄模態框 -->
     <div
       class="modal"
       :class="{ 'modal-open': showEditModal }"
@@ -342,7 +342,7 @@
         }"
         @click.stop
       >
-        <h3 class="font-bold text-lg mb-4">編輯訓練記錄</h3>
+        <h3 class="font-bold text-lg mb-4">編輯訓練紀錄</h3>
         <form @submit.prevent="handleSaveEditRecord" @click.stop>
           <div class="form-control mb-4">
             <label class="label">
@@ -385,6 +385,43 @@
                 class="label-text-alt"
                 :style="{ color: 'var(--color-error)' }"
                 >{{ validationErrors.trainingPlan }}</span
+              >
+            </label>
+          </div>
+
+          <!-- 團體課程選擇（僅當選擇團體課程類型時顯示） -->
+          <div v-if="isEditingSequentialPlan" class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-semibold">團體課程</span>
+            </label>
+            <select
+              v-model="editingOpeningCourse"
+              class="select select-bordered w-full"
+              :class="{ 'select-error': validationErrors.openingCourse }"
+              :style="{
+                backgroundColor: 'var(--color-input-bg)',
+                borderColor: validationErrors.openingCourse
+                  ? 'var(--color-error)'
+                  : 'var(--color-input-border)',
+                color: 'var(--color-text)',
+              }"
+            >
+              <option :value="undefined" disabled>請選擇團體課程</option>
+              <option
+                v-for="course in openingCourses"
+                :key="course.id"
+                :value="course.id"
+              >
+                {{ course.name }} - {{ getDayOfWeekLabel(course.dayOfWeek) }}
+                {{ course.start }}~{{ course.end }}
+                ({{ course.coach?.name || '未指定教練' }})
+              </option>
+            </select>
+            <label v-if="validationErrors.openingCourse" class="label">
+              <span
+                class="label-text-alt"
+                :style="{ color: 'var(--color-error)' }"
+                >{{ validationErrors.openingCourse }}</span
               >
             </label>
           </div>
@@ -514,7 +551,7 @@
       </div>
     </div>
 
-    <!-- 新增訓練記錄模態框 -->
+    <!-- 新增訓練紀錄模態框 -->
     <div
       class="modal"
       :class="{ 'modal-open': showCreateModal }"
@@ -528,7 +565,7 @@
         }"
         @click.stop
       >
-        <h3 class="font-bold text-lg mb-4">新增簽到記錄</h3>
+        <h3 class="font-bold text-lg mb-4">新增簽到紀錄</h3>
         <form @submit.prevent="handleSaveCreateRecord" @click.stop>
           <div class="form-control mb-4">
             <label class="label">
@@ -571,6 +608,43 @@
                 class="label-text-alt"
                 :style="{ color: 'var(--color-error)' }"
                 >{{ validationErrors.trainingPlan }}</span
+              >
+            </label>
+          </div>
+
+          <!-- 團體課程選擇（僅當選擇團體課程類型時顯示） -->
+          <div v-if="isCreatingSequentialPlan" class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-semibold">團體課程</span>
+            </label>
+            <select
+              v-model="creatingOpeningCourse"
+              class="select select-bordered w-full"
+              :class="{ 'select-error': validationErrors.openingCourse }"
+              :style="{
+                backgroundColor: 'var(--color-input-bg)',
+                borderColor: validationErrors.openingCourse
+                  ? 'var(--color-error)'
+                  : 'var(--color-input-border)',
+                color: 'var(--color-text)',
+              }"
+            >
+              <option :value="undefined" disabled>請選擇團體課程</option>
+              <option
+                v-for="course in openingCourses"
+                :key="course.id"
+                :value="course.id"
+              >
+                {{ course.name }} - {{ getDayOfWeekLabel(course.dayOfWeek) }}
+                {{ course.start }}~{{ course.end }}
+                ({{ course.coach?.name || '未指定教練' }})
+              </option>
+            </select>
+            <label v-if="validationErrors.openingCourse" class="label">
+              <span
+                class="label-text-alt"
+                :style="{ color: 'var(--color-error)' }"
+                >{{ validationErrors.openingCourse }}</span
               >
             </label>
           </div>
@@ -714,8 +788,8 @@
         }"
         @click.stop
       >
-        <h3 class="font-bold text-lg mb-4">刪除訓練記錄</h3>
-        <p class="mb-4">您確定要刪除這筆訓練記錄嗎？此操作無法復原。</p>
+        <h3 class="font-bold text-lg mb-4">刪除訓練紀錄</h3>
+        <p class="mb-4">您確定要刪除這筆訓練紀錄嗎？此操作無法復原。</p>
 
         <div class="modal-action">
           <button
@@ -765,9 +839,12 @@ import type {
   CreateTrainingRecord,
 } from "../services/training-record";
 import type { TrainingPlan } from "../services/training-plan";
+import type { OpeningCourse } from "../services/opening-course";
 import { useTraineeStore } from "../stores/trainee";
+import { useCoachStore } from "../stores/coach";
 
 const traineeStore = useTraineeStore();
+const coachStore = useCoachStore();
 
 const props = withDefaults(
   defineProps<{
@@ -825,11 +902,17 @@ const creatingTime = ref<string>("");
 const creatingHour = ref<string>("");
 const creatingMinute = ref<string>("");
 
+// 團體課程相關狀態
+const openingCourses = ref<OpeningCourse[]>([]);
+const editingOpeningCourse = ref<number | undefined>(undefined);
+const creatingOpeningCourse = ref<number | undefined>(undefined);
+
 // 驗證錯誤狀態
 const validationErrors = ref({
   trainingPlan: "",
   date: "",
   time: "",
+  openingCourse: "",
 });
 
 /**
@@ -874,7 +957,43 @@ const minuteOptions = computed(() => {
 });
 
 /**
- * 載入訓練記錄資料
+ * 判斷編輯時選擇的訓練計畫是否為團體課程類型
+ */
+const isEditingSequentialPlan = computed(() => {
+  const selectedPlan = availableTrainingPlans.value.find(
+    (plan) => plan.id === editingRecord.value.trainingPlan
+  );
+  return selectedPlan?.planType === "Sequential";
+});
+
+/**
+ * 判斷新增時選擇的訓練計畫是否為團體課程類型
+ */
+const isCreatingSequentialPlan = computed(() => {
+  const selectedPlan = availableTrainingPlans.value.find(
+    (plan) => plan.id === creatingRecord.value.trainingPlan
+  );
+  return selectedPlan?.planType === "Sequential";
+});
+
+/**
+ * 取得星期對應的中文名稱
+ */
+const getDayOfWeekLabel = (dayOfWeek: string): string => {
+  const dayMap: Record<string, string> = {
+    Monday: "週一",
+    Tuesday: "週二",
+    Wednesday: "週三",
+    Thursday: "週四",
+    Friday: "週五",
+    Saturday: "週六",
+    Sunday: "週日",
+  };
+  return dayMap[dayOfWeek] || dayOfWeek;
+};
+
+/**
+ * 載入訓練紀錄資料
  */
 const loadTrainingRecords = async (): Promise<void> => {
   try {
@@ -887,13 +1006,13 @@ const loadTrainingRecords = async (): Promise<void> => {
     if (response) {
       emit("update-records", response.data);
       totalPages.value = response.totalPages;
-      // 判斷是否有更多記錄：當前頁碼 + 1 < 總頁數
+      // 判斷是否有更多紀錄：當前頁碼 + 1 < 總頁數
       hasMoreRecords.value = currentPage.value + 1 < response.totalPages;
     }
   } catch (error) {
     console.error("Failed to load training records:", error);
     const errorMessage =
-      error instanceof Error ? error.message : "獲取簽到記錄失敗，請稍後再試";
+      error instanceof Error ? error.message : "獲取簽到紀錄失敗，請稍後再試";
     ElMessage.error(errorMessage);
   } finally {
     isLoading.value = false;
@@ -921,7 +1040,7 @@ const handleNextPage = async (): Promise<void> => {
 };
 
 /**
- * 按日期分組訓練記錄
+ * 按日期分組訓練紀錄
  */
 const groupedRecords = computed(() => {
   const groups: Record<string, TrainingRecord[]> = {};
@@ -1009,6 +1128,7 @@ const validateEditForm = (): boolean => {
     trainingPlan: "",
     date: "",
     time: "",
+    openingCourse: "",
   };
 
   // 只有在有可用計畫時才要求選擇訓練計畫
@@ -1025,6 +1145,11 @@ const validateEditForm = (): boolean => {
 
   if (!editingHour.value || !editingMinute.value) {
     errors.time = "請選擇時間";
+  }
+
+  // 如果選擇的是團體課程類型，則必須選擇團體課程
+  if (isEditingSequentialPlan.value && !editingOpeningCourse.value) {
+    errors.openingCourse = "請選擇團體課程";
   }
 
   validationErrors.value = errors;
@@ -1049,7 +1174,7 @@ const handleExportToPdf = async (): Promise<void> => {
     doc.setFont("NotoSansTC");
 
     doc.setFontSize(20);
-    doc.text("簽到記錄", 14, 20);
+    doc.text("簽到紀錄", 14, 20);
 
     let currentY = 30;
 
@@ -1099,7 +1224,7 @@ const handleExportToPdf = async (): Promise<void> => {
       }
     });
 
-    doc.save(`簽到歷史記錄.pdf`);
+    doc.save(`簽到歷史紀錄.pdf`);
     ElMessage.success("PDF 匯出成功");
   } catch (error) {
     console.error("Failed to export PDF:", error);
@@ -1110,11 +1235,11 @@ const handleExportToPdf = async (): Promise<void> => {
 };
 
 /**
- * 處理編輯訓練記錄
+ * 處理編輯訓練紀錄
  */
-const handleEditRecord = (record: TrainingRecord): void => {
+const handleEditRecord = async (record: TrainingRecord): Promise<void> => {
   try {
-    // 直接設置編輯記錄
+    // 直接設置編輯紀錄
     editingRecord.value = {
       id: record.id,
       trainee: props.traineeId,
@@ -1122,6 +1247,9 @@ const handleEditRecord = (record: TrainingRecord): void => {
       date: "",
       editor: props.coachId,
     };
+
+    // 設置現有的團體課程（如果有的話）
+    editingOpeningCourse.value = record.openingCourse?.id;
 
     // 設置當前時間
     const currentDateTime = dayjs().tz("Asia/Taipei");
@@ -1137,6 +1265,10 @@ const handleEditRecord = (record: TrainingRecord): void => {
       );
     }
 
+    // 載入團體課程列表
+    await coachStore.fetchOpeningCourses();
+    openingCourses.value = coachStore.openingCourses;
+
     showEditModal.value = true;
   } catch (error) {
     console.error("Failed to handle edit record:", error);
@@ -1145,7 +1277,7 @@ const handleEditRecord = (record: TrainingRecord): void => {
 };
 
 /**
- * 處理儲存編輯的訓練記錄
+ * 處理儲存編輯的訓練紀錄
  */
 const handleSaveEditRecord = async (): Promise<void> => {
   if (!validateEditForm()) {
@@ -1155,6 +1287,13 @@ const handleSaveEditRecord = async (): Promise<void> => {
   const combinedTime = `${editingHour.value}:${editingMinute.value}`;
   const combinedDateTime = `${editingDate.value}T${combinedTime}`;
   editingRecord.value.date = dayjs(combinedDateTime).tz("Asia/Taipei").format();
+
+  // 如果是團體課程類型，加入團體課程 ID
+  if (isEditingSequentialPlan.value && editingOpeningCourse.value) {
+    editingRecord.value.openingCourse = editingOpeningCourse.value;
+  } else {
+    editingRecord.value.openingCourse = undefined;
+  }
 
   try {
     const result = await traineeStore.updateTrainingRecord(editingRecord.value);
@@ -1187,26 +1326,31 @@ const handleCancelEdit = (): void => {
   editingTime.value = "";
   editingHour.value = "";
   editingMinute.value = "";
+  editingOpeningCourse.value = undefined;
   initializeDefaultTime();
   validationErrors.value = {
     trainingPlan: "",
     date: "",
     time: "",
+    openingCourse: "",
   };
 };
 
 /**
- * 處理新增簽到記錄
+ * 處理新增簽到紀錄
  */
-const handleCreateRecord = (): void => {
+const handleCreateRecord = async (): Promise<void> => {
   try {
-    // 設置建立記錄
+    // 設置建立紀錄
     creatingRecord.value = {
       trainee: props.traineeId,
       trainingPlan: 0,
       date: undefined,
       editor: props.coachId,
     };
+
+    // 重置團體課程選擇
+    creatingOpeningCourse.value = undefined;
 
     // 設置當前時間
     const currentDateTime = dayjs().tz("Asia/Taipei");
@@ -1221,6 +1365,10 @@ const handleCreateRecord = (): void => {
         (plan) => (plan.quota || 0) - (plan.trainingRecord?.length || 0) > 0
       );
     }
+
+    // 載入團體課程列表
+    await coachStore.fetchOpeningCourses();
+    openingCourses.value = coachStore.openingCourses;
 
     showCreateModal.value = true;
   } catch (error) {
@@ -1237,6 +1385,7 @@ const validateCreateForm = (): boolean => {
     trainingPlan: "",
     date: "",
     time: "",
+    openingCourse: "",
   };
 
   // 只有在有可用計畫時才要求選擇訓練計畫
@@ -1255,12 +1404,17 @@ const validateCreateForm = (): boolean => {
     errors.time = "請選擇時間";
   }
 
+  // 如果選擇的是團體課程類型，則必須選擇團體課程
+  if (isCreatingSequentialPlan.value && !creatingOpeningCourse.value) {
+    errors.openingCourse = "請選擇團體課程";
+  }
+
   validationErrors.value = errors;
   return !Object.values(errors).some((error) => error !== "");
 };
 
 /**
- * 處理儲存新增的訓練記錄
+ * 處理儲存新增的訓練紀錄
  */
 const handleSaveCreateRecord = async (): Promise<void> => {
   if (!validateCreateForm()) {
@@ -1272,6 +1426,13 @@ const handleSaveCreateRecord = async (): Promise<void> => {
   creatingRecord.value.date = dayjs(combinedDateTime)
     .tz("Asia/Taipei")
     .toDate();
+
+  // 如果是團體課程類型，加入團體課程 ID
+  if (isCreatingSequentialPlan.value && creatingOpeningCourse.value) {
+    creatingRecord.value.openingCourse = creatingOpeningCourse.value;
+  } else {
+    creatingRecord.value.openingCourse = undefined;
+  }
 
   try {
     const result = await traineeStore.createTrainingRecord(
@@ -1306,15 +1467,17 @@ const handleCancelCreate = (): void => {
   creatingTime.value = "";
   creatingHour.value = "";
   creatingMinute.value = "";
+  creatingOpeningCourse.value = undefined;
   validationErrors.value = {
     trainingPlan: "",
     date: "",
     time: "",
+    openingCourse: "",
   };
 };
 
 /**
- * 處理刪除訓練記錄
+ * 處理刪除訓練紀錄
  */
 const handleDeleteRecord = (record: TrainingRecord): void => {
   deletingRecord.value = record;
@@ -1322,7 +1485,7 @@ const handleDeleteRecord = (record: TrainingRecord): void => {
 };
 
 /**
- * 處理確認刪除訓練記錄
+ * 處理確認刪除訓練紀錄
  */
 const handleConfirmDeleteRecord = async (): Promise<void> => {
   if (!deletingRecord.value) return;

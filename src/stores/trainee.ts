@@ -172,7 +172,7 @@ export const useTraineeStore = defineStore("trainee", {
         return response;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "無法獲取簽到記錄資料";
+          error instanceof Error ? error.message : "無法獲取簽到紀錄資料";
         console.error("Failed to get training record:", error);
         throw new Error(errorMessage);
       }
@@ -189,7 +189,7 @@ export const useTraineeStore = defineStore("trainee", {
         return Boolean(response);
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "無法更新訓練記錄";
+          error instanceof Error ? error.message : "無法更新訓練紀錄";
         this.error = errorMessage;
         console.error("Failed to update training record:", error);
         return null;
@@ -207,7 +207,7 @@ export const useTraineeStore = defineStore("trainee", {
         return Boolean(response);
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "無法刪除訓練記錄";
+          error instanceof Error ? error.message : "無法刪除訓練紀錄";
         this.error = errorMessage;
         console.error("Failed to delete training record:", error);
         return null;
@@ -227,7 +227,7 @@ export const useTraineeStore = defineStore("trainee", {
         return Boolean(response);
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "無法建立訓練記錄";
+          error instanceof Error ? error.message : "無法建立訓練紀錄";
         this.error = errorMessage;
         console.error("Failed to create training record:", error);
         return null;

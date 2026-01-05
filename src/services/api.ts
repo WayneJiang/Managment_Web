@@ -190,7 +190,7 @@ export const api = {
       ).data;
     } catch (error) {
       throw new Error(
-        (error as any).response?.data?.message || "無法更新訓練記錄"
+        (error as any).response?.data?.message || "無法更新訓練紀錄"
       );
     }
   },
@@ -200,7 +200,7 @@ export const api = {
       return (await apiClient.delete(`/trainingRecord/${id}`)).data;
     } catch (error) {
       throw new Error(
-        (error as any).response?.data?.message || "無法刪除訓練記錄"
+        (error as any).response?.data?.message || "無法刪除訓練紀錄"
       );
     }
   },
@@ -213,7 +213,7 @@ export const api = {
         .data;
     } catch (error) {
       throw new Error(
-        (error as any).response?.data?.message || "無法建立訓練記錄"
+        (error as any).response?.data?.message || "無法建立訓練紀錄"
       );
     }
   },

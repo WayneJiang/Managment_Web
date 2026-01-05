@@ -392,7 +392,7 @@
         </div>
       </div>
 
-      <!-- 訓練記錄列表 -->
+      <!-- 訓練紀錄列表 -->
       <TrainingRecordList
         v-if="showRecords"
         :traineeId="currentTrainee.id"
@@ -751,7 +751,7 @@ const handleBack = (): void => {
 };
 
 /**
- * 處理訓練記錄更新
+ * 處理訓練紀錄更新
  */
 const handleUpdateTrainingRecords = (records: TrainingRecord[]): void => {
   trainingRecords.value = records;

@@ -178,7 +178,7 @@
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     ></path>
                   </svg>
-                  <span class="text-sm opacity-70">課程時間：</span>
+                  <span class="text-sm opacity-70">時間：</span>
                   <span class="font-medium">
                     {{ record.openingCourse.start }}~{{ record.openingCourse.end }}
                   </span>

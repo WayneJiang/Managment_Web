@@ -127,11 +127,10 @@ const navigateBasedOnRole = (userId: number | null): void => {
 const initializeUserCheck = async (): Promise<void> => {
   // 如果 store 中已經有 socialId，直接進行身份檢查
   if (viewerStore.socialId) {
-    try {
-      const userId = await viewerStore.fetchBySocialId(viewerStore.socialId);
+    const userId = await viewerStore.fetchBySocialId(viewerStore.socialId);
+
+    if (!viewerStore.error) {
       navigateBasedOnRole(userId);
-    } catch (err: unknown) {
-      // Store 會自動處理錯誤狀態
     }
     return;
   }
@@ -148,11 +147,10 @@ const initializeUserCheck = async (): Promise<void> => {
   // 清理 URL 參數
   cleanUrlParameters();
 
-  try {
-    const userId = await viewerStore.fetchBySocialId(extractedSocialId);
+  const userId = await viewerStore.fetchBySocialId(extractedSocialId);
+ 
+  if (!viewerStore.error) {
     navigateBasedOnRole(userId);
-  } catch (err: unknown) {
-    // Store 會自動處理錯誤狀態
   }
 };
 

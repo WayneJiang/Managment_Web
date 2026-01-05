@@ -408,7 +408,7 @@
             >
               <option :value="undefined" disabled>請選擇團體課程</option>
               <option
-                v-for="course in openingCourses"
+                v-for="course in sortedOpeningCourses"
                 :key="course.id"
                 :value="course.id"
               >
@@ -631,7 +631,7 @@
             >
               <option :value="undefined" disabled>請選擇團體課程</option>
               <option
-                v-for="course in openingCourses"
+                v-for="course in sortedOpeningCourses"
                 :key="course.id"
                 :value="course.id"
               >
@@ -991,6 +991,34 @@ const getDayOfWeekLabel = (dayOfWeek: string): string => {
   };
   return dayMap[dayOfWeek] || dayOfWeek;
 };
+
+/**
+ * 取得星期排序權重
+ */
+const getDayOfWeekOrder = (dayOfWeek: string): number => {
+  const orderMap: Record<string, number> = {
+    Monday: 1,
+    Tuesday: 2,
+    Wednesday: 3,
+    Thursday: 4,
+    Friday: 5,
+    Saturday: 6,
+    Sunday: 7,
+  };
+  return orderMap[dayOfWeek] || 8;
+};
+
+/**
+ * 按照星期排序的團體課程列表
+ */
+const sortedOpeningCourses = computed(() => {
+  return [...openingCourses.value].sort((a, b) => {
+    const orderDiff = getDayOfWeekOrder(a.dayOfWeek) - getDayOfWeekOrder(b.dayOfWeek);
+    if (orderDiff !== 0) return orderDiff;
+    // 同一天則按開始時間排序
+    return a.start.localeCompare(b.start);
+  });
+});
 
 /**
  * 載入訓練紀錄資料

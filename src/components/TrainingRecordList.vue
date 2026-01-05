@@ -153,10 +153,34 @@
                   <span
                     class="font-medium"
                     :class="{
-                      'text-error': !record.trainingPlan?.coach?.name,
+                      'text-error': !getCoachName(record),
                     }"
                   >
-                    {{ record.trainingPlan?.coach?.name || "未指定" }}
+                    {{ getCoachName(record) }}
+                  </span>
+                </div>
+
+                <!-- 團體課程時間（僅團體課程顯示） -->
+                <div
+                  v-if="record.trainingPlan?.planType === 'Sequential' && record.openingCourse"
+                  class="flex items-center justify-center gap-2"
+                >
+                  <svg
+                    class="w-4 h-4 opacity-70"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
+                  </svg>
+                  <span class="text-sm opacity-70">課程時間：</span>
+                  <span class="font-medium">
+                    {{ record.openingCourse.start }}~{{ record.openingCourse.end }}
                   </span>
                 </div>
 
@@ -728,7 +752,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, withDefaults } from "vue";
+import { computed, ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -948,6 +972,17 @@ const getPlanTypeLabel = (planType: TrainingPlan["planType"]): string => {
 };
 
 /**
+ * 獲取教練名稱
+ * 團體課程優先顯示 openingCourse 的教練，否則顯示 trainingPlan 的教練
+ */
+const getCoachName = (record: TrainingRecord): string => {
+  if (record.trainingPlan?.planType === "Sequential" && record.openingCourse?.coach?.name) {
+    return record.openingCourse.coach.name;
+  }
+  return record.trainingPlan?.coach?.name || "未指定";
+};
+
+/**
  * 格式化時間
  */
 const formatTime = (dateTimeString: string): string => {
@@ -1027,12 +1062,15 @@ const handleExportToPdf = async (): Promise<void> => {
       const tableData = records.map((record) => [
         formatTime(record.createdDate),
         getPlanTypeLabel(record.trainingPlan?.planType),
-        record.trainingPlan?.coach?.name || "未指定",
+        getCoachName(record),
+        record.trainingPlan?.planType === "Sequential" && record.openingCourse
+          ? `${record.openingCourse.start}~${record.openingCourse.end}`
+          : "",
         record.trainingPlan?.quota?.toString() || "",
       ]);
 
       autoTable(doc, {
-        head: [["時間", "計畫", "教練", "額度", "已用"]],
+        head: [["時間", "計畫", "教練", "課程時段", "額度"]],
         body: tableData,
         startY: currentY,
         styles: {

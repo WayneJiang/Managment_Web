@@ -412,7 +412,6 @@ import { useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import { useCoachStore } from "../stores/coach";
 import { ElMessage } from "element-plus";
-import dayjs from "dayjs";
 import LoadingState from "../components/LoadingState.vue";
 import TrainingPlanList from "../components/TrainingPlanList.vue";
 import TrainingRecordList from "../components/TrainingRecordList.vue";

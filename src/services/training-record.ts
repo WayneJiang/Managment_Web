@@ -1,6 +1,7 @@
 import { Trainee } from "./trainee";
 import { TrainingPlan } from "./training-plan";
 import { Coach } from "./coach";
+import { OpeningCourse } from "./opening-course";
 
 export interface TrainingRecord {
   id: number;
@@ -8,6 +9,7 @@ export interface TrainingRecord {
   trainingPlan: TrainingPlan;
   createdDate: string;
   editor?: Coach;
+  openingCourse?: OpeningCourse;
 }
 
 /**

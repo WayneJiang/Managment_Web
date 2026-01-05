@@ -45,17 +45,4 @@ const router: Router = createRouter({
   ],
 });
 
-router.beforeEach((to) => {
-  const requiredState = to.meta.requiresState as string[] | undefined;
-
-  if (requiredState && requiredState.length > 0) {
-    const routeState = (to as any).state || history.state;
-    const missingKeys = requiredState.filter((key) => !routeState?.[key]);
-
-    if (missingKeys.length > 0) {
-      return "/";
-    }
-  }
-});
-
 export default router;

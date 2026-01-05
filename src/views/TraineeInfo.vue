@@ -194,6 +194,13 @@ const handleUpdateRecords = (records: TrainingRecord[]): void => {
 
 onMounted(async (): Promise<void> => {
   extractRouteParams();
+
+  // 檢查必要參數，如果沒有則重定向回首頁
+  if (!traineeId.value) {
+    router.replace("/");
+    return;
+  }
+
   await initializeTraineeData();
 });
 </script>

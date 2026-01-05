@@ -146,14 +146,16 @@ const filteredTrainees = computed(() => {
  * 初始化教練和學員資料
  */
 const initializeData = async (): Promise<void> => {
+  const routeState = history.state;
+  const coachId = Number(routeState?.id);
+
+  // 檢查必要參數，如果沒有則重定向回首頁
+  if (!coachId || Number.isNaN(coachId)) {
+    router.replace("/");
+    return;
+  }
+
   try {
-    const routeState = history.state;
-    const coachId = Number(routeState?.id);
-
-    if (!coachId || Number.isNaN(coachId)) {
-      throw new Error("缺少有效的教練 ID");
-    }
-
     // 並行載入教練和學員資料
     await Promise.all([
       coachStore.fetchCoachById(coachId),

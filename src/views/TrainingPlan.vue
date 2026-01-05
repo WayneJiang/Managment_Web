@@ -503,14 +503,16 @@ const extractRouteParams = (): void => {
  * 初始化資料
  */
 const initializeData = async (): Promise<void> => {
+  const routeState = history.state;
+  const traineeId = Number(routeState?.id);
+
+  // 檢查必要參數，如果沒有則重定向回首頁
+  if (!traineeId) {
+    router.replace("/");
+    return;
+  }
+
   try {
-    const routeState = history.state;
-    const traineeId = Number(routeState?.id);
-
-    if (!traineeId) {
-      throw new Error("缺少學員 ID");
-    }
-
     const [trainee, coachesData] = await Promise.all([
       traineeStore.fetchTraineeById(traineeId),
       traineeStore.fetchCoaches(),

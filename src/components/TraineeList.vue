@@ -294,6 +294,7 @@ const getPlanTypeLabel = (planType: string | undefined): string => {
 
   const planTypeMap: Record<string, string> = {
     Personal: "個人教練",
+    FlexiblePersonal: "個人彈性",
     // Block: "團體課程",
     Sequential: "團體課程",
   };
@@ -313,9 +314,13 @@ const getPlanTypeClass = (planType: string | undefined): string => {
     return "badge-primary";
   }
 
-  if (planType === "Block") {
-    return "badge-success";
+  if (planType === "FlexiblePersonal") {
+    return "badge-info";
   }
+
+  // if (planType === "Block") {
+  //   return "badge-success";
+  // }
 
   if (planType === "Sequential") {
     return "badge-warning";

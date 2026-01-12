@@ -120,13 +120,16 @@
                     :class="{
                       'badge-primary':
                         record.trainingPlan?.planType === 'Personal',
-                      'badge-success':
-                        record.trainingPlan?.planType === 'Block',
+                      'badge-info':
+                        record.trainingPlan?.planType === 'FlexiblePersonal',
+                      // 'badge-success':
+                      //   record.trainingPlan?.planType === 'Block',
                       'badge-warning':
                         record.trainingPlan?.planType === 'Sequential',
                       'badge-secondary':
                         record.trainingPlan?.planType !== 'Personal' &&
-                        record.trainingPlan?.planType !== 'Block' &&
+                        record.trainingPlan?.planType !== 'FlexiblePersonal' &&
+                        // record.trainingPlan?.planType !== 'Block' &&
                         record.trainingPlan?.planType !== 'Sequential',
                     }"
                   >
@@ -1109,6 +1112,8 @@ const getPlanTypeLabel = (planType: TrainingPlan["planType"]): string => {
   switch (planType) {
     case "Personal":
       return "個人教練";
+    case "FlexiblePersonal":
+      return "個人彈性";
     // case "Block":
     //   return "團體課程";
     case "Sequential":

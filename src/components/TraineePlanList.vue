@@ -30,11 +30,13 @@
                 class="badge badge-lg"
                 :class="{
                   'badge-primary': trainingPlan.planType === 'Personal',
-                  'badge-success': trainingPlan.planType === 'Block',
+                  'badge-info': trainingPlan.planType === 'FlexiblePersonal',
+                  // 'badge-success': trainingPlan.planType === 'Block',
                   'badge-warning': trainingPlan.planType === 'Sequential',
                   'badge-secondary':
                     trainingPlan.planType !== 'Personal' &&
-                    trainingPlan.planType !== 'Block' &&
+                    trainingPlan.planType !== 'FlexiblePersonal' &&
+                    // trainingPlan.planType !== 'Block' &&
                     trainingPlan.planType !== 'Sequential',
                 }"
               >
@@ -83,7 +85,7 @@
               </div>
             </div>
 
-            <div v-if="trainingPlan.planType !== 'Sequential'" class="mb-4">
+            <div v-if="trainingPlan.planType !== 'Sequential' && trainingPlan.planType !== 'FlexiblePersonal'" class="mb-4">
               <div class="flex items-center gap-2 mb-2">
                 <svg
                   class="w-4 h-4 opacity-70"
@@ -221,6 +223,7 @@ const getPlanTypeLabel = (planType: string): string => {
 
   const planTypeMap: Record<string, string> = {
     Personal: "個人教練",
+    FlexiblePersonal: "個人彈性",
     // Block: "團體課程",
     Sequential: "團體課程",
   };

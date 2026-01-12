@@ -102,8 +102,8 @@
                     }"
                   >
                     <option value="Personal">個人教練</option>
+                    <option value="FlexiblePersonal">個人彈性</option>
                     <option value="Sequential">團體課程</option>
-                    <!-- <option value="Sequential">開放團課</option> -->
                   </select>
                   <label v-if="validationErrors.planType" class="label">
                     <span
@@ -584,8 +584,8 @@ const validateForm = (): boolean => {
     trainingSlots: "",
   };
 
-  // 團體課程不需要選擇教練
-  if (!selectedCoach.value && planType.value !== "Block") {
+  // 所有計畫類型都需要選擇教練
+  if (!selectedCoach.value) {
     errors.coach = "請選擇教練";
   }
 
@@ -597,8 +597,8 @@ const validateForm = (): boolean => {
     errors.quota = "請輸入1-100之間的數字";
   }
 
-  // 團體課程不需要設定訓練時段
-  if (trainingTimeSlots.value.length === 0 && planType.value !== "Block") {
+  // 個人彈性不需要設定訓練時段
+  if (trainingTimeSlots.value.length === 0 && planType.value !== "FlexiblePersonal") {
     errors.trainingSlots = "請至少設定一個訓練時段";
   } else if (trainingTimeSlots.value.length > 0) {
     const hasInvalidSlot = trainingTimeSlots.value.some(

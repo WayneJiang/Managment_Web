@@ -9,18 +9,12 @@ onMounted(() => {
 
 <template>
   <div
-    class="min-h-screen w-full"
-    :style="{
-      backgroundColor: 'var(--color-background)',
-      color: 'var(--color-text)',
-    }"
+    class="min-h-screen w-full liquid-glass-bg"
+    :style="{ color: 'var(--color-text)' }"
   >
-    <header
-      :style="{ backgroundColor: 'var(--color-primary)', color: '#fff' }"
-      class="py-4 w-full"
-    >
+    <header class="glass-header py-4 w-full sticky top-0 z-50">
       <div class="container mx-auto px-1 lg:px-2">
-        <h1 class="text-xl sm:text-2xl font-bold">好！來健身</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-white">好！來健身</h1>
       </div>
     </header>
     <main class="py-6 w-full">
@@ -28,12 +22,8 @@ onMounted(() => {
         <router-view />
       </div>
     </main>
-    <footer
-      class="py-4 mt-8 w-full"
-      :style="{
-        backgroundColor: 'var(--color-card-bg)',
-        color: 'var(--color-text-secondary)',
-      }"
+    <footer class="glass-footer py-4 mt-8 w-full"
+      :style="{ color: 'var(--color-text-secondary)' }"
     >
       <div class="container mx-auto px-1 lg:px-2 text-center">
         <p>&copy; 好！來健身 版權所有</p>

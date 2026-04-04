@@ -33,7 +33,7 @@
             v-model="searchQuery"
             type="text"
             placeholder="搜尋學員姓名或手機號碼..."
-            class="input input-bordered w-full pl-10 pr-4 py-2"
+            class="input w-full pl-10 pr-4 py-2"
             :style="{
               backgroundColor: 'var(--color-card-bg)',
               color: 'var(--color-text)',
@@ -197,24 +197,14 @@
               :style="{ borderColor: 'var(--color-border)' }"
             >
               <button
-                class="btn btn-sm flex-1"
-                :style="{
-                  backgroundColor: '#f97316',
-                  color: '#fff',
-                  borderColor: '#f97316',
-                }"
+                class="btn btn-sm btn-soft btn-secondary flex-1"
                 @click="handleUpdate(trainee)"
               >
                 編輯資料
               </button>
               <button
                 v-if="canManagePlan"
-                class="btn btn-sm flex-1"
-                :style="{
-                  backgroundColor: '#f97316',
-                  color: '#fff',
-                  borderColor: '#f97316',
-                }"
+                class="btn btn-sm btn-soft btn-accent flex-1"
                 @click="handleAdjust(trainee)"
               >
                 管理計畫
@@ -315,7 +305,7 @@ const getPlanTypeClass = (planType: string | undefined): string => {
   }
 
   if (planType === "FlexiblePersonal") {
-    return "badge-info";
+    return "badge-success";
   }
 
   // if (planType === "Block") {

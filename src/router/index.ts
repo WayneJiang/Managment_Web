@@ -26,6 +26,11 @@ const router: Router = createRouter({
       meta: { requiresState: ["id"] },
     },
     {
+      path: "/coach/manage",
+      name: "CoachManage",
+      component: () => import("../views/CoachManage.vue"),
+    },
+    {
       path: "/plan",
       name: "TrainingPlan",
       component: () => import("../views/TrainingPlan.vue"),

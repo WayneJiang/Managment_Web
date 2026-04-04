@@ -33,7 +33,7 @@
             v-model="searchQuery"
             type="text"
             placeholder="搜尋教練姓名..."
-            class="input input-bordered w-full pl-10 pr-4 py-2"
+            class="input w-full pl-10 pr-4 py-2"
             :style="{
               backgroundColor: 'var(--color-card-bg)',
               color: 'var(--color-text)',
@@ -92,12 +92,7 @@
               :style="{ borderColor: 'var(--color-border)' }"
             >
               <button
-                class="btn btn-sm flex-1"
-                :style="{
-                  backgroundColor: '#f97316',
-                  color: '#fff',
-                  borderColor: '#f97316',
-                }"
+                class="btn btn-sm btn-soft btn-warning flex-1"
                 @click="handleViewTrainees(coach)"
               >
                 負責學員資訊
@@ -192,9 +187,9 @@ const getCoachTypeClass = (coachType: CoachType | undefined): string => {
   }
 
   const coachTypeClassMap: Record<CoachType, string> = {
-    Founder: "badge-primary",
-    Partner: "badge-accent",
-    Team: "badge-secondary",
+    Founder: "badge-error",
+    Partner: "badge-primary",
+    Team: "badge-success",
   };
 
   return coachTypeClassMap[coachType] || "badge-ghost";

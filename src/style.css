@@ -1,51 +1,70 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "daisyui";
+
+@theme {
+  --color-primary: #2563eb;
+  --color-secondary: #4b5563;
+  --color-accent: #37cdbe;
+}
 
 :root {
-  /* Light theme variables */
-  --color-background: #ffffff;
-  --color-text: #111111;
-  --color-text-secondary: #7c7c7c;
-  --color-primary: #d32f2f; /* Red */
-  --color-primary-hover: #b71c1c; /* Darker Red */
-  --color-button-bg: #fff0f0;
-  --color-button-border: #d32f2f;
-  --color-button-hover-border: #b71c1c;
-  --color-card-bg: #fffafa;
-  --color-border: #d32f2f;
-  --color-input-bg: #ffffff;
-  --color-input-border: #d32f2f;
-  --color-input-focus-border: #b71c1c;
-  --color-error: #d32f2f;
-  --color-success: #43a047;
-  --color-warning: #ffa000;
-  --color-info: #1976d2;
+  /* Liquid Glass Light Theme */
+  --color-background: #f0f4f8;
+  --color-text: #334155;
+  --color-text-secondary: #64748b;
+  --color-primary-brand: #d32f2f;
+  --color-primary-hover: #b71c1c;
+  --color-button-bg: rgba(255, 255, 255, 0.5);
+  --color-button-border: rgba(211, 47, 47, 0.4);
+  --color-button-hover-border: rgba(183, 28, 28, 0.6);
+  --color-card-bg: rgba(255, 255, 255, 0.5);
+  --color-border: rgba(255, 255, 255, 0.6);
+  --color-input-bg: rgba(255, 255, 255, 0.6);
+  --color-input-border: rgba(211, 47, 47, 0.3);
+  --color-input-focus-border: rgba(183, 28, 28, 0.6);
+  --color-error: #ef4444;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+
+  /* Glass effect variables */
+  --glass-blur: 20px;
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 [data-theme="dark"] {
-  /* Dark theme variables */
-  --color-background: #111111;
-  --color-text: #fffafa;
-  --color-text-secondary: #bdbdbd;
-  --color-primary: #ff5252; /* Bright Red */
-  --color-primary-hover: #ff1744; /* Deeper Red */
-  --color-button-bg: #1a1a1a;
-  --color-button-border: #ff5252;
-  --color-button-hover-border: #ff1744;
-  --color-card-bg: #181818;
-  --color-border: #ff5252;
-  --color-input-bg: #181818;
-  --color-input-border: #ff5252;
-  --color-input-focus-border: #ff1744;
-  --color-error: #ff5252;
-  --color-success: #66bb6a;
-  --color-warning: #ffb300;
-  --color-info: #64b5f6;
+  /* Liquid Glass Dark Theme */
+  --color-background: #0f0f1a;
+  --color-text: #f5f5fa;
+  --color-text-secondary: #b0b8c4;
+  --color-primary-brand: #ff5252;
+  --color-primary-hover: #ff1744;
+  --color-button-bg: rgba(255, 255, 255, 0.1);
+  --color-button-border: rgba(255, 82, 82, 0.4);
+  --color-button-hover-border: rgba(255, 23, 68, 0.6);
+  --color-card-bg: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.15);
+  --color-input-bg: rgba(255, 255, 255, 0.1);
+  --color-input-border: rgba(255, 82, 82, 0.3);
+  --color-input-focus-border: rgba(255, 23, 68, 0.5);
+  --color-error: #ff6b6b;
+  --color-success: #81c784;
+  --color-warning: #ffc107;
+  --color-info: #82b1ff;
+
+  /* Glass effect variables (dark) */
+  --glass-blur: 24px;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light dark;
@@ -55,12 +74,12 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: color 0.3s ease, background-color 0.3s ease;
+  -webkit-text-stroke: 0.2px;
 }
 
 a {
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--color-primary-brand);
   text-decoration: inherit;
   transition: color 0.3s ease;
 }
@@ -83,30 +102,201 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid var(--color-button-border);
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: var(--color-button-bg);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-button:hover {
-  border-color: var(--color-button-hover-border);
-}
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
+/* ===== Liquid Glass Card ===== */
 .card {
   padding: 1em;
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 1rem !important;
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), var(--glass-highlight);
+}
+
+[data-theme="dark"] .card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), var(--glass-highlight);
+}
+
+/* ===== Liquid Glass Header & Footer ===== */
+.glass-header {
+  background: rgba(211, 47, 47, 0.75) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .glass-header {
+  background: rgba(255, 82, 82, 0.2) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.glass-footer {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-top: 1px solid var(--glass-border);
+}
+
+/* ===== Liquid Glass Buttons ===== */
+.btn {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.btn-outline {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ===== Liquid Glass Inputs ===== */
+.input, .select, .textarea {
+  background: var(--color-input-bg) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: var(--glass-border) !important;
+  transition: all 0.2s ease;
+}
+
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--color-primary-brand) !important;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.15);
+}
+
+[data-theme="dark"] .input:focus,
+[data-theme="dark"] .select:focus,
+[data-theme="dark"] .textarea:focus {
+  box-shadow: 0 0 0 2px rgba(255, 82, 82, 0.2);
+}
+
+/* ===== Liquid Glass Table ===== */
+.table thead tr {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--glass-border);
+  transition: background 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ===== Liquid Glass Badge ===== */
+.badge {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* 所有語意 badge 預設使用 soft 風格 — 提高文字對比 */
+.badge-primary,
+.badge-secondary,
+.badge-accent,
+.badge-info,
+.badge-success,
+.badge-warning,
+.badge-error,
+.badge-neutral {
+  background-color: color-mix(in oklch, currentColor 15%, transparent) !important;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background-color: rgba(37, 99, 235, 0.15) !important;
+  color: #1d4ed8 !important;
+}
+
+[data-theme="dark"] .badge-primary {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+  color: #60a5fa !important;
+}
+
+.badge-success {
+  background-color: rgba(34, 197, 94, 0.15) !important;
+  color: #15803d !important;
+}
+
+[data-theme="dark"] .badge-success {
+  background-color: rgba(34, 197, 94, 0.2) !important;
+  color: #4ade80 !important;
+}
+
+.badge-warning {
+  background-color: color-mix(in oklch, currentColor 12%, transparent) !important;
+  color: #b45309 !important;
+}
+
+[data-theme="dark"] .badge-warning {
+  color: #fbbf24 !important;
+}
+
+.badge-error {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  color: #b91c1c !important;
+}
+
+[data-theme="dark"] .badge-error {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+}
+
+/* ===== Liquid Glass Modal ===== */
+.modal {
+  z-index: 9999 !important;
+  isolation: isolate;
+}
+
+.modal-box {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 1.5rem !important;
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+
+/* ===== Background Gradient ===== */
+.liquid-glass-bg {
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(211, 47, 47, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(37, 99, 235, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(55, 205, 190, 0.04) 0%, transparent 60%),
+    var(--color-background);
+}
+
+[data-theme="dark"] .liquid-glass-bg {
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255, 82, 82, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(45, 212, 191, 0.04) 0%, transparent 60%),
+    var(--color-background);
+}
+
+/* ===== Hover Brand Color ===== */
+.hover-brand:hover {
+  color: var(--color-primary-brand) !important;
 }
 
 #app {
@@ -116,22 +306,9 @@ button:focus-visible {
   text-align: left;
 }
 
-/* 添加主題過渡效果 */
+/* 平滑過渡 */
 * {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-/* 移除重複的媒體查詢，因為我們現在使用 ThemeService 來處理主題切換 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* 這些樣式現在由 ThemeService 控制 */
-  }
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    /* 這些樣式現在由 ThemeService 控制 */
-  }
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
 }
 
 /* Responsive Table: 卡片式表格 for mobile */
@@ -151,10 +328,12 @@ button:focus-visible {
   table.responsive-table tr, .table.responsive-table tr {
     display: Block;
     margin-bottom: 1.5rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
-    background: var(--color-card-bg);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    border: 1px solid var(--glass-border);
+    border-radius: 1rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--glass-shadow);
     padding: 0.5rem 0.75rem;
   }
   table.responsive-table td, .table.responsive-table td {

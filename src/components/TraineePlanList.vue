@@ -30,7 +30,7 @@
                 class="badge badge-lg"
                 :class="{
                   'badge-primary': trainingPlan.planType === 'Personal',
-                  'badge-info': trainingPlan.planType === 'FlexiblePersonal',
+                  'badge-success': trainingPlan.planType === 'FlexiblePersonal',
                   // 'badge-success': trainingPlan.planType === 'Block',
                   'badge-warning': trainingPlan.planType === 'Sequential',
                   'badge-secondary':

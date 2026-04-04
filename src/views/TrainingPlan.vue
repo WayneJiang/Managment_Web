@@ -2,7 +2,7 @@
   <div class="w-full">
     <h1
       class="text-3xl font-bold mb-4"
-      :style="{ color: 'var(--color-primary)' }"
+      :style="{ color: 'var(--color-primary-brand)' }"
     >
       訓練計畫
     </h1>
@@ -35,7 +35,7 @@
                   border: '1px solid var(--color-border)',
                 }"
               >
-                <div class="form-control">
+                <div class="">
                   <label class="label">
                     <span
                       class="label-text font-semibold"
@@ -45,7 +45,7 @@
                   </label>
                   <select
                     v-model="selectedCoach"
-                    class="select select-bordered w-full"
+                    class="select w-full"
                     :class="{ 'select-error': validationErrors.coach }"
                     :style="{
                       backgroundColor: 'var(--color-input-bg)',
@@ -66,7 +66,7 @@
                   </select>
                   <label v-if="validationErrors.coach" class="label">
                     <span
-                      class="label-text-alt"
+                      class="text-sm"
                       :style="{ color: 'var(--color-error)' }"
                       >{{ validationErrors.coach }}</span
                     >
@@ -81,7 +81,7 @@
                   border: '1px solid var(--color-border)',
                 }"
               >
-                <div class="form-control">
+                <div class="">
                   <label class="label">
                     <span
                       class="label-text font-semibold"
@@ -91,7 +91,7 @@
                   </label>
                   <select
                     v-model="planType"
-                    class="select select-bordered w-full"
+                    class="select w-full"
                     :class="{ 'select-error': validationErrors.planType }"
                     :style="{
                       backgroundColor: 'var(--color-input-bg)',
@@ -107,7 +107,7 @@
                   </select>
                   <label v-if="validationErrors.planType" class="label">
                     <span
-                      class="label-text-alt"
+                      class="text-sm"
                       :style="{ color: 'var(--color-error)' }"
                       >{{ validationErrors.planType }}</span
                     >
@@ -122,7 +122,7 @@
                   border: '1px solid var(--color-border)',
                 }"
               >
-                <div class="form-control">
+                <div class="">
                   <label class="label">
                     <span
                       class="label-text font-semibold"
@@ -133,7 +133,7 @@
                   <input
                     type="number"
                     v-model.number="quota"
-                    class="input input-bordered w-full"
+                    class="input w-full"
                     :class="{ 'input-error': validationErrors.quota }"
                     :style="{
                       backgroundColor: 'var(--color-input-bg)',
@@ -148,7 +148,7 @@
                   />
                   <label v-if="validationErrors.quota" class="label">
                     <span
-                      class="label-text-alt"
+                      class="text-sm"
                       :style="{ color: 'var(--color-error)' }"
                       >{{ validationErrors.quota }}</span
                     >
@@ -164,7 +164,7 @@
                 border: '1px solid var(--color-border)',
               }"
             >
-              <div class="form-control">
+              <div class="">
                 <div class="flex justify-between items-center mb-4">
                   <label class="label">
                     <span
@@ -178,8 +178,8 @@
                     class="btn btn-sm btn-outline"
                     @click="addTrainingSlot"
                     :style="{
-                      borderColor: 'var(--color-primary)',
-                      color: 'var(--color-primary)',
+                      borderColor: 'var(--color-primary-brand)',
+                      color: 'var(--color-primary-brand)',
                     }"
                   >
                     <svg
@@ -233,7 +233,7 @@
                       <span class="text-sm font-medium opacity-80">時段</span>
                       <button
                         type="button"
-                        class="btn btn-sm btn-error"
+                        class="btn btn-sm btn-soft btn-error"
                         @click="removeTrainingSlot(index)"
                       >
                         <svg
@@ -253,7 +253,7 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2">
-                      <div class="form-control">
+                      <div class="">
                         <label class="label">
                           <span class="label-text text-sm opacity-70"
                             >星期</span
@@ -261,7 +261,7 @@
                         </label>
                         <select
                           v-model="slot.dayOfWeek"
-                          class="select select-bordered select-sm w-full"
+                          class="select select-sm w-full"
                           :style="{
                             backgroundColor: 'var(--color-card-bg)',
                             borderColor: 'var(--color-input-border)',
@@ -279,7 +279,7 @@
                         </select>
                       </div>
 
-                      <div class="form-control">
+                      <div class="">
                         <label class="label">
                           <span class="label-text text-sm opacity-70"
                             >開始時間</span
@@ -287,7 +287,7 @@
                         </label>
                         <select
                           v-model="slot.start"
-                          class="select select-bordered select-sm w-full"
+                          class="select select-sm w-full"
                           :style="{
                             backgroundColor: 'var(--color-card-bg)',
                             borderColor: 'var(--color-input-border)',
@@ -305,7 +305,7 @@
                         </select>
                       </div>
 
-                      <div class="form-control">
+                      <div class="">
                         <label class="label">
                           <span class="label-text text-sm opacity-70"
                             >結束時間</span
@@ -313,7 +313,7 @@
                         </label>
                         <select
                           v-model="slot.end"
-                          class="select select-bordered select-sm w-full"
+                          class="select select-sm w-full"
                           :style="{
                             backgroundColor: 'var(--color-card-bg)',
                             borderColor: 'var(--color-input-border)',
@@ -336,7 +336,7 @@
 
                 <label v-if="validationErrors.trainingSlots" class="label mt-3">
                   <span
-                    class="label-text-alt"
+                    class="text-sm"
                     :style="{ color: 'var(--color-error)' }"
                     >{{ validationErrors.trainingSlots }}</span
                   >
@@ -350,8 +350,8 @@
                 class="btn btn-primary"
                 :disabled="isLoading"
                 :style="{
-                  backgroundColor: 'var(--color-primary)',
-                  borderColor: 'var(--color-primary)',
+                  backgroundColor: 'var(--color-primary-brand)',
+                  borderColor: 'var(--color-primary-brand)',
                   color: 'white',
                 }"
               >
@@ -360,14 +360,9 @@
               </button>
               <button
                 type="button"
-                class="btn btn-ghost"
+                class="btn btn-outline"
                 @click="handleCancel"
                 :disabled="isLoading"
-                :style="{
-                  backgroundColor: 'var(--color-button-bg)',
-                  borderColor: 'var(--color-button-border)',
-                  color: 'var(--color-text)',
-                }"
               >
                 {{ isEditMode ? "取消" : "返回" }}
               </button>

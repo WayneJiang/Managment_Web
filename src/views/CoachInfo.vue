@@ -9,7 +9,7 @@
         <!-- 只有 Founder 可以使用管理教練功能 -->
         <button
           v-if="isFounder"
-          @click="openCoachListModal"
+          @click="navigateToCoachManage"
           class="btn btn-outline btn-sm"
         >
           <svg
@@ -61,68 +61,30 @@
         @adjust="navigateToAdjust"
       />
 
-      <!-- 教練列表區塊（僅 Founder 可見） -->
-      <CoachDisplayList
-        v-if="isFounder"
-        :coaches="filteredCoaches"
-        @view-trainees="handleViewTrainees"
-      />
     </div>
 
-    <!-- 教練列表 Modal -->
-    <CoachListModal
-      :is-open="isCoachListModalOpen"
-      :coaches="filteredCoaches"
-      @close="closeCoachListModal"
-      @create="handleCreateCoach"
-      @update="handleUpdateCoach"
-    />
-
-    <!-- 教練負責學員 Modal -->
-    <CoachTraineesModal
-      :is-open="isCoachTraineesModalOpen"
-      :coach="selectedCoach"
-      :trainees="trainees"
-      @close="closeCoachTraineesModal"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useCoachStore } from "../stores/coach";
 import TraineeList from "../components/TraineeList.vue";
-import CoachDisplayList from "../components/CoachListView.vue";
 import LoadingState from "../components/LoadingState.vue";
-import CoachListModal from "../components/CoachListManage.vue";
-import CoachTraineesModal from "../components/CoachTraineesView.vue";
 import type { Trainee } from "../services/trainee";
-import type { Coach, CreateCoach, UpdateCoach } from "../services/coach";
 
 const router = useRouter();
 const coachStore = useCoachStore();
 
-// Modal 狀態
-const isCoachListModalOpen = ref<boolean>(false);
-const isCoachTraineesModalOpen = ref<boolean>(false);
-const selectedCoach = ref<Coach | null>(null);
-
 // 使用 store 的狀態，而不是本地 ref
 const currentCoach = computed(() => coachStore.currentCoach);
 const trainees = computed(() => coachStore.trainees);
-const coaches = computed(() => coachStore.coaches);
 const isLoading = computed(() => coachStore.loading);
 const errorMessage = computed(() => coachStore.error);
 
 // 檢查是否為 Founder
 const isFounder = computed(() => currentCoach.value?.coachType === "Founder");
-
-// 過濾掉當前教練自己的教練列表
-const filteredCoaches = computed(() => {
-  if (!currentCoach.value) return coaches.value;
-  return coaches.value.filter((coach) => coach.id !== currentCoach.value?.id);
-});
 
 // 根據教練類型過濾學員列表
 const filteredTrainees = computed(() => {
@@ -232,54 +194,10 @@ const navigateToOpeningCourse = (): void => {
 };
 
 /**
- * 開啟教練列表 Modal
+ * 導航到教練管理頁面
  */
-const openCoachListModal = async (): Promise<void> => {
-  // 載入教練列表
-  await coachStore.fetchCoaches();
-  isCoachListModalOpen.value = true;
+const navigateToCoachManage = (): void => {
+  router.push({ path: "/coach/manage" });
 };
 
-/**
- * 關閉教練列表 Modal
- */
-const closeCoachListModal = (): void => {
-  isCoachListModalOpen.value = false;
-};
-
-/**
- * 建立教練
- */
-const handleCreateCoach = async (data: CreateCoach): Promise<void> => {
-  const success = await coachStore.createCoach(data);
-  if (success) {
-    // 成功後不需要手動關閉 modal，CoachListModal 會自動處理
-  }
-};
-
-/**
- * 更新教練
- */
-const handleUpdateCoach = async (data: UpdateCoach): Promise<void> => {
-  const success = await coachStore.updateCoach(data);
-  if (success) {
-    // 成功後不需要手動關閉 modal，CoachListModal 會自動處理
-  }
-};
-
-/**
- * 查看教練負責的學員資訊
- */
-const handleViewTrainees = (coach: Coach): void => {
-  selectedCoach.value = coach;
-  isCoachTraineesModalOpen.value = true;
-};
-
-/**
- * 關閉教練學員 Modal
- */
-const closeCoachTraineesModal = (): void => {
-  isCoachTraineesModalOpen.value = false;
-  selectedCoach.value = null;
-};
 </script>

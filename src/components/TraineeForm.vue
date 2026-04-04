@@ -1,58 +1,43 @@
 <template>
-  <div
-    class="card shadow-xl w-full"
-    :style="{
-      backgroundColor: 'var(--color-card-bg)',
-      color: 'var(--color-text)',
-    }"
-  >
+  <div class="card shadow-xl w-full">
     <div class="card-body">
       <h2 class="card-title text-2xl">學員資料</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">姓名</span>
+            <span class="font-medium">姓名</span>
           </label>
           <input
             type="text"
             v-model="traineeData.name"
-            class="input"
-            :style="getInputStyle('name')"
+            class="input w-full"
+            :class="{ 'input-error': validationErrors.name }"
             @input="validateField('name')"
           />
-          <label class="label" v-if="validationErrors.name">
-            <span
-              class="label-text-alt"
-              :style="{ color: 'var(--color-error)' }"
-              >{{ validationErrors.name }}</span
-            >
-          </label>
+          <p v-if="validationErrors.name" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
+            {{ validationErrors.name }}
+          </p>
         </div>
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">性別</span>
+            <span class="font-medium">性別</span>
           </label>
           <select
             v-model="traineeData.gender"
-            class="select"
-            :style="{
-              borderColor: 'var(--color-input-border)',
-              backgroundColor: 'var(--color-input-bg)',
-              color: 'var(--color-text)',
-            }"
+            class="select w-full"
           >
             <option value="Male">男</option>
             <option value="Female">女</option>
           </select>
         </div>
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">生日</span>
+            <span class="font-medium">生日</span>
           </label>
           <input
             type="date"
             v-model="traineeData.birthday"
-            class="input"
+            class="input w-full"
             :class="{ 'input-error': validationErrors.birthday }"
             :min="getMinBirthday()"
             :max="getMaxBirthday()"
@@ -60,131 +45,99 @@
             :value="getBirthdayValue()"
             @input="validateField('birthday')"
           />
-          <label class="label" v-if="validationErrors.birthday">
-            <span class="label-text-alt text-error">{{
-              validationErrors.birthday
-            }}</span>
-          </label>
+          <p v-if="validationErrors.birthday" class="text-sm mt-1 text-error">
+            {{ validationErrors.birthday }}
+          </p>
         </div>
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">手機</span>
+            <span class="font-medium">手機</span>
           </label>
           <input
             type="tel"
             v-model="formattedPhone"
-            class="input"
+            class="input w-full"
             :class="{ 'input-error': validationErrors.phone }"
             placeholder="09XX-XXX-XXX"
             maxlength="12"
             @input="handlePhoneInput"
           />
-          <label class="label" v-if="validationErrors.phone">
-            <span class="label-text-alt text-error">{{
-              validationErrors.phone
-            }}</span>
-          </label>
+          <p v-if="validationErrors.phone" class="text-sm mt-1 text-error">
+            {{ validationErrors.phone }}
+          </p>
         </div>
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">身高(cm)</span>
+            <span class="font-medium">身高(cm)</span>
           </label>
           <input
             type="number"
             v-model.number="traineeData.height"
-            class="input"
+            class="input w-full"
             :class="{ 'input-error': validationErrors.height }"
             min="100.0"
             max="250.0"
             step="0.1"
             @input="validateField('height')"
           />
-          <label class="label" v-if="validationErrors.height">
-            <span class="label-text-alt text-error">{{
-              validationErrors.height
-            }}</span>
-          </label>
+          <p v-if="validationErrors.height" class="text-sm mt-1 text-error">
+            {{ validationErrors.height }}
+          </p>
         </div>
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">體重(kg)</span>
+            <span class="font-medium">體重(kg)</span>
           </label>
           <input
             type="number"
             v-model.number="traineeData.weight"
-            class="input"
+            class="input w-full"
             :class="{ 'input-error': validationErrors.weight }"
             min="30.0"
             max="300.0"
             step="0.1"
             @input="validateField('weight')"
           />
-          <label class="label" v-if="validationErrors.weight">
-            <span class="label-text-alt text-error">{{
-              validationErrors.weight
-            }}</span>
-          </label>
+          <p v-if="validationErrors.weight" class="text-sm mt-1 text-error">
+            {{ validationErrors.weight }}
+          </p>
         </div>
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">BMI</span>
+            <span class="font-medium">BMI</span>
           </label>
-          <input type="text" :value="calculatedBMI" class="input" disabled />
+          <input type="text" :value="calculatedBMI" class="input w-full" disabled />
         </div>
       </div>
 
       <!-- Note 欄位 - 僅教練可見 -->
-      <div v-if="coach" class="form-control mt-4">
+      <div v-if="coach" class="mt-4">
         <label class="label">
-          <span class="label-text">備註</span>
-          <span class="label-text-alt" :class="getNoteCharacterCountClass()">
+          <span class="font-medium">備註</span>
+          <span class="text-sm" :class="getNoteCharacterCountClass()">
             {{ getNoteCharacterCount() }}/100
           </span>
         </label>
         <textarea
           v-model="traineeData.note"
-          class="textarea textarea-bordered"
+          class="textarea w-full"
           :class="{ 'textarea-error': validationErrors.note }"
-          :style="{
-            borderColor: validationErrors.note
-              ? 'var(--color-error)'
-              : 'var(--color-input-border)',
-            backgroundColor: 'var(--color-input-bg)',
-            color: 'var(--color-text)',
-          }"
           placeholder="請輸入備註（最多100字）..."
           rows="3"
           maxlength="100"
           @input="validateField('note')"
         ></textarea>
-        <label class="label" v-if="validationErrors.note">
-          <span
-            class="label-text-alt"
-            :style="{ color: 'var(--color-error)' }"
-            >{{ validationErrors.note }}</span
-          >
-        </label>
+        <p v-if="validationErrors.note" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
+          {{ validationErrors.note }}
+        </p>
       </div>
       <div class="card-actions justify-end mt-4">
-        <button
-          class="btn"
-          :style="{
-            backgroundColor: 'var(--color-primary)',
-            color: '#fff',
-            borderColor: 'var(--color-primary)',
-          }"
-          @click="handleSubmit"
-        >
+        <button class="btn btn-primary" @click="handleSubmit">
           儲存
         </button>
         <button
           v-if="coach"
-          class="btn"
-          :style="{
-            backgroundColor: 'transparent',
-            color: 'var(--color-primary)',
-            borderColor: 'var(--color-primary)',
-          }"
+          class="btn btn-outline"
           @click="handleBack"
         >
           返回

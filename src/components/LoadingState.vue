@@ -70,7 +70,7 @@ const props = withDefaults(defineProps<Props>(), {
   loadingText: "載入中...",
   emptyText: "目前沒有資料",
   loadingSize: "lg",
-  loadingColor: "var(--color-primary)",
+  loadingColor: "var(--color-primary-brand)",
   errorType: "error",
 });
 

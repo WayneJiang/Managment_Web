@@ -4,14 +4,29 @@
       <div
         v-for="day in weekDays"
         :key="day"
-        class="bg-base-200 rounded-lg p-3"
+        class="rounded-lg p-3"
+        :style="{
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: '1rem',
+        }"
       >
         <h3 class="text-lg font-semibold mb-4">{{ day }}</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           <div
             v-for="course in getCoursesByDay(day)"
             :key="course.id"
-            class="bg-secondary text-secondary-content rounded-lg p-2 shadow-sm"
+            class="rounded-lg p-2"
+            :style="{
+              background: 'var(--glass-bg)',
+              backdropFilter: 'blur(var(--glass-blur))',
+              WebkitBackdropFilter: 'blur(var(--glass-blur))',
+              border: '1px solid var(--glass-border)',
+              boxShadow: 'var(--glass-shadow), var(--glass-highlight)',
+              color: 'var(--color-text)',
+            }"
           >
             <div class="flex justify-between items-start mb-2">
               <div class="font-medium">課程名稱：{{ course.name }}</div>
@@ -20,9 +35,9 @@
                   @click="$emit('edit', course)"
                   class="btn btn-xs btn-outline"
                   style="
-                    border-color: white;
-                    color: white;
-                    background-color: transparent;
+                    border-color: var(--glass-border);
+                    color: var(--color-text);
+                    background-color: var(--glass-bg);
                   "
                 >
                   <svg
@@ -43,9 +58,9 @@
                   @click="$emit('delete', course)"
                   class="btn btn-xs btn-outline"
                   style="
-                    border-color: white;
-                    color: white;
-                    background-color: transparent;
+                    border-color: var(--glass-border);
+                    color: var(--color-text);
+                    background-color: var(--glass-bg);
                   "
                 >
                   <svg

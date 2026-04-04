@@ -1,78 +1,52 @@
 <template>
   <div class="modal" :class="{ 'modal-open': isOpen }">
     <div class="modal-box">
-      <h3 class="font-bold text-lg mb-4">
+      <h3 class="font-bold text-xl mb-4">
         {{ isEdit ? "修改課程" : "新增課程" }}
       </h3>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">課程名稱</span>
+            <span class="font-medium">課程名稱</span>
           </label>
           <input
             v-model="formData.name"
             type="text"
-            class="input"
-            :style="{
-              borderColor: errors.name
-                ? 'var(--color-error)'
-                : 'var(--color-input-border)',
-              backgroundColor: 'var(--color-input-bg)',
-              color: 'var(--color-text)',
-            }"
+            class="input w-full"
+            :class="{ 'input-error': errors.name }"
           />
-          <label v-if="errors.name" class="label">
-            <span
-              class="label-text-alt"
-              :style="{ color: 'var(--color-error)' }"
-              >{{ errors.name }}</span
-            >
-          </label>
+          <p v-if="errors.name" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
+            {{ errors.name }}
+          </p>
         </div>
 
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">教練</span>
+            <span class="font-medium">教練</span>
           </label>
           <select
             v-model="formData.coachId"
-            class="select"
-            :style="{
-              borderColor: errors.coachId
-                ? 'var(--color-error)'
-                : 'var(--color-input-border)',
-              backgroundColor: 'var(--color-input-bg)',
-              color: 'var(--color-text)',
-            }"
+            class="select w-full"
+            :class="{ 'select-error': errors.coachId }"
           >
             <option v-for="coach in coaches" :key="coach.id" :value="coach.id">
               {{ coach.name }}
             </option>
           </select>
-          <label v-if="errors.coachId" class="label">
-            <span
-              class="label-text-alt"
-              :style="{ color: 'var(--color-error)' }"
-              >{{ errors.coachId }}</span
-            >
-          </label>
+          <p v-if="errors.coachId" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
+            {{ errors.coachId }}
+          </p>
         </div>
 
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">星期</span>
+            <span class="font-medium">星期</span>
           </label>
           <select
             v-model="formData.dayOfWeek"
-            class="select"
-            :style="{
-              borderColor: errors.dayOfWeek
-                ? 'var(--color-error)'
-                : 'var(--color-input-border)',
-              backgroundColor: 'var(--color-input-bg)',
-              color: 'var(--color-text)',
-            }"
+            class="select w-full"
+            :class="{ 'select-error': errors.dayOfWeek }"
           >
             <option :value="DayOfWeek.MONDAY">星期一</option>
             <option :value="DayOfWeek.TUESDAY">星期二</option>
@@ -82,30 +56,20 @@
             <option :value="DayOfWeek.SATURDAY">星期六</option>
             <option :value="DayOfWeek.SUNDAY">星期日</option>
           </select>
-          <label v-if="errors.dayOfWeek" class="label">
-            <span
-              class="label-text-alt"
-              :style="{ color: 'var(--color-error)' }"
-              >{{ errors.dayOfWeek }}</span
-            >
-          </label>
+          <p v-if="errors.dayOfWeek" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
+            {{ errors.dayOfWeek }}
+          </p>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <div class="form-control">
+          <div>
             <label class="label">
-              <span class="label-text">開始時間</span>
+              <span class="font-medium">開始時間</span>
             </label>
             <select
               v-model="formData.start"
-              class="select"
-              :style="{
-                borderColor: errors.start
-                  ? 'var(--color-error)'
-                  : 'var(--color-input-border)',
-                backgroundColor: 'var(--color-input-bg)',
-                color: 'var(--color-text)',
-              }"
+              class="select w-full"
+              :class="{ 'select-error': errors.start }"
             >
               <option value="">開始時間</option>
               <option
@@ -116,28 +80,18 @@
                 {{ time.label }}
               </option>
             </select>
-            <label v-if="errors.start" class="label">
-              <span
-                class="label-text-alt"
-                :style="{ color: 'var(--color-error)' }"
-                >{{ errors.start }}</span
-              >
-            </label>
+            <p v-if="errors.start" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
+              {{ errors.start }}
+            </p>
           </div>
-          <div class="form-control">
+          <div>
             <label class="label">
-              <span class="label-text">結束時間</span>
+              <span class="font-medium">結束時間</span>
             </label>
             <select
               v-model="formData.end"
-              class="select"
-              :style="{
-                borderColor: errors.end
-                  ? 'var(--color-error)'
-                  : 'var(--color-input-border)',
-                backgroundColor: 'var(--color-input-bg)',
-                color: 'var(--color-text)',
-              }"
+              class="select w-full"
+              :class="{ 'select-error': errors.end }"
             >
               <option value="">結束時間</option>
               <option
@@ -148,23 +102,19 @@
                 {{ time.label }}
               </option>
             </select>
-            <label v-if="errors.end" class="label">
-              <span
-                class="label-text-alt"
-                :style="{ color: 'var(--color-error)' }"
-                >{{ errors.end }}</span
-              >
-            </label>
+            <p v-if="errors.end" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
+              {{ errors.end }}
+            </p>
           </div>
         </div>
 
-        <div class="form-control">
+        <div>
           <label class="label">
-            <span class="label-text">備註</span>
+            <span class="font-medium">備註</span>
           </label>
           <textarea
             v-model="formData.note"
-            class="textarea textarea-bordered"
+            class="textarea w-full"
             rows="3"
           ></textarea>
         </div>
@@ -177,7 +127,6 @@
             type="submit"
             class="btn btn-primary"
             :disabled="isSubmitting"
-            :class="{ 'btn-disabled': isSubmitting }"
           >
             <span
               v-if="isSubmitting"

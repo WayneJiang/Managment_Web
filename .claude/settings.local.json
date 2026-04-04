@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vue-tsc:*)",
+      "Bash(npx --yes vue-tsc --noEmit)",
+      "Bash(node_modules/.bin/vue-tsc --noEmit)",
+      "Bash(ls node_modules/.bin/vue*)",
+      "Bash(npm view:*)",
+      "Bash(npm install:*)",
+      "Bash(sudo rm:*)",
+      "Bash(npm cache:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(xargs sed:*)",
+      "Bash(npx vite:*)",
+      "Bash(ls node_modules/daisyui/*.css node_modules/daisyui/index.css)",
+      "Bash(find:*)",
+      "WebSearch",
+      "WebFetch(domain:dev.to)"
+    ]
+  }
+}

@@ -137,6 +137,7 @@ export const api = {
     }
   },
 
+
   async getOpeningCourses(): Promise<OpeningCourse[]> {
     try {
       return (await apiClient.get(`/openingCourses`)).data;

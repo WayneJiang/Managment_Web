@@ -1,10 +1,7 @@
 <template>
   <div
     class="card shadow-xl mt-2 w-full"
-    :style="{
-      backgroundColor: 'var(--color-card-bg)',
-      color: 'var(--color-text)',
-    }"
+
   >
     <div class="card-body">
       <div class="flex justify-between items-start">
@@ -14,11 +11,7 @@
             v-if="isCoach && canEditRecords"
             type="button"
             class="btn btn-primary"
-            :style="{
-              backgroundColor: 'var(--color-primary)',
-              color: '#fff',
-              borderColor: 'var(--color-primary)',
-            }"
+
             @click.prevent="handleCreateRecord"
             :disabled="isLoading"
           >
@@ -40,11 +33,7 @@
           <button
             type="button"
             class="btn"
-            :style="{
-              backgroundColor: 'var(--color-primary)',
-              color: '#fff',
-              borderColor: 'var(--color-primary)',
-            }"
+
             @click.prevent="handleExportToPdf"
             :disabled="trainingRecords.length === 0 || isLoading"
           >
@@ -63,17 +52,13 @@
           v-for="(dayRecords, date) in groupedRecords"
           :key="date"
           class="card bg-base-100 shadow-lg"
-          :style="{
-            backgroundColor: 'var(--color-card-bg)',
-            color: 'var(--color-text)',
-            border: '1px solid var(--color-border)',
-          }"
+
         >
           <div class="card-body p-3 sm:p-4">
             <!-- 日期標題 -->
             <div
               class="flex items-center gap-3 mb-4 pb-3 border-b"
-              :style="{ borderColor: 'var(--color-border)' }"
+
             >
               <svg
                 class="w-5 h-5 opacity-70"
@@ -105,10 +90,7 @@
                 v-for="(record, index) in dayRecords"
                 :key="index"
                 class="flex flex-col gap-3 p-3 rounded-lg text-center"
-                :style="{
-                  backgroundColor: 'var(--color-bg)',
-                  border: '1px solid var(--color-border)',
-                }"
+                style="background: var(--glass-bg); border: 1px solid var(--glass-border);"
               >
                 <!-- 時間 -->
                 <div class="flex items-center justify-center gap-3">
@@ -120,7 +102,7 @@
                     :class="{
                       'badge-primary':
                         record.trainingPlan?.planType === 'Personal',
-                      'badge-info':
+                      'badge-success':
                         record.trainingPlan?.planType === 'FlexiblePersonal',
                       // 'badge-success':
                       //   record.trainingPlan?.planType === 'Block',
@@ -191,12 +173,9 @@
                 <div class="flex items-center justify-center gap-2">
                   <div
                     v-if="isCoach && canEditRecords"
-                    class="btn btn-sm btn-outline btn-primary cursor-pointer"
+                    class="btn btn-sm btn-soft btn-primary cursor-pointer"
                     @click.stop.prevent="handleEditRecord(record)"
-                    :style="{
-                      borderColor: 'var(--color-primary)',
-                      color: 'var(--color-primary)',
-                    }"
+
                     role="button"
                     tabindex="0"
                     @keydown.enter="handleEditRecord(record)"
@@ -220,12 +199,9 @@
                   <button
                     v-if="isCoach && canEditRecords"
                     type="button"
-                    class="btn btn-sm btn-outline btn-error"
+                    class="btn btn-sm btn-soft btn-error"
                     @click.stop.prevent="handleDeleteRecord(record)"
-                    :style="{
-                      borderColor: 'var(--color-error)',
-                      color: 'var(--color-error)',
-                    }"
+
                   >
                     <svg
                       class="w-4 h-4"
@@ -275,11 +251,7 @@
           v-if="currentPage > 0"
           type="button"
           class="btn btn-primary"
-          :style="{
-            backgroundColor: 'var(--color-primary)',
-            color: '#fff',
-            borderColor: 'var(--color-primary)',
-          }"
+
           @click.prevent="handlePreviousPage"
           :disabled="isLoading"
         >
@@ -305,11 +277,7 @@
           v-if="hasMoreRecords"
           type="button"
           class="btn btn-primary"
-          :style="{
-            backgroundColor: 'var(--color-primary)',
-            color: '#fff',
-            borderColor: 'var(--color-primary)',
-          }"
+
           @click.prevent="handleNextPage"
           :disabled="isLoading"
         >
@@ -331,6 +299,7 @@
       </div>
     </div>
 
+    <Teleport to="body">
     <!-- 編輯訓練紀錄模態框 -->
     <div
       class="modal"
@@ -339,29 +308,20 @@
     >
       <div
         class="modal-box"
-        :style="{
-          backgroundColor: 'var(--color-card-bg)',
-          color: 'var(--color-text)',
-        }"
+
         @click.stop
       >
         <h3 class="font-bold text-lg mb-4">編輯訓練紀錄</h3>
         <form @submit.prevent="handleSaveEditRecord" @click.stop>
-          <div class="form-control mb-4">
+          <div class="mb-4">
             <label class="label">
-              <span class="label-text font-semibold">訓練計畫</span>
+              <span class="font-semibold">訓練計畫</span>
             </label>
             <select
               v-model="editingRecord.trainingPlan"
-              class="select select-bordered w-full"
+              class="select w-full"
               :class="{ 'select-error': validationErrors.trainingPlan }"
-              :style="{
-                backgroundColor: 'var(--color-input-bg)',
-                borderColor: validationErrors.trainingPlan
-                  ? 'var(--color-error)'
-                  : 'var(--color-input-border)',
-                color: 'var(--color-text)',
-              }"
+
             >
               <option
                 v-for="trainingPlan in availableTrainingPlans"
@@ -385,29 +345,22 @@
             </select>
             <label v-if="validationErrors.trainingPlan" class="label">
               <span
-                class="label-text-alt"
-                :style="{ color: 'var(--color-error)' }"
+                class="text-sm text-error"
                 >{{ validationErrors.trainingPlan }}</span
               >
             </label>
           </div>
 
           <!-- 團體課程選擇（僅當選擇團體課程類型時顯示） -->
-          <div v-if="isEditingSequentialPlan" class="form-control mb-4">
+          <div v-if="isEditingSequentialPlan" class="mb-4">
             <label class="label">
-              <span class="label-text font-semibold">團體課程</span>
+              <span class="font-semibold">團體課程</span>
             </label>
             <select
               v-model="editingOpeningCourse"
-              class="select select-bordered w-full"
+              class="select w-full"
               :class="{ 'select-error': validationErrors.openingCourse }"
-              :style="{
-                backgroundColor: 'var(--color-input-bg)',
-                borderColor: validationErrors.openingCourse
-                  ? 'var(--color-error)'
-                  : 'var(--color-input-border)',
-                color: 'var(--color-text)',
-              }"
+
             >
               <option :value="undefined" disabled>請選擇團體課程</option>
               <option
@@ -422,62 +375,48 @@
             </select>
             <label v-if="validationErrors.openingCourse" class="label">
               <span
-                class="label-text-alt"
-                :style="{ color: 'var(--color-error)' }"
+                class="text-sm text-error"
                 >{{ validationErrors.openingCourse }}</span
               >
             </label>
           </div>
 
-          <div class="form-control mb-4">
+          <div class="mb-4">
             <label class="label">
-              <span class="label-text font-semibold">簽到時間</span>
+              <span class="font-semibold">簽到時間</span>
             </label>
             <div class="grid grid-cols-2 gap-4">
               <!-- 日期選擇 -->
-              <div class="form-control">
+              <div class="">
                 <label class="label">
-                  <span class="label-text text-sm opacity-80">日期</span>
+                  <span class="text-sm opacity-80">日期</span>
                 </label>
                 <input
                   type="date"
                   v-model="editingDate"
-                  class="input input-bordered w-full"
+                  class="input w-full"
                   :class="{ 'input-error': validationErrors.date }"
-                  :style="{
-                    backgroundColor: 'var(--color-input-bg)',
-                    borderColor: validationErrors.date
-                      ? 'var(--color-error)'
-                      : 'var(--color-input-border)',
-                    color: 'var(--color-text)',
-                  }"
+
                 />
                 <label v-if="validationErrors.date" class="label">
                   <span
-                    class="label-text-alt"
-                    :style="{ color: 'var(--color-error)' }"
+                    class="text-sm text-error"
                     >{{ validationErrors.date }}</span
                   >
                 </label>
               </div>
               <!-- 時間選擇 -->
-              <div class="form-control">
+              <div class="">
                 <label class="label">
-                  <span class="label-text text-sm opacity-80">時間</span>
+                  <span class="text-sm opacity-80">時間</span>
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                   <!-- 小時選擇 -->
                   <select
                     v-model="editingHour"
-                    class="select select-bordered w-full"
+                    class="select w-full"
                     :class="{ 'select-error': validationErrors.time }"
-                    :style="{
-                      backgroundColor: 'var(--color-input-bg)',
-                      borderColor: validationErrors.time
-                        ? 'var(--color-error)'
-                        : 'var(--color-input-border)',
-                      color: 'var(--color-text)',
-                    }"
+
                     required
                   >
                     <option
@@ -491,15 +430,9 @@
                   <!-- 分鐘選擇 -->
                   <select
                     v-model="editingMinute"
-                    class="select select-bordered w-full"
+                    class="select w-full"
                     :class="{ 'select-error': validationErrors.time }"
-                    :style="{
-                      backgroundColor: 'var(--color-input-bg)',
-                      borderColor: validationErrors.time
-                        ? 'var(--color-error)'
-                        : 'var(--color-input-border)',
-                      color: 'var(--color-text)',
-                    }"
+
                     required
                   >
                     <option
@@ -513,8 +446,7 @@
                 </div>
                 <label v-if="validationErrors.time" class="label">
                   <span
-                    class="label-text-alt"
-                    :style="{ color: 'var(--color-error)' }"
+                    class="text-sm text-error"
                     >{{ validationErrors.time }}</span
                   >
                 </label>
@@ -527,25 +459,17 @@
               type="submit"
               class="btn btn-primary"
               :disabled="isLoading"
-              :style="{
-                backgroundColor: 'var(--color-primary)',
-                borderColor: 'var(--color-primary)',
-                color: 'white',
-              }"
+
             >
               <span v-if="isLoading" class="loading loading-spinner"></span>
               儲存
             </button>
             <button
               type="button"
-              class="btn btn-ghost"
+              class="btn btn-outline"
               @click.prevent="handleCancelEdit"
               :disabled="isLoading"
-              :style="{
-                backgroundColor: 'var(--color-button-bg)',
-                borderColor: 'var(--color-button-border)',
-                color: 'var(--color-text)',
-              }"
+
             >
               取消
             </button>
@@ -562,29 +486,20 @@
     >
       <div
         class="modal-box"
-        :style="{
-          backgroundColor: 'var(--color-card-bg)',
-          color: 'var(--color-text)',
-        }"
+
         @click.stop
       >
         <h3 class="font-bold text-lg mb-4">新增簽到紀錄</h3>
         <form @submit.prevent="handleSaveCreateRecord" @click.stop>
-          <div class="form-control mb-4">
+          <div class="mb-4">
             <label class="label">
-              <span class="label-text font-semibold">訓練計畫</span>
+              <span class="font-semibold">訓練計畫</span>
             </label>
             <select
               v-model="creatingRecord.trainingPlan"
-              class="select select-bordered w-full"
+              class="select w-full"
               :class="{ 'select-error': validationErrors.trainingPlan }"
-              :style="{
-                backgroundColor: 'var(--color-input-bg)',
-                borderColor: validationErrors.trainingPlan
-                  ? 'var(--color-error)'
-                  : 'var(--color-input-border)',
-                color: 'var(--color-text)',
-              }"
+
             >
               <option
                 v-for="trainingPlan in availableTrainingPlans"
@@ -608,29 +523,22 @@
             </select>
             <label v-if="validationErrors.trainingPlan" class="label">
               <span
-                class="label-text-alt"
-                :style="{ color: 'var(--color-error)' }"
+                class="text-sm text-error"
                 >{{ validationErrors.trainingPlan }}</span
               >
             </label>
           </div>
 
           <!-- 團體課程選擇（僅當選擇團體課程類型時顯示） -->
-          <div v-if="isCreatingSequentialPlan" class="form-control mb-4">
+          <div v-if="isCreatingSequentialPlan" class="mb-4">
             <label class="label">
-              <span class="label-text font-semibold">團體課程</span>
+              <span class="font-semibold">團體課程</span>
             </label>
             <select
               v-model="creatingOpeningCourse"
-              class="select select-bordered w-full"
+              class="select w-full"
               :class="{ 'select-error': validationErrors.openingCourse }"
-              :style="{
-                backgroundColor: 'var(--color-input-bg)',
-                borderColor: validationErrors.openingCourse
-                  ? 'var(--color-error)'
-                  : 'var(--color-input-border)',
-                color: 'var(--color-text)',
-              }"
+
             >
               <option :value="undefined" disabled>請選擇團體課程</option>
               <option
@@ -645,62 +553,48 @@
             </select>
             <label v-if="validationErrors.openingCourse" class="label">
               <span
-                class="label-text-alt"
-                :style="{ color: 'var(--color-error)' }"
+                class="text-sm text-error"
                 >{{ validationErrors.openingCourse }}</span
               >
             </label>
           </div>
 
-          <div class="form-control mb-4">
+          <div class="mb-4">
             <label class="label">
-              <span class="label-text font-semibold">簽到時間</span>
+              <span class="font-semibold">簽到時間</span>
             </label>
             <div class="grid grid-cols-2 gap-4">
               <!-- 日期選擇 -->
-              <div class="form-control">
+              <div class="">
                 <label class="label">
-                  <span class="label-text text-sm opacity-80">日期</span>
+                  <span class="text-sm opacity-80">日期</span>
                 </label>
                 <input
                   type="date"
                   v-model="creatingDate"
-                  class="input input-bordered w-full"
+                  class="input w-full"
                   :class="{ 'input-error': validationErrors.date }"
-                  :style="{
-                    backgroundColor: 'var(--color-input-bg)',
-                    borderColor: validationErrors.date
-                      ? 'var(--color-error)'
-                      : 'var(--color-input-border)',
-                    color: 'var(--color-text)',
-                  }"
+
                 />
                 <label v-if="validationErrors.date" class="label">
                   <span
-                    class="label-text-alt"
-                    :style="{ color: 'var(--color-error)' }"
+                    class="text-sm text-error"
                     >{{ validationErrors.date }}</span
                   >
                 </label>
               </div>
               <!-- 時間選擇 -->
-              <div class="form-control">
+              <div class="">
                 <label class="label">
-                  <span class="label-text text-sm opacity-80">時間</span>
+                  <span class="text-sm opacity-80">時間</span>
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                   <!-- 小時選擇 -->
                   <select
                     v-model="creatingHour"
-                    class="select select-bordered w-full"
+                    class="select w-full"
                     :class="{ 'select-error': validationErrors.time }"
-                    :style="{
-                      backgroundColor: 'var(--color-input-bg)',
-                      borderColor: validationErrors.time
-                        ? 'var(--color-error)'
-                        : 'var(--color-input-border)',
-                      color: 'var(--color-text)',
-                    }"
+
                     required
                   >
                     <option
@@ -714,15 +608,9 @@
                   <!-- 分鐘選擇 -->
                   <select
                     v-model="creatingMinute"
-                    class="select select-bordered w-full"
+                    class="select w-full"
                     :class="{ 'select-error': validationErrors.time }"
-                    :style="{
-                      backgroundColor: 'var(--color-input-bg)',
-                      borderColor: validationErrors.time
-                        ? 'var(--color-error)'
-                        : 'var(--color-input-border)',
-                      color: 'var(--color-text)',
-                    }"
+
                     required
                   >
                     <option
@@ -736,8 +624,7 @@
                 </div>
                 <label v-if="validationErrors.time" class="label">
                   <span
-                    class="label-text-alt"
-                    :style="{ color: 'var(--color-error)' }"
+                    class="text-sm text-error"
                     >{{ validationErrors.time }}</span
                   >
                 </label>
@@ -750,25 +637,17 @@
               type="submit"
               class="btn btn-primary"
               :disabled="isLoading"
-              :style="{
-                backgroundColor: 'var(--color-primary)',
-                borderColor: 'var(--color-primary)',
-                color: 'white',
-              }"
+
             >
               <span v-if="isLoading" class="loading loading-spinner"></span>
               新增
             </button>
             <button
               type="button"
-              class="btn btn-ghost"
+              class="btn btn-outline"
               @click.prevent="handleCancelCreate"
               :disabled="isLoading"
-              :style="{
-                backgroundColor: 'var(--color-button-bg)',
-                borderColor: 'var(--color-button-border)',
-                color: 'var(--color-text)',
-              }"
+
             >
               取消
             </button>
@@ -785,10 +664,7 @@
     >
       <div
         class="modal-box"
-        :style="{
-          backgroundColor: 'var(--color-card-bg)',
-          color: 'var(--color-text)',
-        }"
+
         @click.stop
       >
         <h3 class="font-bold text-lg mb-4">刪除訓練紀錄</h3>
@@ -797,34 +673,27 @@
         <div class="modal-action">
           <button
             type="button"
-            class="btn btn-error"
+            class="btn btn-soft btn-error"
             @click.prevent="handleConfirmDeleteRecord"
             :disabled="isLoading"
-            :style="{
-              backgroundColor: 'var(--color-error)',
-              borderColor: 'var(--color-error)',
-              color: 'white',
-            }"
+
           >
             <span v-if="isLoading" class="loading loading-spinner"></span>
             確認
           </button>
           <button
             type="button"
-            class="btn btn-ghost"
+            class="btn btn-outline"
             @click.prevent="handleCancelDelete"
             :disabled="isLoading"
-            :style="{
-              backgroundColor: 'var(--color-button-bg)',
-              borderColor: 'var(--color-button-border)',
-              color: 'var(--color-text)',
-            }"
+
           >
             取消
           </button>
         </div>
       </div>
     </div>
+    </Teleport>
   </div>
 </template>
 

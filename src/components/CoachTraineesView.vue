@@ -23,7 +23,7 @@
         <input
           v-model="selectedMonth"
           type="month"
-          class="input input-bordered w-full"
+          class="input w-full"
           :style="{
             backgroundColor: 'var(--color-card-bg)',
             color: 'var(--color-text)',
@@ -117,12 +117,7 @@
       <!-- 關閉按鈕 -->
       <div class="modal-action">
         <button
-          class="btn"
-          :style="{
-            backgroundColor: '#f97316',
-            color: '#fff',
-            borderColor: '#f97316',
-          }"
+          class="btn btn-outline"
           @click="closeModal"
         >
           關閉
@@ -206,7 +201,7 @@ const getPlanTypeClass = (planType: string | undefined): string => {
   }
 
   if (planType === "FlexiblePersonal") {
-    return "badge-info";
+    return "badge-success";
   }
 
   // if (planType === "Block") {

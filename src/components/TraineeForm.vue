@@ -178,17 +178,7 @@ const validationErrors = ref({
   note: "",
 });
 
-/**
- * 獲取輸入框樣式
- */
-const getInputStyle = (fieldName: keyof typeof validationErrors.value) => {
-  const hasError = validationErrors.value[fieldName];
-  return {
-    borderColor: hasError ? "var(--color-error)" : "var(--color-input-border)",
-    backgroundColor: "var(--color-input-bg)",
-    color: "var(--color-text)",
-  };
-};
+
 
 /**
  * 獲取最小生日（100年前）

@@ -39,6 +39,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import { createLineLoginService } from "../services/line-login";
 import { encodeLineState } from "../utils/line-state";
 import LoadingState from "../components/LoadingState.vue";
@@ -53,20 +54,13 @@ const isBinding = ref<boolean>(false);
 /**
  * 從 URL 或 state 獲取教練 ID
  */
-const getCoachId = (): number | null => {
-  // 從 router state 獲取
-  const routeState = history.state;
-  if (routeState?.coachId) {
-    return Number(routeState.coachId);
-  }
+const route = useRoute();
 
-  // 從 URL 參數獲取
-  const urlParams = new URLSearchParams(window.location.search);
-  const coachIdParam = urlParams.get("coachId");
+const getCoachId = (): number | null => {
+  const coachIdParam = route.query.coachId as string;
   if (coachIdParam) {
     return Number(coachIdParam);
   }
-
   return null;
 };
 

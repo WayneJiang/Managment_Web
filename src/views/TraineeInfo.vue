@@ -1,6 +1,6 @@
 <template>
   <div class="w-full">
-    <h1 class="text-3xl font-bold mb-4">學員資訊</h1>
+    <h1 class="text-xl font-bold mb-4">學員資訊</h1>
     <LoadingState :loading="isLoading" :error="errorMessage || ''" />
 
     <div v-if="!isLoading && !errorMessage && currentTrainee" class="w-full">
@@ -34,6 +34,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import { useCoachStore } from "../stores/coach";
+import { useNavigationStore } from "../stores/navigation";
 import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TraineeForm from "../components/TraineeForm.vue";
@@ -77,14 +78,14 @@ const canEditRecords = computed(() => {
  * 從路由狀態中提取參數
  */
 const extractRouteParams = (): void => {
-  const routeState = history.state;
-  isCoach.value = Boolean(routeState?.coach);
-  isRegister.value = Boolean(routeState?.register);
-  traineeId.value = routeState?.id?.toString() || "";
-  coachId.value = Number(routeState?.coachId) || -1; // 從路由狀態中提取教練 ID
-  lineNote.value = routeState?.note || ""; // 從路由狀態中提取 LINE 顯示名稱
-  showRecords.value = routeState?.showRecords !== false; // 預設為 true，除非明確設為 false
-  showPlans.value = routeState?.showPlans !== false; // 預設為 true，除非明確設為 false
+  const navStore = useNavigationStore();
+  traineeId.value = navStore.targetId;
+  isCoach.value = navStore.coach;
+  isRegister.value = navStore.register;
+  coachId.value = navStore.coachId;
+  lineNote.value = navStore.note;
+  showRecords.value = navStore.showRecords;
+  showPlans.value = navStore.showPlans;
 };
 
 /**

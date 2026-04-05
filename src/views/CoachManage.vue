@@ -2,7 +2,7 @@
   <div class="w-full">
     <!-- 頁面標題列 -->
     <div class="flex flex-col md:flex-row justify-between items-center mb-4">
-      <h1 class="text-3xl font-bold">教練管理</h1>
+      <h1 class="text-xl font-bold">教練管理</h1>
       <div class="flex items-center gap-2 mt-2 md:mt-0">
         <button
           v-if="!isFormOpen"
@@ -98,14 +98,24 @@
       <div class="card-body">
         <div class="flex justify-between items-center">
           <h2 class="card-title text-2xl">PDF 檔案</h2>
-          <button
-            @click="fetchBlobs"
-            class="btn btn-outline btn-sm"
-            :disabled="isLoadingBlobs"
-          >
-            <span v-if="isLoadingBlobs" class="loading loading-spinner loading-sm"></span>
-            重新整理
-          </button>
+          <div class="flex gap-2">
+            <button
+              @click="handleRegenerateReport"
+              class="btn btn-soft btn-primary btn-sm"
+              :disabled="isRegenerating"
+            >
+              <span v-if="isRegenerating" class="loading loading-spinner loading-sm"></span>
+              {{ isRegenerating ? '產生中...' : '重新產生報表' }}
+            </button>
+            <button
+              @click="fetchBlobs"
+              class="btn btn-outline btn-sm"
+              :disabled="isLoadingBlobs"
+            >
+              <span v-if="isLoadingBlobs" class="loading loading-spinner loading-sm"></span>
+              重新整理
+            </button>
+          </div>
         </div>
 
         <div v-if="isLoadingBlobs" class="flex justify-center py-8">
@@ -131,21 +141,13 @@
                 <td>{{ file.pathname }}</td>
                 <td>{{ formatFileSize(file.size) }}</td>
                 <td>
-                  <div class="flex gap-2">
-                    <a
-                      :href="file.url"
-                      target="_blank"
-                      class="btn btn-soft btn-primary btn-xs"
-                    >
-                      下載
-                    </a>
-                    <button
-                      @click="handleDeleteBlob(file)"
-                      class="btn btn-soft btn-error btn-xs"
-                    >
-                      刪除
-                    </button>
-                  </div>
+                  <a
+                    :href="file.url"
+                    target="_blank"
+                    class="btn btn-soft btn-primary btn-xs"
+                  >
+                    下載
+                  </a>
                 </td>
               </tr>
             </tbody>
@@ -306,7 +308,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import { useCoachStore } from "../stores/coach";
 import { api } from "../services/api";
 import axios from "axios";
@@ -320,7 +321,6 @@ interface BlobFile {
   uploadedAt: string;
 }
 
-const router = useRouter();
 const coachStore = useCoachStore();
 
 const isFormOpen = ref<boolean>(false);
@@ -336,6 +336,7 @@ const pageSize = 20;
 // Blob 檔案相關
 const blobFiles = ref<BlobFile[]>([]);
 const isLoadingBlobs = ref<boolean>(false);
+const isRegenerating = ref<boolean>(false);
 
 const errors = ref<{
   name: string;
@@ -371,10 +372,6 @@ onMounted(async () => {
     fetchBlobs(),
   ]);
 });
-
-const goBack = (): void => {
-  router.back();
-};
 
 function getCoachTypeLabel(coach: Coach): string {
   if (!coach.coachType) return "";
@@ -644,20 +641,18 @@ const fetchBlobs = async (): Promise<void> => {
   }
 };
 
-const handleDeleteBlob = async (file: BlobFile): Promise<void> => {
-  if (!confirm(`確定要刪除「${file.pathname}」嗎？`)) return;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+const handleRegenerateReport = async (): Promise<void> => {
+  isRegenerating.value = true;
   try {
-    if (BLOB_TOKEN) {
-      await axios.post("/api/blobs/delete", { urls: [file.url] }, {
-        headers: { Authorization: `Bearer ${BLOB_TOKEN}` },
-      });
-    } else {
-      await axios.delete(`/api/blobs?url=${encodeURIComponent(file.url)}`);
-    }
-    blobFiles.value = blobFiles.value.filter((f) => f.url !== file.url);
+    await axios.get(`${API_BASE_URL}/regenerateReport`);
+    // 產生完成後重新載入檔案列表
+    await fetchBlobs();
   } catch (error) {
-    console.error("Failed to delete blob:", error);
+    console.error("Failed to regenerate report:", error);
+  } finally {
+    isRegenerating.value = false;
   }
 };
 

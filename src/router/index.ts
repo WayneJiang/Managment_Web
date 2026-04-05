@@ -17,13 +17,11 @@ const router: Router = createRouter({
       path: "/trainee/info",
       name: "TraineeInfo",
       component: () => import("../views/TraineeInfo.vue"),
-      meta: { requiresState: ["id"] },
     },
     {
       path: "/coach",
       name: "CoachInfo",
       component: () => import("../views/CoachInfo.vue"),
-      meta: { requiresState: ["id"] },
     },
     {
       path: "/coach/manage",
@@ -34,13 +32,11 @@ const router: Router = createRouter({
       path: "/plan",
       name: "TrainingPlan",
       component: () => import("../views/TrainingPlan.vue"),
-      meta: { requiresState: ["id"] },
     },
     {
       path: "/opening-course",
       name: "OpeningCourse",
       component: () => import("../views/OpeningCourse.vue"),
-      meta: { requiresState: ["id"] },
     },
     {
       path: "/line-callback",

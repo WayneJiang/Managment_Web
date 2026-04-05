@@ -15,7 +15,8 @@
       "Bash(ls node_modules/daisyui/*.css node_modules/daisyui/index.css)",
       "Bash(find:*)",
       "WebSearch",
-      "WebFetch(domain:dev.to)"
+      "WebFetch(domain:dev.to)",
+      "Bash(npx npm-check-updates:*)"
     ]
   }
 }

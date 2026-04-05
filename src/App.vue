@@ -14,7 +14,7 @@ onMounted(() => {
   >
     <header class="glass-header py-4 w-full sticky top-0 z-50">
       <div class="container mx-auto px-1 lg:px-2">
-        <h1 class="text-xl sm:text-2xl font-bold text-white">好！來健身</h1>
+        <h1 class="text-lg sm:text-xl font-bold text-white">好！來健身</h1>
       </div>
     </header>
     <main class="py-6 w-full">

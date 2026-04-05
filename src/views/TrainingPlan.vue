@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <h1
-      class="text-3xl font-bold mb-4"
+      class="text-xl font-bold mb-4"
       :style="{ color: 'var(--color-primary-brand)' }"
     >
       訓練計畫
@@ -406,6 +406,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useTraineeStore } from "../stores/trainee";
 import { useCoachStore } from "../stores/coach";
+import { useNavigationStore } from "../stores/navigation";
 import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TrainingPlanList from "../components/TrainingPlanList.vue";
@@ -487,18 +488,18 @@ const timeOptions = Array.from({ length: 144 }, (_, i) => {
  * 從路由狀態中提取參數
  */
 const extractRouteParams = (): void => {
-  const routeState = history.state;
-  editorId.value = Number(routeState?.editor) || 0;
-  showRecords.value = routeState?.showRecords !== false; // 預設為 true，除非明確設為 false
-  showPlans.value = routeState?.showPlans !== false; // 預設為 true，除非明確設為 false
+  const navStore = useNavigationStore();
+  editorId.value = navStore.editor;
+  showRecords.value = navStore.showRecords;
+  showPlans.value = navStore.showPlans;
 };
 
 /**
  * 初始化資料
  */
 const initializeData = async (): Promise<void> => {
-  const routeState = history.state;
-  const traineeId = Number(routeState?.id);
+  const navStore = useNavigationStore();
+  const traineeId = Number(navStore.targetId);
 
   // 檢查必要參數，如果沒有則重定向回首頁
   if (!traineeId) {

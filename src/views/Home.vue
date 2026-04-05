@@ -56,6 +56,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useViewerStore } from "../stores/viewer";
+import { useNavigationStore } from "../stores/navigation";
 import { createLineLoginService } from "../services/line-login";
 import { encodeLineState } from "../utils/line-state";
 import LoadingState from "../components/LoadingState.vue";
@@ -88,33 +89,16 @@ const cleanUrlParameters = (): void => {
  */
 const navigateBasedOnRole = (userId: number | null): void => {
   try {
+    const navStore = useNavigationStore();
     if (viewerStore.isTrainee) {
-      router.push({
-        path: "/trainee/info",
-        state: {
-          id: userId,
-          coach: false,
-          register: false,
-        },
-      });
+      navStore.setTraineeNav(userId!);
+      router.push("/trainee/info");
     } else if (viewerStore.isCoach) {
-      router.push({
-        path: "/coach",
-        state: {
-          id: userId,
-          coach: true,
-        },
-      });
+      navStore.setCoachNav(userId!);
+      router.push("/coach");
     } else {
-      // 新使用者，導航到註冊頁面
-      router.push({
-        path: "/trainee/info",
-        state: {
-          id: viewerStore.socialId,
-          coach: false,
-          register: true,
-        },
-      });
+      navStore.setTraineeNav(viewerStore.socialId, { register: true });
+      router.push("/trainee/info");
     }
   } catch (error) {
     // 導航失敗，靜默處理

@@ -35,6 +35,7 @@ import { getLineStateFromUrl } from "../utils/line-state";
 import { lineApi } from "../services/api-line";
 import LoadingState from "../components/LoadingState.vue";
 import { useTraineeStore } from "../stores/trainee";
+import { useNavigationStore } from "../stores/navigation";
 
 // 初始化 Vue Router 實例
 const router: Router = useRouter();
@@ -147,33 +148,18 @@ const navigateToMainPage = async (socialId: string,note:string): Promise<void> =
       )
     }
     
-    router.push({
-      path: "/trainee/info",
-      state: {
-        id: userId,
-        coach: false,
-        register: false,
-      },
-    });
+    const navStore = useNavigationStore();
+    navStore.setTraineeNav(userId!);
+    router.push("/trainee/info");
   } else if (viewerStore.isCoach) {
-    router.push({
-      path: "/coach",
-      state: {
-        id: userId,
-        coach: true,
-      },
-    });
+    const navStore = useNavigationStore();
+    navStore.setCoachNav(userId!);
+    router.push("/coach");
   } else {
     // 新使用者，導航到註冊頁面
-    router.push({
-      path: "/trainee/info",
-      state: {
-        id: viewerStore.socialId,
-        coach: false,
-        register: true,
-        note: `Line 顯示名稱：${note}`,
-      },
-    });
+    const navStore = useNavigationStore();
+    navStore.setTraineeNav(viewerStore.socialId, { register: true, note: `Line 顯示名稱：${note}` });
+    router.push("/trainee/info");
   }
 };
 
@@ -207,14 +193,9 @@ const handleBindCoach = async (
     }
 
     // 綁定成功，導航到教練頁面
-    router.push({
-      path: "/coach",
-      state: {
-        id: coachId,
-        coach: true,
-        bindSuccess: true,
-      },
-    });
+    const navStore = useNavigationStore();
+    navStore.setCoachNav(coachId);
+    router.push("/coach");
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : "綁定教練失敗");
   }

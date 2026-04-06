@@ -157,6 +157,75 @@
       </div>
     </div>
 
+    <!-- 年度統計卡片 -->
+    <div
+      v-if="selectedCoach && !isFormOpen"
+      class="card shadow-xl w-full mt-4"
+    >
+      <div class="card-body">
+        <div class="flex justify-between items-center">
+          <h2 class="card-title text-2xl">{{ selectedCoach.name }} 的年度統計</h2>
+          <button @click="closeRecords" class="btn btn-outline btn-sm">關閉</button>
+        </div>
+
+        <div v-if="isLoadingYearlySummary" class="flex justify-center py-8">
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
+
+        <div v-else-if="yearlySummary.personal.length === 0 && yearlySummary.sequential.length === 0" class="text-center py-8 text-gray-500">
+          目前沒有年度統計資料
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          <!-- 個人課程年度統計 -->
+          <div v-if="yearlySummary.personal.length > 0">
+            <h3 class="font-bold text-lg mb-2">個人課程</h3>
+            <div class="overflow-x-auto">
+              <table class="table table-sm w-full">
+                <thead>
+                  <tr>
+                    <th>年度</th>
+                    <th>上課人數</th>
+                    <th>上課堂數</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in yearlySummary.personal" :key="row.year">
+                    <td class="font-medium">{{ row.year }}</td>
+                    <td>{{ row.totalAttendees }} 人</td>
+                    <td>{{ row.totalSessions }} 堂</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 團體課程年度統計 -->
+          <div v-if="yearlySummary.sequential.length > 0">
+            <h3 class="font-bold text-lg mb-2">團體課程</h3>
+            <div class="overflow-x-auto">
+              <table class="table table-sm w-full">
+                <thead>
+                  <tr>
+                    <th>年度</th>
+                    <th>上課人數</th>
+                    <th>開課次數</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in yearlySummary.sequential" :key="row.year">
+                    <td class="font-medium">{{ row.year }}</td>
+                    <td>{{ row.totalAttendees }} 人</td>
+                    <td>{{ row.totalSessions }} 次</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 課程紀錄卡片 -->
     <div
       v-if="selectedCoach && !isFormOpen"
@@ -330,6 +399,11 @@ const copiedCoachId = ref<number | null>(null);
 const selectedCoach = ref<Coach | null>(null);
 const coachRecords = ref<TrainingRecord[]>([]);
 const isLoadingRecords = ref<boolean>(false);
+const isLoadingYearlySummary = ref<boolean>(false);
+const yearlySummary = ref<{
+  personal: { year: string; totalAttendees: number; totalSessions: number }[];
+  sequential: { year: string; totalAttendees: number; totalSessions: number }[];
+}>({ personal: [], sequential: [] });
 const currentPage = ref<number>(1);
 const pageSize = 20;
 
@@ -493,8 +567,19 @@ const handleSubmit = async (): Promise<void> => {
 const handleViewRecords = async (coach: Coach): Promise<void> => {
   selectedCoach.value = coach;
   coachRecords.value = [];
+  yearlySummary.value = { personal: [], sequential: [] };
   currentPage.value = 1;
   isLoadingRecords.value = true;
+  isLoadingYearlySummary.value = true;
+
+  // 同時載入年度統計
+  api.getCoachYearlySummary(coach.id).then((data) => {
+    yearlySummary.value = data;
+  }).catch((error) => {
+    console.error("Failed to fetch yearly summary:", error);
+  }).finally(() => {
+    isLoadingYearlySummary.value = false;
+  });
 
   try {
     // 從 store 中找出該教練負責的學員（透過 trainingPlan.coach）
@@ -554,6 +639,7 @@ const handleViewRecords = async (coach: Coach): Promise<void> => {
 const closeRecords = (): void => {
   selectedCoach.value = null;
   coachRecords.value = [];
+  yearlySummary.value = { personal: [], sequential: [] };
 };
 
 const totalPages = computed(() => Math.ceil(coachRecords.value.length / pageSize));

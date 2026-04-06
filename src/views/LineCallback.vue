@@ -138,7 +138,7 @@ const navigateToMainPage = async (socialId: string,note:string): Promise<void> =
     const trainee= await traineeStore.fetchTraineeById(userId);
     if(trainee){
       await traineeStore.updateTrainee(
-        userId, 
+        userId,
         {
           name:trainee.name,
           gender:trainee?.gender,
@@ -147,15 +147,15 @@ const navigateToMainPage = async (socialId: string,note:string): Promise<void> =
         }
       )
     }
-    
+
     const navStore = useNavigationStore();
-    navStore.setTraineeNav(userId!);
+    navStore.setTraineeNav(userId);
     router.push("/trainee/info");
   } else if (viewerStore.isCoach) {
     const navStore = useNavigationStore();
-    navStore.setCoachNav(userId!);
+    navStore.setCoachNav(userId);
     router.push("/coach");
-  } else {
+  } else if (viewerStore.socialId) {
     // 新使用者，導航到註冊頁面
     const navStore = useNavigationStore();
     navStore.setTraineeNav(viewerStore.socialId, { register: true, note: `Line 顯示名稱：${note}` });

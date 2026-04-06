@@ -90,13 +90,13 @@ const cleanUrlParameters = (): void => {
 const navigateBasedOnRole = (userId: number | null): void => {
   try {
     const navStore = useNavigationStore();
-    if (viewerStore.isTrainee) {
-      navStore.setTraineeNav(userId!);
+    if (viewerStore.isTrainee && userId !== null) {
+      navStore.setTraineeNav(userId);
       router.push("/trainee/info");
-    } else if (viewerStore.isCoach) {
-      navStore.setCoachNav(userId!);
+    } else if (viewerStore.isCoach && userId !== null) {
+      navStore.setCoachNav(userId);
       router.push("/coach");
-    } else {
+    } else if (viewerStore.socialId) {
       navStore.setTraineeNav(viewerStore.socialId, { register: true });
       router.push("/trainee/info");
     }

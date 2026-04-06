@@ -49,6 +49,17 @@ export const api = {
     }
   },
 
+  async getCoachYearlySummary(coachId: number): Promise<{
+    personal: { year: string; totalAttendees: number; totalSessions: number }[];
+    sequential: { year: string; totalAttendees: number; totalSessions: number }[];
+  }> {
+    try {
+      return (await apiClient.get(`/coach/${coachId}/yearlySummary`)).data;
+    } catch (error) {
+      throw new Error((error as any).response?.data?.message || "無法獲取年度統計");
+    }
+  },
+
   async getByTraineeId(id: number): Promise<Trainee> {
     try {
       return (await apiClient.get(`/trainee/info/${id}`)).data;

@@ -3,9 +3,11 @@ import { defineStore } from "pinia";
 const STORAGE_KEY = "nav-state";
 
 interface NavigationState {
+  viewerId: string;
   targetId: string;
   coach: boolean;
   register: boolean;
+  preview: boolean;
   coachId: number;
   note: string;
   showRecords: boolean;
@@ -14,9 +16,11 @@ interface NavigationState {
 }
 
 const defaultState = (): NavigationState => ({
+  viewerId: "",
   targetId: "",
   coach: false,
   register: false,
+  preview: false,
   coachId: -1,
   note: "",
   showRecords: true,
@@ -44,9 +48,15 @@ export const useNavigationStore = defineStore("navigation", {
   },
 
   actions: {
+    setViewer(id: string | number) {
+      this.viewerId = String(id);
+      saveToSession(this.$state);
+    },
+
     setTraineeNav(id: string | number, params?: {
       coach?: boolean;
       register?: boolean;
+      preview?: boolean;
       coachId?: number;
       note?: string;
       showRecords?: boolean;
@@ -55,6 +65,7 @@ export const useNavigationStore = defineStore("navigation", {
       this.targetId = String(id);
       this.coach = params?.coach ?? false;
       this.register = params?.register ?? false;
+      this.preview = params?.preview ?? false;
       this.coachId = params?.coachId ?? -1;
       this.note = params?.note ?? "";
       this.showRecords = params?.showRecords ?? true;

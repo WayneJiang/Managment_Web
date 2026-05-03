@@ -43,6 +43,12 @@ import { useRoute } from "vue-router";
 import { createLineLoginService } from "../services/line-login";
 import { encodeLineState } from "../utils/line-state";
 import LoadingState from "../components/LoadingState.vue";
+import {
+  LINE_AUTH_MESSAGE_TYPE,
+  openLineLoginPopup,
+  processLineAuthCode,
+  type LineAuthMessage,
+} from "../services/line-auth-flow";
 
 const lineLoginService = createLineLoginService();
 
@@ -65,13 +71,12 @@ const getCoachId = (): number | null => {
 };
 
 /**
- * 處理 LINE 登入
+ * 處理 LINE 登入：在彈窗中開啟授權頁，主頁面 history 不會被汙染
  */
 const handleLineLogin = (): void => {
   try {
     isLineLoginLoading.value = true;
 
-    // 獲取教練 ID
     const coachId = getCoachId();
     if (!coachId) {
       errorMessage.value = "未找到教練 ID，請重新操作";
@@ -79,12 +84,62 @@ const handleLineLogin = (): void => {
       return;
     }
 
-    // 生成綁定教練的 state，包含教練 ID
     const state = encodeLineState("bind-coach", { coachId });
-
-    // 生成 LINE 登入 URL 並跳轉
     const loginUrl = lineLoginService.generateLoginUrl(state);
-    window.location.href = loginUrl;
+
+    const popup = openLineLoginPopup(loginUrl);
+    if (!popup) {
+      window.location.replace(loginUrl);
+      return;
+    }
+
+    let closedPoller: number | null = null;
+
+    const cleanup = (): void => {
+      window.removeEventListener("message", handleMessage);
+      if (closedPoller !== null) {
+        window.clearInterval(closedPoller);
+        closedPoller = null;
+      }
+    };
+
+    const handleMessage = async (event: MessageEvent): Promise<void> => {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data as LineAuthMessage | undefined;
+      if (!data || data.type !== LINE_AUTH_MESSAGE_TYPE) return;
+
+      cleanup();
+
+      if (data.error) {
+        errorMessage.value = data.error;
+        isLineLoginLoading.value = false;
+        return;
+      }
+      if (!data.code) {
+        errorMessage.value = "未收到LINE授權碼";
+        isLineLoginLoading.value = false;
+        return;
+      }
+
+      try {
+        isBinding.value = true;
+        await processLineAuthCode(data.code, data.state ?? null);
+      } catch (err) {
+        errorMessage.value =
+          err instanceof Error ? err.message : "綁定失敗，請稍後再試";
+        isLineLoginLoading.value = false;
+        isBinding.value = false;
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    closedPoller = window.setInterval(() => {
+      if (popup.closed) {
+        cleanup();
+        isLineLoginLoading.value = false;
+      }
+    }, 500);
   } catch (error) {
     isLineLoginLoading.value = false;
     errorMessage.value = "LINE 登入失敗，請稍後再試";

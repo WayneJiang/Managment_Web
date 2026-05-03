@@ -12,6 +12,7 @@
             v-model="traineeData.name"
             class="input w-full"
             :class="{ 'input-error': validationErrors.name }"
+            :disabled="preview"
             @input="validateField('name')"
           />
           <p v-if="validationErrors.name" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
@@ -25,6 +26,7 @@
           <select
             v-model="traineeData.gender"
             class="select w-full"
+            :disabled="preview"
           >
             <option value="Male">男</option>
             <option value="Female">女</option>
@@ -43,6 +45,7 @@
             :max="getMaxBirthday()"
             :placeholder="getBirthdayPlaceholder()"
             :value="getBirthdayValue()"
+            :disabled="preview"
             @input="validateField('birthday')"
           />
           <p v-if="validationErrors.birthday" class="text-sm mt-1 text-error">
@@ -60,6 +63,7 @@
             :class="{ 'input-error': validationErrors.phone }"
             placeholder="09XX-XXX-XXX"
             maxlength="12"
+            :disabled="preview"
             @input="handlePhoneInput"
           />
           <p v-if="validationErrors.phone" class="text-sm mt-1 text-error">
@@ -78,6 +82,7 @@
             min="100.0"
             max="250.0"
             step="0.1"
+            :disabled="preview"
             @input="validateField('height')"
           />
           <p v-if="validationErrors.height" class="text-sm mt-1 text-error">
@@ -96,6 +101,7 @@
             min="30.0"
             max="300.0"
             step="0.1"
+            :disabled="preview"
             @input="validateField('weight')"
           />
           <p v-if="validationErrors.weight" class="text-sm mt-1 text-error">
@@ -125,22 +131,16 @@
           placeholder="請輸入備註（最多100字）..."
           rows="3"
           maxlength="100"
+          :disabled="preview"
           @input="validateField('note')"
         ></textarea>
         <p v-if="validationErrors.note" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
           {{ validationErrors.note }}
         </p>
       </div>
-      <div class="card-actions justify-end mt-4">
+      <div v-if="!preview" class="card-actions justify-end mt-4">
         <button class="btn btn-primary" @click="handleSubmit">
           儲存
-        </button>
-        <button
-          v-if="coach"
-          class="btn btn-outline"
-          @click="handleBack"
-        >
-          返回
         </button>
       </div>
     </div>
@@ -155,13 +155,16 @@ import type { Trainee } from "../services/trainee";
 interface Props {
   trainee: Trainee;
   coach?: boolean;
+  preview?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  coach: false,
+  preview: false,
+});
 
 const emit = defineEmits<{
   (e: "save", data: Trainee): void;
-  (e: "back"): void;
 }>();
 
 // 表單資料
@@ -409,13 +412,6 @@ const handleSubmit = (): void => {
   } as Trainee;
 
   emit("save", data);
-};
-
-/**
- * 處理返回按鈕
- */
-const handleBack = (): void => {
-  emit("back");
 };
 
 // 監聽格式化手機號碼變化

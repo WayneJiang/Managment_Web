@@ -7,8 +7,8 @@
       <TraineeForm
         :trainee="currentTrainee"
         :coach="isCoach"
+        :preview="isPreview"
         @save="handleSave"
-        @back="handleBack"
       />
       <TraineePlanList
         v-if="showPlans"
@@ -55,6 +55,7 @@ const errorMessage = computed(() => traineeStore.error);
 // 本地狀態管理
 const isCoach = ref<boolean>(false);
 const isRegister = ref<boolean>(false);
+const isPreview = ref<boolean>(false);
 const traineeId = ref<string>("");
 const coachId = ref<number>(-1); // 預設為 -1，表示未指定教練
 const lineNote = ref<string>(""); // LINE 顯示名稱
@@ -82,6 +83,7 @@ const extractRouteParams = (): void => {
   traineeId.value = navStore.targetId;
   isCoach.value = navStore.coach;
   isRegister.value = navStore.register;
+  isPreview.value = navStore.preview;
   coachId.value = navStore.coachId;
   lineNote.value = navStore.note;
   showRecords.value = navStore.showRecords;

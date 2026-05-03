@@ -701,25 +701,11 @@ const copyBindUrl = async (coachId: number): Promise<void> => {
 };
 
 // ===== Blob 檔案相關 =====
-const BLOB_TOKEN = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN || "";
-
 const fetchBlobs = async (): Promise<void> => {
   isLoadingBlobs.value = true;
   try {
-    if (BLOB_TOKEN) {
-      // 本地開發：透過 Vite proxy 轉發到 vercel.com/api/blob
-      const response = await axios.get("/api/blobs", {
-        headers: { Authorization: `Bearer ${BLOB_TOKEN}` },
-      });
-      const allBlobs = response.data.blobs || [];
-      blobFiles.value = allBlobs
-        .filter((b: any) => b.pathname.endsWith(".pdf"))
-        .map((b: any) => ({ url: b.url, pathname: b.pathname, size: b.size, uploadedAt: b.uploadedAt }));
-    } else {
-      // 正式環境：走 Serverless Function
-      const response = await axios.get("/api/blobs");
-      blobFiles.value = response.data;
-    }
+    const response = await axios.get("/api/blobs");
+    blobFiles.value = response.data;
   } catch (error) {
     console.error("Failed to fetch blobs:", error);
   } finally {
@@ -727,7 +713,7 @@ const fetchBlobs = async (): Promise<void> => {
   }
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 
 const handleRegenerateReport = async (): Promise<void> => {
   isRegenerating.value = true;

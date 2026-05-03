@@ -16,7 +16,13 @@
       "Bash(find:*)",
       "WebSearch",
       "WebFetch(domain:dev.to)",
-      "Bash(npx npm-check-updates:*)"
+      "Bash(npx npm-check-updates:*)",
+      "Bash(npm run *)",
+      "Bash(awk -F= '{print length\\($2\\)}')",
+      "Bash(awk -F= '/VITE_BLOB/ {print \"raw_length=\"length\\($0\\); print \"value_length=\"length\\($2\\); print \"first_char_code=\"ord\\(substr\\($2,1,1\\)\\)} function ord\\(c\\){return sprintf\\(\"%d\", c\\)}' /Users/wayne/Github/Managment_Web/.env)",
+      "Bash(xxd)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"exit=$?\")"
     ]
   }
 }

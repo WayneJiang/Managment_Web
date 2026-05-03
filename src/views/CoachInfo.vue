@@ -48,6 +48,33 @@
           </svg>
           管理團體課程
         </button>
+        <!-- 開發 / 預覽用：以學員 ID = 1 視角檢視 -->
+        <button
+          v-if="canImpersonateTrainee"
+          @click="impersonateTrainee"
+          class="btn btn-outline btn-sm"
+        >
+          <svg
+            class="h-4 w-4 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            ></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            ></path>
+          </svg>
+          學員視角
+        </button>
       </div>
     </div>
 
@@ -216,6 +243,8 @@ import type { Trainee } from "../services/trainee";
 import type { Coach } from "../services/coach";
 import type { TrainingRecord } from "../services/training-record";
 
+defineOptions({ name: "CoachInfo" });
+
 const router = useRouter();
 const coachStore = useCoachStore();
 
@@ -224,6 +253,10 @@ const trainees = computed(() => coachStore.trainees);
 const isLoading = computed(() => coachStore.loading);
 const errorMessage = computed(() => coachStore.error);
 const isFounder = computed(() => currentCoach.value?.coachType === "Founder");
+const canImpersonateTrainee = computed(() => {
+  const id = currentCoach.value?.id;
+  return id === 1 || id === 2;
+});
 
 const coachRecords = ref<TrainingRecord[]>([]);
 const isLoadingRecords = ref<boolean>(false);
@@ -244,7 +277,7 @@ const filteredTrainees = computed(() => {
 });
 
 const initializeData = async (): Promise<void> => {
-  const coachId = Number(navStore.targetId);
+  const coachId = Number(navStore.viewerId || navStore.targetId);
 
   if (!coachId || Number.isNaN(coachId)) {
     router.replace("/");
@@ -401,6 +434,18 @@ const navigateToAdjust = (trainee: Trainee): void => {
     showPlans: true,
   });
   router.push("/plan");
+};
+
+const impersonateTrainee = (): void => {
+  navStore.setTraineeNav(1, {
+    coach: false,
+    register: false,
+    preview: true,
+    coachId: -1,
+    showRecords: true,
+    showPlans: true,
+  });
+  router.push("/trainee/info");
 };
 
 const navigateToOpeningCourse = (): void => {

@@ -26,181 +26,72 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import type { Router } from "vue-router";
-import { useViewerStore } from "../stores/viewer";
-import { useCoachStore } from "../stores/coach";
 import { createLineLoginService } from "../services/line-login";
-import { getLineStateFromUrl } from "../utils/line-state";
-import { lineApi } from "../services/api-line";
 import LoadingState from "../components/LoadingState.vue";
-import { useTraineeStore } from "../stores/trainee";
-import { useNavigationStore } from "../stores/navigation";
+import {
+  LINE_AUTH_MESSAGE_TYPE,
+  processLineAuthCode,
+  type LineAuthMessage,
+} from "../services/line-auth-flow";
 
-// 初始化 Vue Router 實例
-const router: Router = useRouter();
-
-// 初始化用戶狀態管理 store
-const viewerStore = useViewerStore();
-const coachStore = useCoachStore();
-const traineeStore = useTraineeStore();
-
-// 初始化 LINE 登入服務
 const lineLoginService = createLineLoginService();
 
-// 響應式狀態變數
-const isLoading = ref<boolean>(true); // 載入狀態
-const errorMessage = ref<string | null>(null); // 錯誤訊息
+const isLoading = ref<boolean>(true);
+const errorMessage = ref<string | null>(null);
 
-/**
- * 處理LINE登入回調流程
- *
- * 此函數負責完整的LINE OAuth登入流程：
- * 1. 檢查URL參數中是否有錯誤
- * 2. 提取授權碼
- * 3. 使用授權碼交換access token
- * 4. 使用access token獲取用戶資料
- * 5. 更新用戶狀態並跳轉到主頁面
- *
- * @throws {Error} 當登入流程中任何步驟失敗時拋出錯誤
- */
-const handleLineCallback = async (): Promise<void> => {
+const isInPopup = (): boolean => {
   try {
-    // 步驟1：檢查URL參數中是否有錯誤訊息
+    return !!window.opener && window.opener !== window && !window.opener.closed;
+  } catch {
+    return false;
+  }
+};
+
+const postResultToOpener = (): void => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const message: LineAuthMessage = {
+      type: LINE_AUTH_MESSAGE_TYPE,
+      code: params.get("code") ?? undefined,
+      state: params.get("state") ?? undefined,
+      error:
+        params.get("error_description") ?? params.get("error") ?? undefined,
+    };
+    window.opener?.postMessage(message, window.location.origin);
+  } catch {
+    // 無法 postMessage 時仍嘗試關閉視窗
+  }
+  window.close();
+};
+
+const handleLineCallback = async (): Promise<void> => {
+  // 在彈窗內 → 把結果丟回主視窗後關閉，主視窗會接手後續流程
+  if (isInPopup()) {
+    postResultToOpener();
+    return;
+  }
+
+  // 整頁 fallback：popup 被擋掉或從非彈窗環境進入時走這條路徑
+  try {
     if (lineLoginService.hasError()) {
-      const error = lineLoginService.getErrorMessage();
-      throw new Error(error || "LINE登入過程中發生錯誤");
+      throw new Error(
+        lineLoginService.getErrorMessage() || "LINE登入過程中發生錯誤"
+      );
     }
 
-    // 步驟2：從URL參數中提取LINE授權碼
     const code = lineLoginService.extractAuthorizationCode();
     if (!code) {
       throw new Error("未收到LINE授權碼");
     }
 
-    // 步驟3：使用授權碼向LINE API交換access token
-    const redirectUri = `${window.location.origin}/line-callback`;
-    const tokenResponse = await lineApi.exchangeLineCodeForToken(
-      code,
-      redirectUri
-    );
-
-    // 步驟4：使用access token獲取LINE用戶資料
-    const userProfile = await lineApi.getLineUserInfo(
-      tokenResponse.access_token
-    );
-
-    // 步驟5：更新用戶狀態並導航到主頁面
-    await navigateToMainPage(userProfile.sub,userProfile.name);
+    await processLineAuthCode(code, lineLoginService.extractState());
   } catch (error) {
-    // 錯誤處理：將錯誤訊息顯示給用戶
     errorMessage.value =
       error instanceof Error ? error.message : "LINE登入失敗，請稍後再試";
   } finally {
-    // 無論成功或失敗，都要結束載入狀態
     isLoading.value = false;
   }
 };
 
-/**
- * 導航到主頁面
- *
- * 此函數負責處理登入成功後的用戶狀態更新和頁面跳轉：
- * 1. 檢查登入目的（從 state 參數）
- * 2. 根據不同目的執行不同的處理流程
- *
- * @param socialId - LINE用戶的唯一識別碼
- * @throws {Error} 當用戶未註冊或獲取用戶資料失敗時拋出錯誤
- */
-const navigateToMainPage = async (socialId: string,note:string): Promise<void> => {
-  // 檢查登入目的
-  const state = getLineStateFromUrl();
-
-  // 處理綁定教練帳號
-  if (state?.purpose === "bind-coach" && state.data?.coachId) {
-    await handleBindCoach(socialId, state.data.coachId);
-    return;
-  }
-
-  // 步驟1：將LINE用戶的social ID儲存到viewer store
-  viewerStore.setSocialId(socialId);
-
-  // 步驟2：根據social ID從後端獲取用戶資料
-  const userId = await viewerStore.fetchBySocialId(socialId);
-
-  // 步驟3：驗證用戶是否已在系統中註冊
-  if (userId === null) {
-    throw new Error("無法獲取用戶資料，請確認您已註冊");
-  }
-
-  // 步驟4：根據用戶角色直接導航到對應頁面
-  if (viewerStore.isTrainee) {
-    const trainee= await traineeStore.fetchTraineeById(userId);
-    if(trainee){
-      await traineeStore.updateTrainee(
-        userId,
-        {
-          name:trainee.name,
-          gender:trainee?.gender,
-          phone:trainee.phone,
-          note:`Line 顯示名稱：${note}`
-        }
-      )
-    }
-
-    const navStore = useNavigationStore();
-    navStore.setTraineeNav(userId);
-    router.push("/trainee/info");
-  } else if (viewerStore.isCoach) {
-    const navStore = useNavigationStore();
-    navStore.setCoachNav(userId);
-    router.push("/coach");
-  } else if (viewerStore.socialId) {
-    // 新使用者，導航到註冊頁面
-    const navStore = useNavigationStore();
-    navStore.setTraineeNav(viewerStore.socialId, { register: true, note: `Line 顯示名稱：${note}` });
-    router.push("/trainee/info");
-  }
-};
-
-/**
- * 處理綁定教練帳號
- *
- * @param socialId - LINE用戶的唯一識別碼
- * @param coachId - 教練ID
- */
-const handleBindCoach = async (
-  socialId: string,
-  coachId: number
-): Promise<void> => {
-  try {
-    // 載入教練資料
-    const coach = await coachStore.fetchCoachById(coachId);
-    if (!coach) {
-      throw new Error("未找到教練資料");
-    }
-
-    // 更新教練的 socialId
-    const success = await coachStore.updateCoach({
-      id: coachId,
-      name: coach.name,
-      coachType: coach.coachType || "Team",
-      socialId: socialId,
-    });
-
-    if (!success) {
-      throw new Error("綁定失敗，請稍後再試");
-    }
-
-    // 綁定成功，導航到教練頁面
-    const navStore = useNavigationStore();
-    navStore.setCoachNav(coachId);
-    router.push("/coach");
-  } catch (error) {
-    throw new Error(error instanceof Error ? error.message : "綁定教練失敗");
-  }
-};
-
-// 組件掛載時自動執行LINE登入回調處理
 onMounted(handleLineCallback);
 </script>

@@ -237,7 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import type { Trainee } from "../services/trainee";
 import type { TrainingPlan, TrainingTimeSlot } from "../services/training-plan";
 
@@ -255,10 +255,20 @@ const emit = defineEmits<{
   (e: "adjust", trainee: Trainee): void;
 }>();
 
+const SEARCH_STORAGE_KEY = "trainee-list-search";
+
 /**
- * 搜尋查詢字串
+ * 搜尋查詢字串（保存到 sessionStorage，返回時延續）
  */
-const searchQuery = ref<string>("");
+const searchQuery = ref<string>(sessionStorage.getItem(SEARCH_STORAGE_KEY) ?? "");
+
+watch(searchQuery, (value) => {
+  if (value) {
+    sessionStorage.setItem(SEARCH_STORAGE_KEY, value);
+  } else {
+    sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+  }
+});
 
 /**
  * 過濾後的學員列表

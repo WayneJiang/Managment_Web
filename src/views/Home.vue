@@ -54,15 +54,18 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 import { useViewerStore } from "../stores/viewer";
 import { useNavigationStore } from "../stores/navigation";
 import { createLineLoginService } from "../services/line-login";
 import { encodeLineState } from "../utils/line-state";
 import LoadingState from "../components/LoadingState.vue";
-import type { Router } from "vue-router";
+import {
+  LINE_AUTH_MESSAGE_TYPE,
+  openLineLoginPopup,
+  processLineAuthCode,
+  type LineAuthMessage,
+} from "../services/line-auth-flow";
 
-const router: Router = useRouter();
 const viewerStore = useViewerStore();
 const lineLoginService = createLineLoginService();
 
@@ -91,14 +94,17 @@ const navigateBasedOnRole = (userId: number | null): void => {
   try {
     const navStore = useNavigationStore();
     if (viewerStore.isTrainee && userId !== null) {
+      navStore.setViewer(userId);
       navStore.setTraineeNav(userId);
-      router.push("/trainee/info");
+      window.location.replace("/trainee/info");
     } else if (viewerStore.isCoach && userId !== null) {
+      navStore.setViewer(userId);
       navStore.setCoachNav(userId);
-      router.push("/coach");
+      window.location.replace("/coach");
     } else if (viewerStore.socialId) {
+      navStore.setViewer(viewerStore.socialId);
       navStore.setTraineeNav(viewerStore.socialId, { register: true });
-      router.push("/trainee/info");
+      window.location.replace("/trainee/info");
     }
   } catch (error) {
     // 導航失敗，靜默處理
@@ -139,18 +145,68 @@ const initializeUserCheck = async (): Promise<void> => {
 };
 
 /**
- * 處理LINE登入
+ * 處理LINE登入：在彈窗中開啟 LINE 授權頁，主頁面 history 不會被汙染
  */
 const handleLineLogin = (): void => {
   try {
     isLineLoginLoading.value = true;
 
-    // 生成一般登入的 state
     const state = encodeLineState("normal");
-
-    // 生成LINE登入URL並跳轉
     const loginUrl = lineLoginService.generateLoginUrl(state);
-    window.location.href = loginUrl;
+
+    const popup = openLineLoginPopup(loginUrl);
+    if (!popup) {
+      // 彈窗被擋 → fallback 整頁跳轉
+      window.location.replace(loginUrl);
+      return;
+    }
+
+    let closedPoller: number | null = null;
+
+    const cleanup = (): void => {
+      window.removeEventListener("message", handleMessage);
+      if (closedPoller !== null) {
+        window.clearInterval(closedPoller);
+        closedPoller = null;
+      }
+    };
+
+    const handleMessage = async (event: MessageEvent): Promise<void> => {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data as LineAuthMessage | undefined;
+      if (!data || data.type !== LINE_AUTH_MESSAGE_TYPE) return;
+
+      cleanup();
+
+      if (data.error) {
+        viewerStore.error = data.error;
+        isLineLoginLoading.value = false;
+        return;
+      }
+      if (!data.code) {
+        viewerStore.error = "未收到LINE授權碼";
+        isLineLoginLoading.value = false;
+        return;
+      }
+
+      try {
+        await processLineAuthCode(data.code, data.state ?? null);
+      } catch (err) {
+        viewerStore.error =
+          err instanceof Error ? err.message : "LINE登入失敗，請稍後再試";
+        isLineLoginLoading.value = false;
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    // 偵測使用者手動關閉彈窗
+    closedPoller = window.setInterval(() => {
+      if (popup.closed) {
+        cleanup();
+        isLineLoginLoading.value = false;
+      }
+    }, 500);
   } catch (error) {
     isLineLoginLoading.value = false;
   }

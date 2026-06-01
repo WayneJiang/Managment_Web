@@ -118,6 +118,18 @@
           </div>
         </div>
 
+        <div
+          v-if="regenerateMessage"
+          :class="[
+            'alert',
+            'mt-2',
+            'py-2',
+            regenerateMessage.type === 'success' ? 'alert-success' : 'alert-error',
+          ]"
+        >
+          <span>{{ regenerateMessage.text }}</span>
+        </div>
+
         <div v-if="isLoadingBlobs" class="flex justify-center py-8">
           <span class="loading loading-spinner loading-lg"></span>
         </div>
@@ -131,18 +143,20 @@
           <table class="table w-full">
             <thead>
               <tr>
-                <th class="w-1/2">檔案名稱</th>
-                <th class="w-1/4">大小</th>
-                <th class="w-1/4">操作</th>
+                <th class="w-2/5">檔案名稱</th>
+                <th class="w-1/5">大小</th>
+                <th class="w-1/5">產生時間</th>
+                <th class="w-1/5">操作</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="file in blobFiles" :key="file.url">
                 <td>{{ file.pathname }}</td>
                 <td>{{ formatFileSize(file.size) }}</td>
+                <td>{{ formatUploadedAt(file.uploadedAt) }}</td>
                 <td>
                   <a
-                    :href="file.url"
+                    :href="`${file.url}?v=${encodeURIComponent(file.uploadedAt)}`"
                     target="_blank"
                     class="btn btn-soft btn-primary btn-xs"
                   >
@@ -411,6 +425,10 @@ const pageSize = 20;
 const blobFiles = ref<BlobFile[]>([]);
 const isLoadingBlobs = ref<boolean>(false);
 const isRegenerating = ref<boolean>(false);
+const regenerateMessage = ref<{
+  type: "success" | "error";
+  text: string;
+} | null>(null);
 
 const errors = ref<{
   name: string;
@@ -717,15 +735,35 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 
 const handleRegenerateReport = async (): Promise<void> => {
   isRegenerating.value = true;
+  regenerateMessage.value = null;
   try {
-    await axios.get(`${API_BASE_URL}/regenerateReport`);
+    const { data } = await axios.get(`${API_BASE_URL}/regenerateReport`);
     // 產生完成後重新載入檔案列表
     await fetchBlobs();
+    regenerateMessage.value = {
+      type: "success",
+      text: data?.message || "報表已重新產生",
+    };
   } catch (error) {
     console.error("Failed to regenerate report:", error);
+    regenerateMessage.value = {
+      type: "error",
+      text: "重新產生報表失敗，請稍後再試",
+    };
   } finally {
     isRegenerating.value = false;
   }
+};
+
+const formatUploadedAt = (dateStr: string): string => {
+  return new Date(dateStr).toLocaleString("zh-TW", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const formatFileSize = (bytes: number): string => {

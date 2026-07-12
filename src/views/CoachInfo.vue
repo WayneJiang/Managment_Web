@@ -323,10 +323,11 @@ const loadCoachInsights = async (coach: Coach): Promise<void> => {
     });
 
   try {
+    // 團體課程的紀錄可能掛在其他教練的計畫下，所以有團體課程計畫的學員也要納入
     const traineeIds = new Set<number>();
     for (const trainee of trainees.value) {
       for (const plan of trainee.trainingPlan || []) {
-        if (plan.coach?.id === coach.id) {
+        if (plan.coach?.id === coach.id || plan.planType === "Sequential") {
           traineeIds.add(trainee.id);
           break;
         }
@@ -345,7 +346,12 @@ const loadCoachInsights = async (coach: Coach): Promise<void> => {
       while (page <= totalPagesLocal) {
         const result = await api.getByTrainingRecord(traineeId, page);
         for (const record of result.data) {
-          if (record.trainingPlan?.coach?.id === coach.id) {
+          // 團體課程以開課教練為準，其餘以訓練計畫教練為準
+          const isCoachRecord =
+            record.trainingPlan?.planType === "Sequential" && record.openingCourse
+              ? record.openingCourse.coach?.id === coach.id
+              : record.trainingPlan?.coach?.id === coach.id;
+          if (isCoachRecord) {
             if (!record.trainee?.name) {
               const name = traineeNameMap.get(traineeId);
               if (name) {

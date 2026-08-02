@@ -101,18 +101,18 @@
                     class="badge"
                     :class="{
                       'badge-primary':
-                        record.trainingPlan?.planType === 'Personal',
+                        record.trainingPlan?.planType === 'PrivateTraining',
                       'badge-success':
-                        record.trainingPlan?.planType === 'FlexiblePersonal',
-                      // 'badge-success':
-                      //   record.trainingPlan?.planType === 'Block',
+                        record.trainingPlan?.planType === 'FlexPrivate',
+                      'badge-info':
+                        record.trainingPlan?.planType === 'SemiPrivate',
                       'badge-warning':
-                        record.trainingPlan?.planType === 'Sequential',
+                        record.trainingPlan?.planType === 'GroupFitness',
                       'badge-secondary':
-                        record.trainingPlan?.planType !== 'Personal' &&
-                        record.trainingPlan?.planType !== 'FlexiblePersonal' &&
-                        // record.trainingPlan?.planType !== 'Block' &&
-                        record.trainingPlan?.planType !== 'Sequential',
+                        record.trainingPlan?.planType !== 'PrivateTraining' &&
+                        record.trainingPlan?.planType !== 'FlexPrivate' &&
+                        record.trainingPlan?.planType !== 'SemiPrivate' &&
+                        record.trainingPlan?.planType !== 'GroupFitness',
                     }"
                   >
                     {{ getPlanTypeLabel(record.trainingPlan?.planType) }}
@@ -147,7 +147,7 @@
 
                 <!-- 團體課程時間（僅團體課程顯示） -->
                 <div
-                  v-if="record.trainingPlan?.planType === 'Sequential' && record.openingCourse"
+                  v-if="record.trainingPlan?.planType === 'GroupFitness' && record.openingCourse"
                   class="flex items-center justify-center gap-2"
                 >
                   <svg
@@ -317,32 +317,12 @@
             <label class="label">
               <span class="font-semibold">訓練計畫</span>
             </label>
-            <select
+            <GlassSelect
               v-model="editingRecord.trainingPlan"
-              class="select w-full"
-              :class="{ 'select-error': validationErrors.trainingPlan }"
-
-            >
-              <option
-                v-for="trainingPlan in availableTrainingPlans"
-                :key="trainingPlan.id"
-                :value="trainingPlan.id"
-              >
-                {{ trainingPlan.coach?.name || "未指定教練" }} -
-                {{ getPlanTypeLabel(trainingPlan.planType) }}
-                ({{ trainingPlan.quota }}堂，剩餘{{
-                  (trainingPlan.quota || 0) -
-                  (trainingPlan.trainingRecord?.length || 0)
-                }}堂)
-              </option>
-              <option
-                v-if="availableTrainingPlans.length === 0"
-                value=""
-                disabled
-              >
-                沒有可用的訓練計畫（所有計畫額度已用完）
-              </option>
-            </select>
+              :options="trainingPlanOptions"
+              :placeholder="trainingPlanPlaceholder"
+              :error="!!validationErrors.trainingPlan"
+            />
             <label v-if="validationErrors.trainingPlan" class="label">
               <span
                 class="text-sm text-error"
@@ -352,27 +332,16 @@
           </div>
 
           <!-- 團體課程選擇（僅當選擇團體課程類型時顯示） -->
-          <div v-if="isEditingSequentialPlan" class="mb-4">
+          <div v-if="isEditingGroupFitnessPlan" class="mb-4">
             <label class="label">
               <span class="font-semibold">團體課程</span>
             </label>
-            <select
+            <GlassSelect
               v-model="editingOpeningCourse"
-              class="select w-full"
-              :class="{ 'select-error': validationErrors.openingCourse }"
-
-            >
-              <option :value="undefined" disabled>請選擇團體課程</option>
-              <option
-                v-for="course in sortedOpeningCourses"
-                :key="course.id"
-                :value="course.id"
-              >
-                {{ course.name }} - {{ getDayOfWeekLabel(course.dayOfWeek) }}
-                {{ course.start }}~{{ course.end }}
-                ({{ course.coach?.name || '未指定教練' }})
-              </option>
-            </select>
+              :options="openingCourseOptions"
+              placeholder="請選擇團體課程"
+              :error="!!validationErrors.openingCourse"
+            />
             <label v-if="validationErrors.openingCourse" class="label">
               <span
                 class="text-sm text-error"
@@ -412,37 +381,19 @@
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                   <!-- 小時選擇 -->
-                  <select
+                  <GlassSelect
                     v-model="editingHour"
-                    class="select w-full"
-                    :class="{ 'select-error': validationErrors.time }"
-
-                    required
-                  >
-                    <option
-                      v-for="hourOption in hourOptions"
-                      :key="hourOption.value"
-                      :value="hourOption.value"
-                    >
-                      {{ hourOption.label }}
-                    </option>
-                  </select>
+                    :options="hourOptions"
+                    placeholder="時"
+                    :error="!!validationErrors.time"
+                  />
                   <!-- 分鐘選擇 -->
-                  <select
+                  <GlassSelect
                     v-model="editingMinute"
-                    class="select w-full"
-                    :class="{ 'select-error': validationErrors.time }"
-
-                    required
-                  >
-                    <option
-                      v-for="minuteOption in minuteOptions"
-                      :key="minuteOption.value"
-                      :value="minuteOption.value"
-                    >
-                      {{ minuteOption.label }}
-                    </option>
-                  </select>
+                    :options="minuteOptions"
+                    placeholder="分"
+                    :error="!!validationErrors.time"
+                  />
                 </div>
                 <label v-if="validationErrors.time" class="label">
                   <span
@@ -495,32 +446,12 @@
             <label class="label">
               <span class="font-semibold">訓練計畫</span>
             </label>
-            <select
+            <GlassSelect
               v-model="creatingRecord.trainingPlan"
-              class="select w-full"
-              :class="{ 'select-error': validationErrors.trainingPlan }"
-
-            >
-              <option
-                v-for="trainingPlan in availableTrainingPlans"
-                :key="trainingPlan.id"
-                :value="trainingPlan.id"
-              >
-                {{ trainingPlan.coach?.name || "未指定教練" }} -
-                {{ getPlanTypeLabel(trainingPlan.planType) }}
-                ({{ trainingPlan.quota }}堂，剩餘{{
-                  (trainingPlan.quota || 0) -
-                  (trainingPlan.trainingRecord?.length || 0)
-                }}堂)
-              </option>
-              <option
-                v-if="availableTrainingPlans.length === 0"
-                value=""
-                disabled
-              >
-                沒有可用的訓練計畫（所有計畫額度已用完）
-              </option>
-            </select>
+              :options="trainingPlanOptions"
+              :placeholder="trainingPlanPlaceholder"
+              :error="!!validationErrors.trainingPlan"
+            />
             <label v-if="validationErrors.trainingPlan" class="label">
               <span
                 class="text-sm text-error"
@@ -530,27 +461,16 @@
           </div>
 
           <!-- 團體課程選擇（僅當選擇團體課程類型時顯示） -->
-          <div v-if="isCreatingSequentialPlan" class="mb-4">
+          <div v-if="isCreatingGroupFitnessPlan" class="mb-4">
             <label class="label">
               <span class="font-semibold">團體課程</span>
             </label>
-            <select
+            <GlassSelect
               v-model="creatingOpeningCourse"
-              class="select w-full"
-              :class="{ 'select-error': validationErrors.openingCourse }"
-
-            >
-              <option :value="undefined" disabled>請選擇團體課程</option>
-              <option
-                v-for="course in sortedOpeningCourses"
-                :key="course.id"
-                :value="course.id"
-              >
-                {{ course.name }} - {{ getDayOfWeekLabel(course.dayOfWeek) }}
-                {{ course.start }}~{{ course.end }}
-                ({{ course.coach?.name || '未指定教練' }})
-              </option>
-            </select>
+              :options="openingCourseOptions"
+              placeholder="請選擇團體課程"
+              :error="!!validationErrors.openingCourse"
+            />
             <label v-if="validationErrors.openingCourse" class="label">
               <span
                 class="text-sm text-error"
@@ -590,37 +510,19 @@
                 </label>
                 <div class="grid grid-cols-2 gap-2">
                   <!-- 小時選擇 -->
-                  <select
+                  <GlassSelect
                     v-model="creatingHour"
-                    class="select w-full"
-                    :class="{ 'select-error': validationErrors.time }"
-
-                    required
-                  >
-                    <option
-                      v-for="hourOption in hourOptions"
-                      :key="hourOption.value"
-                      :value="hourOption.value"
-                    >
-                      {{ hourOption.label }}
-                    </option>
-                  </select>
+                    :options="hourOptions"
+                    placeholder="時"
+                    :error="!!validationErrors.time"
+                  />
                   <!-- 分鐘選擇 -->
-                  <select
+                  <GlassSelect
                     v-model="creatingMinute"
-                    class="select w-full"
-                    :class="{ 'select-error': validationErrors.time }"
-
-                    required
-                  >
-                    <option
-                      v-for="minuteOption in minuteOptions"
-                      :key="minuteOption.value"
-                      :value="minuteOption.value"
-                    >
-                      {{ minuteOption.label }}
-                    </option>
-                  </select>
+                    :options="minuteOptions"
+                    placeholder="分"
+                    :error="!!validationErrors.time"
+                  />
                 </div>
                 <label v-if="validationErrors.time" class="label">
                   <span
@@ -714,6 +616,7 @@ import type { TrainingPlan } from "../services/training-plan";
 import type { OpeningCourse } from "../services/opening-course";
 import { useTraineeStore } from "../stores/trainee";
 import { useCoachStore } from "../stores/coach";
+import GlassSelect from "../utils/GlassSelect.vue";
 
 const traineeStore = useTraineeStore();
 const coachStore = useCoachStore();
@@ -829,23 +732,45 @@ const minuteOptions = computed(() => {
 });
 
 /**
+ * 訓練計畫選項
+ */
+const trainingPlanOptions = computed(() =>
+  availableTrainingPlans.value.map((trainingPlan) => ({
+    value: trainingPlan.id as number,
+    label:
+      `${trainingPlan.coach?.name || "未指定教練"} - ` +
+      `${getPlanTypeLabel(trainingPlan.planType)} ` +
+      `(${trainingPlan.quota}堂，剩餘${
+        (trainingPlan.quota || 0) - (trainingPlan.trainingRecord?.length || 0)
+      }堂)`,
+  }))
+);
+
+/** 無可用計畫時直接把原因顯示在欄位上 */
+const trainingPlanPlaceholder = computed(() =>
+  availableTrainingPlans.value.length === 0
+    ? "沒有可用的訓練計畫（所有計畫額度已用完）"
+    : "請選擇訓練計畫"
+);
+
+/**
  * 判斷編輯時選擇的訓練計畫是否為團體課程類型
  */
-const isEditingSequentialPlan = computed(() => {
+const isEditingGroupFitnessPlan = computed(() => {
   const selectedPlan = availableTrainingPlans.value.find(
     (plan) => plan.id === editingRecord.value.trainingPlan
   );
-  return selectedPlan?.planType === "Sequential";
+  return selectedPlan?.planType === "GroupFitness";
 });
 
 /**
  * 判斷新增時選擇的訓練計畫是否為團體課程類型
  */
-const isCreatingSequentialPlan = computed(() => {
+const isCreatingGroupFitnessPlan = computed(() => {
   const selectedPlan = availableTrainingPlans.value.find(
     (plan) => plan.id === creatingRecord.value.trainingPlan
   );
-  return selectedPlan?.planType === "Sequential";
+  return selectedPlan?.planType === "GroupFitness";
 });
 
 /**
@@ -891,6 +816,19 @@ const sortedOpeningCourses = computed(() => {
     return a.start.localeCompare(b.start);
   });
 });
+
+/**
+ * 團體課程選項
+ */
+const openingCourseOptions = computed(() =>
+  sortedOpeningCourses.value.map((course) => ({
+    value: course.id as number,
+    label:
+      `${course.name} - ${getDayOfWeekLabel(course.dayOfWeek)} ` +
+      `${course.start}~${course.end} ` +
+      `(${course.coach?.name || "未指定教練"})`,
+  }))
+);
 
 /**
  * 載入訓練紀錄資料
@@ -979,13 +917,13 @@ const groupedRecords = computed(() => {
 const getPlanTypeLabel = (planType: TrainingPlan["planType"]): string => {
   if (!planType) return "";
   switch (planType) {
-    case "Personal":
+    case "PrivateTraining":
       return "個人教練";
-    case "FlexiblePersonal":
+    case "FlexPrivate":
       return "個人彈性";
-    // case "Block":
-    //   return "團體課程";
-    case "Sequential":
+    case "SemiPrivate":
+      return "個人小班";
+    case "GroupFitness":
       return "團體課程";
     default:
       return "";
@@ -997,7 +935,7 @@ const getPlanTypeLabel = (planType: TrainingPlan["planType"]): string => {
  * 團體課程優先顯示 openingCourse 的教練，否則顯示 trainingPlan 的教練
  */
 const getCoachName = (record: TrainingRecord): string => {
-  if (record.trainingPlan?.planType === "Sequential" && record.openingCourse?.coach?.name) {
+  if (record.trainingPlan?.planType === "GroupFitness" && record.openingCourse?.coach?.name) {
     return record.openingCourse.coach.name;
   }
   return record.trainingPlan?.coach?.name || "未指定";
@@ -1050,7 +988,7 @@ const validateEditForm = (): boolean => {
   }
 
   // 如果選擇的是團體課程類型，則必須選擇團體課程
-  if (isEditingSequentialPlan.value && !editingOpeningCourse.value) {
+  if (isEditingGroupFitnessPlan.value && !editingOpeningCourse.value) {
     errors.openingCourse = "請選擇團體課程";
   }
 
@@ -1090,7 +1028,7 @@ const handleExportToPdf = async (): Promise<void> => {
         formatTime(record.createdDate),
         getPlanTypeLabel(record.trainingPlan?.planType),
         getCoachName(record),
-        record.trainingPlan?.planType === "Sequential" && record.openingCourse
+        record.trainingPlan?.planType === "GroupFitness" && record.openingCourse
           ? `${record.openingCourse.start}~${record.openingCourse.end}`
           : "",
         record.trainingPlan?.quota?.toString() || "",
@@ -1191,7 +1129,7 @@ const handleSaveEditRecord = async (): Promise<void> => {
   editingRecord.value.date = dayjs(combinedDateTime).tz("Asia/Taipei").format();
 
   // 如果是團體課程類型，加入團體課程 ID
-  if (isEditingSequentialPlan.value && editingOpeningCourse.value) {
+  if (isEditingGroupFitnessPlan.value && editingOpeningCourse.value) {
     editingRecord.value.openingCourse = editingOpeningCourse.value;
   } else {
     editingRecord.value.openingCourse = undefined;
@@ -1307,7 +1245,7 @@ const validateCreateForm = (): boolean => {
   }
 
   // 如果選擇的是團體課程類型，則必須選擇團體課程
-  if (isCreatingSequentialPlan.value && !creatingOpeningCourse.value) {
+  if (isCreatingGroupFitnessPlan.value && !creatingOpeningCourse.value) {
     errors.openingCourse = "請選擇團體課程";
   }
 
@@ -1330,7 +1268,7 @@ const handleSaveCreateRecord = async (): Promise<void> => {
     .toDate();
 
   // 如果是團體課程類型，加入團體課程 ID
-  if (isCreatingSequentialPlan.value && creatingOpeningCourse.value) {
+  if (isCreatingGroupFitnessPlan.value && creatingOpeningCourse.value) {
     creatingRecord.value.openingCourse = creatingOpeningCourse.value;
   } else {
     creatingRecord.value.openingCourse = undefined;

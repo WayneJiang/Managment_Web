@@ -25,15 +25,12 @@
           <label class="label">
             <span class="font-medium">教練</span>
           </label>
-          <select
+          <GlassSelect
             v-model="formData.coachId"
-            class="select w-full"
-            :class="{ 'select-error': errors.coachId }"
-          >
-            <option v-for="coach in coaches" :key="coach.id" :value="coach.id">
-              {{ coach.name }}
-            </option>
-          </select>
+            :options="coachOptions"
+            placeholder="請選擇教練"
+            :error="!!errors.coachId"
+          />
           <p v-if="errors.coachId" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
             {{ errors.coachId }}
           </p>
@@ -43,19 +40,12 @@
           <label class="label">
             <span class="font-medium">星期</span>
           </label>
-          <select
+          <GlassSelect
             v-model="formData.dayOfWeek"
-            class="select w-full"
-            :class="{ 'select-error': errors.dayOfWeek }"
-          >
-            <option :value="DayOfWeek.MONDAY">星期一</option>
-            <option :value="DayOfWeek.TUESDAY">星期二</option>
-            <option :value="DayOfWeek.WEDNESDAY">星期三</option>
-            <option :value="DayOfWeek.THURSDAY">星期四</option>
-            <option :value="DayOfWeek.FRIDAY">星期五</option>
-            <option :value="DayOfWeek.SATURDAY">星期六</option>
-            <option :value="DayOfWeek.SUNDAY">星期日</option>
-          </select>
+            :options="dayOfWeekOptions"
+            placeholder="請選擇星期"
+            :error="!!errors.dayOfWeek"
+          />
           <p v-if="errors.dayOfWeek" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
             {{ errors.dayOfWeek }}
           </p>
@@ -66,20 +56,12 @@
             <label class="label">
               <span class="font-medium">開始時間</span>
             </label>
-            <select
+            <GlassSelect
               v-model="formData.start"
-              class="select w-full"
-              :class="{ 'select-error': errors.start }"
-            >
-              <option value="">開始時間</option>
-              <option
-                v-for="time in timeOptions"
-                :key="time.value"
-                :value="time.value"
-              >
-                {{ time.label }}
-              </option>
-            </select>
+              :options="timeOptions"
+              placeholder="開始時間"
+              :error="!!errors.start"
+            />
             <p v-if="errors.start" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
               {{ errors.start }}
             </p>
@@ -88,20 +70,12 @@
             <label class="label">
               <span class="font-medium">結束時間</span>
             </label>
-            <select
+            <GlassSelect
               v-model="formData.end"
-              class="select w-full"
-              :class="{ 'select-error': errors.end }"
-            >
-              <option value="">結束時間</option>
-              <option
-                v-for="time in getEndTimeOptions(formData.start)"
-                :key="time.value"
-                :value="time.value"
-              >
-                {{ time.label }}
-              </option>
-            </select>
+              :options="getEndTimeOptions(formData.start)"
+              placeholder="結束時間"
+              :error="!!errors.end"
+            />
             <p v-if="errors.end" class="text-sm mt-1" :style="{ color: 'var(--color-error)' }">
               {{ errors.end }}
             </p>
@@ -149,6 +123,7 @@ import type {
 } from "../services/opening-course";
 import { DayOfWeek } from "../services/opening-course";
 import type { Coach } from "../services/coach";
+import GlassSelect from "../utils/GlassSelect.vue";
 
 interface Props {
   isOpen: boolean;
@@ -196,6 +171,23 @@ const formData = ref<{
   end: "",
   note: "",
 });
+
+const coachOptions = computed(() =>
+  props.coaches.map((coach) => ({
+    value: String(coach.id),
+    label: coach.name,
+  }))
+);
+
+const dayOfWeekOptions = [
+  { value: DayOfWeek.MONDAY, label: "星期一" },
+  { value: DayOfWeek.TUESDAY, label: "星期二" },
+  { value: DayOfWeek.WEDNESDAY, label: "星期三" },
+  { value: DayOfWeek.THURSDAY, label: "星期四" },
+  { value: DayOfWeek.FRIDAY, label: "星期五" },
+  { value: DayOfWeek.SATURDAY, label: "星期六" },
+  { value: DayOfWeek.SUNDAY, label: "星期日" },
+];
 
 // 24小時制時間選項（10分鐘間隔）
 const timeOptions = Array.from({ length: 144 }, (_, i) => {

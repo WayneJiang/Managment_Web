@@ -16,15 +16,15 @@
             <div
               class="badge badge-lg"
               :class="{
-                'badge-primary': trainingPlan.planType === 'Personal',
-                'badge-success': trainingPlan.planType === 'FlexiblePersonal',
-                // 'badge-success': trainingPlan.planType === 'Block',
-                'badge-warning': trainingPlan.planType === 'Sequential',
+                'badge-primary': trainingPlan.planType === 'PrivateTraining',
+                'badge-success': trainingPlan.planType === 'FlexPrivate',
+                'badge-info': trainingPlan.planType === 'SemiPrivate',
+                'badge-warning': trainingPlan.planType === 'GroupFitness',
                 'badge-secondary':
-                  trainingPlan.planType !== 'Personal' &&
-                  trainingPlan.planType !== 'FlexiblePersonal' &&
-                  // trainingPlan.planType !== 'Block' &&
-                  trainingPlan.planType !== 'Sequential',
+                  trainingPlan.planType !== 'PrivateTraining' &&
+                  trainingPlan.planType !== 'FlexPrivate' &&
+                  trainingPlan.planType !== 'SemiPrivate' &&
+                  trainingPlan.planType !== 'GroupFitness',
               }"
             >
               {{ getPlanTypeLabel(trainingPlan.planType) }}
@@ -72,7 +72,7 @@
             </div>
           </div>
 
-          <div v-if="trainingPlan.planType !== 'Sequential'" class="mb-4">
+          <div v-if="trainingPlan.planType !== 'GroupFitness'" class="mb-4">
             <div class="flex items-center gap-2 mb-2">
               <svg
                 class="w-4 h-4 opacity-70"
@@ -94,7 +94,7 @@
             </div>
           </div>
 
-          <div v-if="trainingPlan.planType !== 'Sequential' && trainingPlan.planType !== 'FlexiblePersonal'" class="mb-4">
+          <div v-if="trainingPlan.planType !== 'GroupFitness' && trainingPlan.planType !== 'FlexPrivate'" class="mb-4">
             <div class="flex items-center gap-2 mb-2">
               <svg
                 class="w-4 h-4 opacity-70"
@@ -252,10 +252,10 @@ const getPlanTypeLabel = (planType: string): string => {
   if (!planType) return "未知類型";
 
   const planTypeMap: Record<string, string> = {
-    Personal: "個人教練",
-    FlexiblePersonal: "個人彈性",
-    // Block: "團體課程",
-    Sequential: "團體課程",
+    PrivateTraining: "個人教練",
+    FlexPrivate: "個人彈性",
+    SemiPrivate: "個人小班",
+    GroupFitness: "團體課程",
   };
 
   return planTypeMap[planType] || planType;

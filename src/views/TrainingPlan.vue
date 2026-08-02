@@ -43,27 +43,12 @@
                       >負責教練</span
                     >
                   </label>
-                  <select
+                  <GlassSelect
                     v-model="selectedCoach"
-                    class="select w-full"
-                    :class="{ 'select-error': validationErrors.coach }"
-                    :style="{
-                      backgroundColor: 'var(--color-input-bg)',
-                      borderColor: validationErrors.coach
-                        ? 'var(--color-error)'
-                        : 'var(--color-input-border)',
-                      color: 'var(--color-text)',
-                    }"
-                  >
-                    <option value="">請選擇教練</option>
-                    <option
-                      v-for="coach in coaches"
-                      :key="coach.id"
-                      :value="coach.id"
-                    >
-                      {{ coach.name }}
-                    </option>
-                  </select>
+                    :options="coachOptions"
+                    placeholder="請選擇教練"
+                    :error="!!validationErrors.coach"
+                  />
                   <label v-if="validationErrors.coach" class="label">
                     <span
                       class="text-sm"
@@ -89,22 +74,12 @@
                       >計畫類型</span
                     >
                   </label>
-                  <select
+                  <GlassSelect
                     v-model="planType"
-                    class="select w-full"
-                    :class="{ 'select-error': validationErrors.planType }"
-                    :style="{
-                      backgroundColor: 'var(--color-input-bg)',
-                      borderColor: validationErrors.planType
-                        ? 'var(--color-error)'
-                        : 'var(--color-input-border)',
-                      color: 'var(--color-text)',
-                    }"
-                  >
-                    <option value="Personal">個人教練</option>
-                    <option value="FlexiblePersonal">個人彈性</option>
-                    <option value="Sequential">團體課程</option>
-                  </select>
+                    :options="planTypeOptions"
+                    placeholder="請選擇類型"
+                    :error="!!validationErrors.planType"
+                  />
                   <label v-if="validationErrors.planType" class="label">
                     <span
                       class="text-sm"
@@ -259,24 +234,12 @@
                             >星期</span
                           >
                         </label>
-                        <select
+                        <GlassSelect
                           v-model="slot.dayOfWeek"
-                          class="select select-sm w-full"
-                          :style="{
-                            backgroundColor: 'var(--color-card-bg)',
-                            borderColor: 'var(--color-input-border)',
-                            color: 'var(--color-text)',
-                          }"
-                        >
-                          <option value="">請選擇</option>
-                          <option
-                            v-for="day in dayOptions"
-                            :key="day.value"
-                            :value="day.value"
-                          >
-                            {{ day.label }}
-                          </option>
-                        </select>
+                          :options="dayOptions"
+                          placeholder="請選擇"
+                          size="sm"
+                        />
                       </div>
 
                       <div class="">
@@ -285,24 +248,12 @@
                             >開始時間</span
                           >
                         </label>
-                        <select
+                        <GlassSelect
                           v-model="slot.start"
-                          class="select select-sm w-full"
-                          :style="{
-                            backgroundColor: 'var(--color-card-bg)',
-                            borderColor: 'var(--color-input-border)',
-                            color: 'var(--color-text)',
-                          }"
-                        >
-                          <option value="">請選擇</option>
-                          <option
-                            v-for="time in timeOptions"
-                            :key="time.value"
-                            :value="time.value"
-                          >
-                            {{ time.label }}
-                          </option>
-                        </select>
+                          :options="timeOptions"
+                          placeholder="請選擇"
+                          size="sm"
+                        />
                       </div>
 
                       <div class="">
@@ -311,24 +262,12 @@
                             >結束時間</span
                           >
                         </label>
-                        <select
+                        <GlassSelect
                           v-model="slot.end"
-                          class="select select-sm w-full"
-                          :style="{
-                            backgroundColor: 'var(--color-card-bg)',
-                            borderColor: 'var(--color-input-border)',
-                            color: 'var(--color-text)',
-                          }"
-                        >
-                          <option value="">請選擇</option>
-                          <option
-                            v-for="time in getEndTimeOptions(slot.start)"
-                            :key="time.value"
-                            :value="time.value"
-                          >
-                            {{ time.label }}
-                          </option>
-                        </select>
+                          :options="getEndTimeOptions(slot.start)"
+                          placeholder="請選擇"
+                          size="sm"
+                        />
                       </div>
                     </div>
                   </div>
@@ -411,6 +350,7 @@ import { ElMessage } from "element-plus";
 import LoadingState from "../components/LoadingState.vue";
 import TrainingPlanList from "../components/TrainingPlanList.vue";
 import TrainingRecordList from "../components/TrainingRecordList.vue";
+import GlassSelect from "../utils/GlassSelect.vue";
 import type { Coach } from "../services/coach";
 import type {
   TrainingPlan,
@@ -463,6 +403,20 @@ const canEditRecords = computed(() => {
 });
 
 // 選項資料
+const coachOptions = computed(() =>
+  coaches.value.map((coach) => ({
+    value: coach.id as number,
+    label: coach.name,
+  }))
+);
+
+const planTypeOptions = [
+  { value: "PrivateTraining", label: "個人教練" },
+  { value: "FlexPrivate", label: "個人彈性" },
+  { value: "SemiPrivate", label: "個人小班" },
+  { value: "GroupFitness", label: "團體課程" },
+];
+
 const dayOptions = [
   { value: "Monday", label: "星期一" },
   { value: "Tuesday", label: "星期二" },
@@ -594,7 +548,7 @@ const validateForm = (): boolean => {
   }
 
   // 個人彈性不需要設定訓練時段
-  if (trainingTimeSlots.value.length === 0 && planType.value !== "FlexiblePersonal") {
+  if (trainingTimeSlots.value.length === 0 && planType.value !== "FlexPrivate") {
     errors.trainingSlots = "請至少設定一個訓練時段";
   } else if (trainingTimeSlots.value.length > 0) {
     const hasInvalidSlot = trainingTimeSlots.value.some(

@@ -50,8 +50,8 @@ export const api = {
   },
 
   async getCoachYearlySummary(coachId: number): Promise<{
-    personal: { year: string; totalAttendees: number; totalSessions: number }[];
-    sequential: { year: string; totalAttendees: number; totalSessions: number }[];
+    privateTraining: { year: string; totalAttendees: number; totalSessions: number }[];
+    groupFitness: { year: string; totalAttendees: number; totalSessions: number }[];
   }> {
     try {
       return (await apiClient.get(`/coach/${coachId}/yearlySummary`)).data;

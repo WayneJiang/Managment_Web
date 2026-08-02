@@ -121,7 +121,7 @@
                   </div>
 
                   <!-- 教練資訊 (團體課程不顯示) -->
-                  <div v-if="plan.planType !== 'Sequential'" class="text-xs mb-1">
+                  <div v-if="plan.planType !== 'GroupFitness'" class="text-xs mb-1">
                     <span class="opacity-70">教練：</span>
                     <span :class="getCoachNameClass(plan.coach?.name)">
                       {{ plan.coach?.name || "未指定" }}
@@ -129,7 +129,7 @@
                   </div>
 
                   <!-- 訓練時段 (團體課程不顯示) -->
-                  <div v-if="plan.planType !== 'Sequential'" class="text-xs mb-1">
+                  <div v-if="plan.planType !== 'GroupFitness'" class="text-xs mb-1">
                     <span class="opacity-70">時段：</span>
                     <div
                       v-if="getTrainingSlots(plan).length > 0"
@@ -160,8 +160,6 @@
                 尚未設定訓練計畫
               </div>
             </div>
-
-            <!-- 團體課程夥伴區塊已隱藏 -->
 
             <!-- 備註欄位 -->
             <div v-if="trainee.note && trainee.note.trim()" class="mb-4">
@@ -293,10 +291,10 @@ const getPlanTypeLabel = (planType: string | undefined): string => {
   if (!planType) return "未設定";
 
   const planTypeMap: Record<string, string> = {
-    Personal: "個人教練",
-    FlexiblePersonal: "個人彈性",
-    // Block: "團體課程",
-    Sequential: "團體課程",
+    PrivateTraining: "個人教練",
+    FlexPrivate: "個人彈性",
+    SemiPrivate: "個人小班",
+    GroupFitness: "團體課程",
   };
 
   return planTypeMap[planType] || planType;
@@ -310,19 +308,19 @@ const getPlanTypeClass = (planType: string | undefined): string => {
     return "badge-error";
   }
 
-  if (planType === "Personal") {
+  if (planType === "PrivateTraining") {
     return "badge-primary";
   }
 
-  if (planType === "FlexiblePersonal") {
+  if (planType === "FlexPrivate") {
     return "badge-success";
   }
 
-  // if (planType === "Block") {
-  //   return "badge-success";
-  // }
+  if (planType === "SemiPrivate") {
+    return "badge-info";
+  }
 
-  if (planType === "Sequential") {
+  if (planType === "GroupFitness") {
     return "badge-warning";
   }
 
@@ -415,104 +413,6 @@ const getRemainingQuotaClass = (
     return "text-info";
   }
 };
-
-// === 團體課程夥伴相關函數已註解 ===
-// /**
-//  * 檢查學員是否有團體訓練計畫
-//  */
-// const hasGroupPlan = (trainee: Trainee): boolean => {
-//   return trainee.trainingPlan.some((plan) => plan.planType === "Block");
-// };
-
-// /**
-//  * 比較兩個訓練時段陣列是否相同
-//  */
-// const compareTrainingSlots = (
-//   slots1: TrainingTimeSlot[],
-//   slots2: TrainingTimeSlot[]
-// ): boolean => {
-//   if (slots1.length !== slots2.length) {
-//     return false;
-//   }
-
-//   // 排序後比較每個時段
-//   const sortedSlots1 = [...slots1].sort((a, b) =>
-//     a.dayOfWeek.localeCompare(b.dayOfWeek)
-//   );
-//   const sortedSlots2 = [...slots2].sort((a, b) =>
-//     a.dayOfWeek.localeCompare(b.dayOfWeek)
-//   );
-
-//   return sortedSlots1.every((slot1, index) => {
-//     const slot2 = sortedSlots2[index];
-//     return (
-//       slot1.dayOfWeek === slot2.dayOfWeek &&
-//       slot1.start === slot2.start &&
-//       slot1.end === slot2.end
-//     );
-//   });
-// };
-
-// /**
-//  * 檢查兩個訓練計畫是否為相同的團體課程
-//  */
-// const isSameGroupPlan = (plan1: TrainingPlan, plan2: TrainingPlan): boolean => {
-//   // 基本條件檢查
-//   if (
-//     plan1.planType !== "Block" ||
-//     plan2.planType !== "Block" ||
-//     plan1.coach?.id !== plan2.coach?.id
-//   ) {
-//     return false;
-//   }
-
-//   // 比較訓練時段
-//   const slots1 = getTrainingSlots(plan1);
-//   const slots2 = getTrainingSlots(plan2);
-
-//   return compareTrainingSlots(slots1, slots2);
-// };
-
-// /**
-//  * 獲取團體課程夥伴
-//  */
-// const getGroupMembers = (currentTrainee: Trainee): Trainee[] => {
-//   const groupPlans = currentTrainee.trainingPlan.filter(
-//     (plan) => plan.planType === "Block"
-//   );
-
-//   if (groupPlans.length === 0) {
-//     return [];
-//   }
-
-//   const groupMembers: Trainee[] = [];
-
-//   // 對每個團體計畫尋找夥伴
-//   groupPlans.forEach((currentPlan) => {
-//     const members = props.trainees.filter((trainee) => {
-//       if (trainee.id === currentTrainee.id) {
-//         return false;
-//       }
-
-//       // 檢查該學員是否有相同的團體計畫
-//       const matchingPlan = trainee.trainingPlan.find((plan) =>
-//         isSameGroupPlan(currentPlan, plan)
-//       );
-
-//       return !!matchingPlan;
-//     });
-
-//     // 避免重複添加相同的夥伴
-//     members.forEach((member) => {
-//       if (!groupMembers.find((existing) => existing.id === member.id)) {
-//         groupMembers.push(member);
-//       }
-//     });
-//   });
-
-//   return groupMembers;
-// };
-// === 團體課程夥伴相關函數註解結束 ===
 
 /**
  * 處理更新按鈕點擊

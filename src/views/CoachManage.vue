@@ -186,13 +186,13 @@
           <span class="loading loading-spinner loading-lg"></span>
         </div>
 
-        <div v-else-if="yearlySummary.personal.length === 0 && yearlySummary.sequential.length === 0" class="text-center py-8 text-gray-500">
+        <div v-else-if="yearlySummary.privateTraining.length === 0 && yearlySummary.groupFitness.length === 0" class="text-center py-8 text-gray-500">
           目前沒有年度統計資料
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
           <!-- 個人課程年度統計 -->
-          <div v-if="yearlySummary.personal.length > 0">
+          <div v-if="yearlySummary.privateTraining.length > 0">
             <h3 class="font-bold text-lg mb-2">個人課程</h3>
             <div class="overflow-x-auto">
               <table class="table table-sm w-full">
@@ -204,7 +204,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="row in yearlySummary.personal" :key="row.year">
+                  <tr v-for="row in yearlySummary.privateTraining" :key="row.year">
                     <td class="font-medium">{{ row.year }}</td>
                     <td>{{ row.totalAttendees }} 人</td>
                     <td>{{ row.totalSessions }} 堂</td>
@@ -215,7 +215,7 @@
           </div>
 
           <!-- 團體課程年度統計 -->
-          <div v-if="yearlySummary.sequential.length > 0">
+          <div v-if="yearlySummary.groupFitness.length > 0">
             <h3 class="font-bold text-lg mb-2">團體課程</h3>
             <div class="overflow-x-auto">
               <table class="table table-sm w-full">
@@ -227,7 +227,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="row in yearlySummary.sequential" :key="row.year">
+                  <tr v-for="row in yearlySummary.groupFitness" :key="row.year">
                     <td class="font-medium">{{ row.year }}</td>
                     <td>{{ row.totalAttendees }} 人</td>
                     <td>{{ row.totalSessions }} 次</td>
@@ -284,9 +284,10 @@
                     <span
                       class="badge badge-sm"
                       :class="{
-                        'badge-primary': record.trainingPlan?.planType === 'Personal',
-                        'badge-success': record.trainingPlan?.planType === 'FlexiblePersonal',
-                        'badge-warning': record.trainingPlan?.planType === 'Sequential',
+                        'badge-primary': record.trainingPlan?.planType === 'PrivateTraining',
+                        'badge-success': record.trainingPlan?.planType === 'FlexPrivate',
+                        'badge-info': record.trainingPlan?.planType === 'SemiPrivate',
+                        'badge-warning': record.trainingPlan?.planType === 'GroupFitness',
                       }"
                     >
                       {{ getPlanTypeLabel(record.trainingPlan?.planType) }}
@@ -347,16 +348,12 @@
             <label class="label">
               <span class="font-medium">類型</span>
             </label>
-            <select
+            <GlassSelect
               v-model="formData.coachType"
-              class="select w-full"
-              :class="{ 'select-error': errors.coachType }"
-            >
-              <option value="">請選擇類型</option>
-              <option value="Founder">創辦人</option>
-              <option value="Partner">合作教練</option>
-              <option value="Team">旗下教練</option>
-            </select>
+              :options="coachTypeOptions"
+              placeholder="請選擇類型"
+              :error="!!errors.coachType"
+            />
             <p v-if="errors.coachType" class="text-sm text-error mt-1">
               {{ errors.coachType }}
             </p>
@@ -396,6 +393,13 @@ import { api } from "../services/api";
 import axios from "axios";
 import type { Coach, CoachType, CreateCoach, UpdateCoach } from "../services/coach";
 import type { TrainingRecord } from "../services/training-record";
+import GlassSelect from "../utils/GlassSelect.vue";
+
+const coachTypeOptions = [
+  { value: "Founder", label: "創辦人" },
+  { value: "Partner", label: "合作教練" },
+  { value: "Team", label: "旗下教練" },
+];
 
 interface BlobFile {
   url: string;
@@ -415,9 +419,9 @@ const coachRecords = ref<TrainingRecord[]>([]);
 const isLoadingRecords = ref<boolean>(false);
 const isLoadingYearlySummary = ref<boolean>(false);
 const yearlySummary = ref<{
-  personal: { year: string; totalAttendees: number; totalSessions: number }[];
-  sequential: { year: string; totalAttendees: number; totalSessions: number }[];
-}>({ personal: [], sequential: [] });
+  privateTraining: { year: string; totalAttendees: number; totalSessions: number }[];
+  groupFitness: { year: string; totalAttendees: number; totalSessions: number }[];
+}>({ privateTraining: [], groupFitness: [] });
 const currentPage = ref<number>(1);
 const pageSize = 20;
 
@@ -585,14 +589,18 @@ const handleSubmit = async (): Promise<void> => {
 const handleViewRecords = async (coach: Coach): Promise<void> => {
   selectedCoach.value = coach;
   coachRecords.value = [];
-  yearlySummary.value = { personal: [], sequential: [] };
+  yearlySummary.value = { privateTraining: [], groupFitness: [] };
   currentPage.value = 1;
   isLoadingRecords.value = true;
   isLoadingYearlySummary.value = true;
 
   // 同時載入年度統計
   api.getCoachYearlySummary(coach.id).then((data) => {
-    yearlySummary.value = data;
+    // 後端若回傳非預期結構，仍要保住兩個陣列欄位，避免樣板讀 .length 爆掉
+    yearlySummary.value = {
+      privateTraining: data?.privateTraining ?? [],
+      groupFitness: data?.groupFitness ?? [],
+    };
   }).catch((error) => {
     console.error("Failed to fetch yearly summary:", error);
   }).finally(() => {
@@ -606,7 +614,7 @@ const handleViewRecords = async (coach: Coach): Promise<void> => {
     const traineeIds = new Set<number>();
     for (const trainee of trainees) {
       for (const plan of trainee.trainingPlan || []) {
-        if (plan.coach?.id === coach.id || plan.planType === "Sequential") {
+        if (plan.coach?.id === coach.id || plan.planType === "GroupFitness") {
           traineeIds.add(trainee.id);
           break;
         }
@@ -629,7 +637,7 @@ const handleViewRecords = async (coach: Coach): Promise<void> => {
         for (const record of result.data) {
           // 團體課程以開課教練為準，其餘以訓練計畫教練為準
           const isCoachRecord =
-            record.trainingPlan?.planType === "Sequential" && record.openingCourse
+            record.trainingPlan?.planType === "GroupFitness" && record.openingCourse
               ? record.openingCourse.coach?.id === coach.id
               : record.trainingPlan?.coach?.id === coach.id;
           if (isCoachRecord) {
@@ -663,7 +671,7 @@ const handleViewRecords = async (coach: Coach): Promise<void> => {
 const closeRecords = (): void => {
   selectedCoach.value = null;
   coachRecords.value = [];
-  yearlySummary.value = { personal: [], sequential: [] };
+  yearlySummary.value = { privateTraining: [], groupFitness: [] };
 };
 
 const totalPages = computed(() => Math.ceil(coachRecords.value.length / pageSize));
@@ -699,9 +707,10 @@ const formatTime = (dateStr: string): string => {
 
 const getPlanTypeLabel = (planType?: string): string => {
   const labels: Record<string, string> = {
-    Personal: "個人教練",
-    FlexiblePersonal: "個人彈性",
-    Sequential: "團體課程",
+    PrivateTraining: "個人教練",
+    FlexPrivate: "個人彈性",
+    SemiPrivate: "個人小班",
+    GroupFitness: "團體課程",
   };
   return planType ? labels[planType] || planType : "未知";
 };

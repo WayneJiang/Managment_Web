@@ -29,15 +29,15 @@
               <div
                 class="badge badge-lg"
                 :class="{
-                  'badge-primary': trainingPlan.planType === 'Personal',
-                  'badge-success': trainingPlan.planType === 'FlexiblePersonal',
-                  // 'badge-success': trainingPlan.planType === 'Block',
-                  'badge-warning': trainingPlan.planType === 'Sequential',
+                  'badge-primary': trainingPlan.planType === 'PrivateTraining',
+                  'badge-success': trainingPlan.planType === 'FlexPrivate',
+                  'badge-info': trainingPlan.planType === 'SemiPrivate',
+                  'badge-warning': trainingPlan.planType === 'GroupFitness',
                   'badge-secondary':
-                    trainingPlan.planType !== 'Personal' &&
-                    trainingPlan.planType !== 'FlexiblePersonal' &&
-                    // trainingPlan.planType !== 'Block' &&
-                    trainingPlan.planType !== 'Sequential',
+                    trainingPlan.planType !== 'PrivateTraining' &&
+                    trainingPlan.planType !== 'FlexPrivate' &&
+                    trainingPlan.planType !== 'SemiPrivate' &&
+                    trainingPlan.planType !== 'GroupFitness',
                 }"
               >
                 {{ getPlanTypeLabel(trainingPlan.planType) }}
@@ -85,7 +85,7 @@
               </div>
             </div>
 
-            <div v-if="trainingPlan.planType !== 'Sequential' && trainingPlan.planType !== 'FlexiblePersonal'" class="mb-4">
+            <div v-if="trainingPlan.planType !== 'GroupFitness' && trainingPlan.planType !== 'FlexPrivate'" class="mb-4">
               <div class="flex items-center gap-2 mb-2">
                 <svg
                   class="w-4 h-4 opacity-70"
@@ -118,7 +118,7 @@
               </div>
             </div>
 
-            <div v-if="trainingPlan.planType !== 'Sequential'" class="mb-4">
+            <div v-if="trainingPlan.planType !== 'GroupFitness'" class="mb-4">
               <div class="flex items-center gap-2 mb-2">
                 <svg
                   class="w-4 h-4 opacity-70"
@@ -139,8 +139,6 @@
                 {{ trainingPlan.coach?.name || "未指定" }}
               </div>
             </div>
-
-            <!-- 團隊課程夥伴區塊已隱藏 -->
 
             <div
               class="flex justify-between items-center pt-3 border-t"
@@ -191,15 +189,12 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import type { TrainingPlan, TrainingTimeSlot } from "../services/training-plan";
-import type { Trainee } from "../services/trainee";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const props = defineProps<{
+defineProps<{
   trainingPlans: TrainingPlan[];
-  trainees?: Trainee[];
-  currentTrainee?: Trainee;
 }>();
 
 /**
@@ -222,10 +217,10 @@ const getPlanTypeLabel = (planType: string): string => {
   if (!planType) return "未知類型";
 
   const planTypeMap: Record<string, string> = {
-    Personal: "個人教練",
-    FlexiblePersonal: "個人彈性",
-    // Block: "團體課程",
-    Sequential: "團體課程",
+    PrivateTraining: "個人教練",
+    FlexPrivate: "個人彈性",
+    SemiPrivate: "個人小班",
+    GroupFitness: "團體課程",
   };
 
   return planTypeMap[planType] || planType;
@@ -296,93 +291,4 @@ const getRemainingQuotaClass = (trainingPlan: TrainingPlan): string => {
     return "text-info";
   }
 };
-
-// === 團體課程夥伴相關函數已註解 ===
-// /**
-//  * 比較兩個訓練時段陣列是否相同
-//  */
-// const compareTrainingSlots = (
-//   slots1: TrainingTimeSlot[],
-//   slots2: TrainingTimeSlot[]
-// ): boolean => {
-//   if (slots1.length !== slots2.length) {
-//     return false;
-//   }
-
-//   // 排序後比較每個時段
-//   const sortedSlots1 = [...slots1].sort((a, b) =>
-//     a.dayOfWeek.localeCompare(b.dayOfWeek)
-//   );
-//   const sortedSlots2 = [...slots2].sort((a, b) =>
-//     a.dayOfWeek.localeCompare(b.dayOfWeek)
-//   );
-
-//   return sortedSlots1.every((slot1, index) => {
-//     const slot2 = sortedSlots2[index];
-//     return (
-//       slot1.dayOfWeek === slot2.dayOfWeek &&
-//       slot1.start === slot2.start &&
-//       slot1.end === slot2.end
-//     );
-//   });
-// };
-
-// /**
-//  * 檢查兩個訓練計畫是否為相同的團體課程
-//  */
-// const isSameGroupPlan = (plan1: TrainingPlan, plan2: TrainingPlan): boolean => {
-//   // 基本條件檢查
-//   if (
-//     plan1.planType !== "Block" ||
-//     plan2.planType !== "Block" ||
-//     plan1.coach?.id !== plan2.coach?.id
-//   ) {
-//     return false;
-//   }
-
-//   // 比較訓練時段
-//   const slots1 = getTrainingSlots(plan1);
-//   const slots2 = getTrainingSlots(plan2);
-
-//   return compareTrainingSlots(slots1, slots2);
-// };
-
-// /**
-//  * 獲取團體課程夥伴
-//  */
-// const getGroupMembers = (currentPlan: TrainingPlan): Trainee[] => {
-//   if (
-//     !props.trainees ||
-//     !props.currentTrainee ||
-//     currentPlan.planType !== "Block"
-//   ) {
-//     return [];
-//   }
-
-//   const groupMembers: Trainee[] = [];
-
-//   // 尋找有相同團體計畫的夥伴
-//   const members = props.trainees.filter((trainee) => {
-//     if (trainee.id === props.currentTrainee?.id) {
-//       return false;
-//     }
-
-//     // 檢查該學員是否有相同的團體計畫
-//     const matchingPlan = trainee.trainingPlan.find((plan) =>
-//       isSameGroupPlan(currentPlan, plan)
-//     );
-
-//     return !!matchingPlan;
-//   });
-
-//   // 避免重複添加相同的夥伴
-//   members.forEach((member) => {
-//     if (!groupMembers.find((existing) => existing.id === member.id)) {
-//       groupMembers.push(member);
-//     }
-//   });
-
-//   return groupMembers;
-// };
-// === 團體課程夥伴相關函數註解結束 ===
 </script>

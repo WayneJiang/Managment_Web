@@ -179,10 +179,10 @@ const getPlanTypeLabel = (planType: string | undefined): string => {
   if (!planType) return "未設定";
 
   const planTypeMap: Record<string, string> = {
-    Personal: "個人教練",
-    FlexiblePersonal: "個人彈性",
-    // Block: "團體課程",
-    Sequential: "團體課程",
+    PrivateTraining: "個人教練",
+    FlexPrivate: "個人彈性",
+    SemiPrivate: "個人小班",
+    GroupFitness: "團體課程",
   };
 
   return planTypeMap[planType] || planType;
@@ -196,19 +196,19 @@ const getPlanTypeClass = (planType: string | undefined): string => {
     return "badge-error";
   }
 
-  if (planType === "Personal") {
+  if (planType === "PrivateTraining") {
     return "badge-primary";
   }
 
-  if (planType === "FlexiblePersonal") {
+  if (planType === "FlexPrivate") {
     return "badge-success";
   }
 
-  // if (planType === "Block") {
-  //   return "badge-success";
-  // }
+  if (planType === "SemiPrivate") {
+    return "badge-info";
+  }
 
-  if (planType === "Sequential") {
+  if (planType === "GroupFitness") {
     return "badge-warning";
   }
 

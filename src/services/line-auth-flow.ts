@@ -66,6 +66,11 @@ export const processLineAuthCode = async (
   const socialId = userProfile.sub;
   const note = userProfile.name;
 
+  // sub 為空時後端會被打成 GET /view/ 而回 404，錯誤會被誤判成「查無使用者」
+  if (!socialId) {
+    throw new Error("LINE 授權未回傳使用者識別碼，請重新登入");
+  }
+
   const lineState = stateStr ? decodeLineState(stateStr) : null;
   if (lineState?.purpose === "bind-coach" && lineState.data?.coachId) {
     await handleBindCoach(socialId, lineState.data.coachId);
@@ -74,13 +79,15 @@ export const processLineAuthCode = async (
 
   const viewerStore = useViewerStore();
   viewerStore.setSocialId(socialId);
+  // null 代表請求失敗；0 是後端「查無此 socialId」的哨兵值，屬於正常的未註冊流程
   const userId = await viewerStore.fetchBySocialId(socialId);
   if (userId === null) {
-    throw new Error("無法獲取用戶資料，請確認您已註冊");
+    throw new Error(viewerStore.error || "無法連線至伺服器，請稍後再試");
   }
 
+  const isRegistered = userId !== 0;
   const navStore = useNavigationStore();
-  if (viewerStore.isTrainee) {
+  if (isRegistered && viewerStore.isTrainee) {
     const traineeStore = useTraineeStore();
     const trainee = await traineeStore.fetchTraineeById(userId);
     if (trainee) {
@@ -94,11 +101,11 @@ export const processLineAuthCode = async (
     navStore.setViewer(userId);
     navStore.setTraineeNav(userId);
     window.location.replace("/trainee/info");
-  } else if (viewerStore.isCoach) {
+  } else if (isRegistered && viewerStore.isCoach) {
     navStore.setViewer(userId);
     navStore.setCoachNav(userId);
     window.location.replace("/coach");
-  } else if (viewerStore.socialId) {
+  } else {
     navStore.setViewer(viewerStore.socialId);
     navStore.setTraineeNav(viewerStore.socialId, {
       register: true,

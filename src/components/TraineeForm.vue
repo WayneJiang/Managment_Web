@@ -23,14 +23,12 @@
           <label class="label">
             <span class="font-medium">性別</span>
           </label>
-          <select
+          <GlassSelect
             v-model="traineeData.gender"
-            class="select w-full"
+            :options="genderOptions"
+            placeholder="請選擇性別"
             :disabled="preview"
-          >
-            <option value="Male">男</option>
-            <option value="Female">女</option>
-          </select>
+          />
         </div>
         <div>
           <label class="label">
@@ -151,6 +149,12 @@
 import { ref, computed, onMounted, watch } from "vue";
 import dayjs from "dayjs";
 import type { Trainee } from "../services/trainee";
+import GlassSelect from "../utils/GlassSelect.vue";
+
+const genderOptions = [
+  { value: "Male", label: "男" },
+  { value: "Female", label: "女" },
+];
 
 interface Props {
   trainee: Trainee;

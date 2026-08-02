@@ -13,8 +13,6 @@
       <TraineePlanList
         v-if="showPlans"
         :trainingPlans="currentTrainee.trainingPlan"
-        :trainees="allTrainees"
-        :currentTrainee="currentTrainee"
       />
       <TrainingRecordList
         v-if="showRecords"
@@ -62,7 +60,6 @@ const lineNote = ref<string>(""); // LINE 顯示名稱
 const currentMonthRecords = ref<TrainingRecord[]>([]);
 const showRecords = ref<boolean>(true); // 預設顯示簽到紀錄
 const showPlans = ref<boolean>(true); // 預設顯示歷史計畫
-const allTrainees = ref<Trainee[]>([]);
 
 /**
  * 檢查當前教練是否為 Founder
@@ -113,17 +110,13 @@ const createDefaultTrainee = (): Trainee => ({
 const initializeTraineeData = async (): Promise<void> => {
   try {
     if (!isRegister.value) {
-      // 並行載入學員資料
-      const [trainee, trainees] = await Promise.all([
-        traineeStore.fetchTraineeById(Number(traineeId.value)),
-        traineeStore.fetchTrainees(),
-      ]);
+      const trainee = await traineeStore.fetchTraineeById(
+        Number(traineeId.value)
+      );
 
       if (!trainee) {
         throw new Error("無法獲取學員資料");
       }
-
-      allTrainees.value = trainees || [];
 
       // 如果是教練模式，也載入教練列表以判斷權限
       if (isCoach.value) {
@@ -133,10 +126,6 @@ const initializeTraineeData = async (): Promise<void> => {
       // 對於註冊模式，設定預設的學員物件並清除載入狀態
       traineeStore.currentTrainee = createDefaultTrainee();
       traineeStore.clearLoadingState();
-
-      // 獲取所有學員資料用於顯示夥伴
-      const trainees = await traineeStore.fetchTrainees();
-      allTrainees.value = trainees || [];
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "發生錯誤，請稍後再試";

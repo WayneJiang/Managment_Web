@@ -84,7 +84,35 @@
       <!-- 年度統計卡片 -->
       <div v-if="currentCoach" class="card shadow-xl w-full">
         <div class="card-body">
-          <h2 class="card-title text-2xl">年度統計</h2>
+          <h2 class="card-title text-2xl">
+            年度統計
+            <!-- 全域檢視的統計範圍與一般教練不同，用 tooltip 說明 -->
+            <span
+              v-if="canViewAllRecords"
+              class="tooltip tooltip-bottom font-normal"
+              data-tip="此處為全體教練的年度統計，涵蓋所有學員的簽到紀錄"
+            >
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-circle"
+                aria-label="年度統計說明"
+              >
+                <svg
+                  class="h-5 w-5 opacity-60"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+              </button>
+            </span>
+          </h2>
 
           <div v-if="isLoadingYearlySummary" class="flex justify-center py-8">
             <span class="loading loading-spinner loading-lg"></span>
@@ -150,7 +178,34 @@
       <!-- 課程紀錄卡片 -->
       <div v-if="currentCoach" class="card shadow-xl w-full mt-4">
         <div class="card-body">
-          <h2 class="card-title text-2xl">課程紀錄</h2>
+          <h2 class="card-title text-2xl">
+            課程紀錄
+            <!-- 靠右後改用 tooltip-left，往下展開會超出卡片右緣 -->
+            <span class="tooltip tooltip-left font-normal ml-auto" data-tip="重新載入最新資料">
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs btn-circle"
+                :disabled="isLoadingRecords"
+                aria-label="重新載入課程紀錄"
+                @click="refreshInsights"
+              >
+                <svg
+                  class="h-5 w-5 opacity-60"
+                  :class="{ 'animate-spin': isLoadingRecords }"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  ></path>
+                </svg>
+              </button>
+            </span>
+          </h2>
 
           <div v-if="isLoadingRecords" class="flex justify-center py-8">
             <span class="loading loading-spinner loading-lg"></span>
@@ -164,16 +219,17 @@
             <table class="table w-full">
               <thead>
                 <tr>
-                  <th class="w-1/4">時間</th>
-                  <th class="w-1/4">學員</th>
-                  <th class="w-1/4">類型</th>
-                  <th class="w-1/4">課程</th>
+                  <th :class="recordColumnClass">時間</th>
+                  <th :class="recordColumnClass">學員</th>
+                  <th v-if="canViewAllRecords" :class="recordColumnClass">教練</th>
+                  <th :class="recordColumnClass">類型</th>
+                  <th :class="recordColumnClass">課程</th>
                 </tr>
               </thead>
               <tbody>
                 <template v-for="(dayRecords, date) in pagedGroupedRecords" :key="date">
                   <tr>
-                    <td colspan="4" class="bg-base-200 font-bold">
+                    <td :colspan="canViewAllRecords ? 5 : 4" class="bg-base-200 font-bold">
                       {{ date }}
                       <span class="badge badge-sm ml-2">{{ dayRecords.length }} 堂</span>
                     </td>
@@ -181,6 +237,7 @@
                   <tr v-for="record in dayRecords" :key="record.id">
                     <td>{{ formatTime(record.createdDate) }}</td>
                     <td>{{ record.trainee?.name || '未知學員' }}</td>
+                    <td v-if="canViewAllRecords">{{ getRecordCoachName(record) }}</td>
                     <td>
                       <span
                         class="badge badge-sm"
@@ -254,10 +311,12 @@ const trainees = computed(() => coachStore.trainees);
 const isLoading = computed(() => coachStore.loading);
 const errorMessage = computed(() => coachStore.error);
 const isFounder = computed(() => currentCoach.value?.coachType === "Founder");
-const canImpersonateTrainee = computed(() => {
+// 教練 ID 1、2 具備全域檢視權限：可看到所有學員與所有簽到紀錄
+const canViewAllRecords = computed(() => {
   const id = currentCoach.value?.id;
   return id === 1 || id === 2;
 });
+const canImpersonateTrainee = canViewAllRecords;
 
 const coachRecords = ref<TrainingRecord[]>([]);
 const isLoadingRecords = ref<boolean>(false);
@@ -271,7 +330,7 @@ const pageSize = 20;
 
 const filteredTrainees = computed(() => {
   if (!currentCoach.value) return trainees.value;
-  if (isFounder.value) return trainees.value;
+  if (isFounder.value || canViewAllRecords.value) return trainees.value;
   return trainees.value.filter((trainee) =>
     trainee.trainingPlan.some((plan) => plan.coach?.id === currentCoach.value?.id)
   );
@@ -304,6 +363,70 @@ const initializeData = async (): Promise<void> => {
 
 onMounted(initializeData);
 
+// 後端年度統計把這三種計畫歸類為「個人課程」
+const PRIVATE_PLAN_TYPES = ["PrivateTraining", "FlexPrivate", "SemiPrivate"];
+
+/**
+ * 以台北時區取得 YYYY-MM-DD，對齊後端 SQL 的 AT TIME ZONE 'Asia/Taipei'
+ */
+const getTaipeiDateKey = (dateStr: string): string =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(dateStr));
+
+/**
+ * 全域檢視時自行彙總年度統計，口徑對齊後端 getCoachYearlySummary：
+ * 個人課程 = 不重複學員數 / 簽到筆數；團體課程 = 不重複學員數 / 不重複的「日期 + 開課」
+ */
+const buildYearlySummaryFromRecords = (
+  records: TrainingRecord[]
+): typeof yearlySummary.value => {
+  const privateByYear = new Map<string, { trainees: Set<number>; sessions: number }>();
+  const groupByYear = new Map<string, { trainees: Set<number>; sessions: Set<string> }>();
+
+  for (const record of records) {
+    const planType = record.trainingPlan?.planType;
+    if (!planType || !record.createdDate) continue;
+
+    const dateKey = getTaipeiDateKey(record.createdDate);
+    const year = dateKey.slice(0, 4);
+    const traineeId = record.trainee?.id;
+
+    if (PRIVATE_PLAN_TYPES.includes(planType)) {
+      const entry = privateByYear.get(year) || { trainees: new Set<number>(), sessions: 0 };
+      if (traineeId) entry.trainees.add(traineeId);
+      entry.sessions += 1;
+      privateByYear.set(year, entry);
+      continue;
+    }
+
+    // 後端的團體課程統計是 INNER JOIN OpeningCourse，沒掛開課的紀錄不列入
+    if (planType === "GroupFitness" && record.openingCourse) {
+      const entry =
+        groupByYear.get(year) || { trainees: new Set<number>(), sessions: new Set<string>() };
+      if (traineeId) entry.trainees.add(traineeId);
+      entry.sessions.add(`${dateKey}-${record.openingCourse.id}`);
+      groupByYear.set(year, entry);
+    }
+  }
+
+  return {
+    privateTraining: Array.from(privateByYear, ([year, entry]) => ({
+      year,
+      totalAttendees: entry.trainees.size,
+      totalSessions: entry.sessions,
+    })).sort((a, b) => b.year.localeCompare(a.year)),
+    groupFitness: Array.from(groupByYear, ([year, entry]) => ({
+      year,
+      totalAttendees: entry.trainees.size,
+      totalSessions: entry.sessions.size,
+    })).sort((a, b) => b.year.localeCompare(a.year)),
+  };
+};
+
 const loadCoachInsights = async (coach: Coach): Promise<void> => {
   coachRecords.value = [];
   yearlySummary.value = { privateTraining: [], groupFitness: [] };
@@ -311,26 +434,37 @@ const loadCoachInsights = async (coach: Coach): Promise<void> => {
   isLoadingRecords.value = true;
   isLoadingYearlySummary.value = true;
 
-  api
-    .getCoachYearlySummary(coach.id)
-    .then((data) => {
-      // 後端若回傳非預期結構，仍要保住兩個陣列欄位，避免樣板讀 .length 爆掉
-      yearlySummary.value = {
-        privateTraining: data?.privateTraining ?? [],
-        groupFitness: data?.groupFitness ?? [],
-      };
-    })
-    .catch((error) => {
-      console.error("Failed to fetch yearly summary:", error);
-    })
-    .finally(() => {
-      isLoadingYearlySummary.value = false;
-    });
+  // 具全域檢視權限時不做任何過濾，直接看所有學員的所有簽到紀錄
+  const viewAll = canViewAllRecords.value;
+
+  // 後端的年度統計 API 只算單一教練，全域檢視時改用下面抓到的全部紀錄自行彙總
+  if (!viewAll) {
+    api
+      .getCoachYearlySummary(coach.id)
+      .then((data) => {
+        // 後端若回傳非預期結構，仍要保住兩個陣列欄位，避免樣板讀 .length 爆掉
+        yearlySummary.value = {
+          privateTraining: data?.privateTraining ?? [],
+          groupFitness: data?.groupFitness ?? [],
+        };
+      })
+      .catch((error) => {
+        console.error("Failed to fetch yearly summary:", error);
+      })
+      .finally(() => {
+        isLoadingYearlySummary.value = false;
+      });
+  }
 
   try {
     // 團體課程的紀錄可能掛在其他教練的計畫下，所以有團體課程計畫的學員也要納入
     const traineeIds = new Set<number>();
     for (const trainee of trainees.value) {
+      if (viewAll) {
+        traineeIds.add(trainee.id);
+        continue;
+      }
+
       for (const plan of trainee.trainingPlan || []) {
         if (plan.coach?.id === coach.id || plan.planType === "GroupFitness") {
           traineeIds.add(trainee.id);
@@ -353,16 +487,17 @@ const loadCoachInsights = async (coach: Coach): Promise<void> => {
         for (const record of result.data) {
           // 團體課程以開課教練為準，其餘以訓練計畫教練為準
           const isCoachRecord =
-            record.trainingPlan?.planType === "GroupFitness" && record.openingCourse
+            viewAll ||
+            (record.trainingPlan?.planType === "GroupFitness" && record.openingCourse
               ? record.openingCourse.coach?.id === coach.id
-              : record.trainingPlan?.coach?.id === coach.id;
+              : record.trainingPlan?.coach?.id === coach.id);
           if (isCoachRecord) {
-            if (!record.trainee?.name) {
-              const name = traineeNameMap.get(traineeId);
-              if (name) {
-                record.trainee = { ...record.trainee, id: traineeId, name } as any;
-              }
-            }
+            // 後端沒有帶回 trainee 關聯，補上目前迴圈的學員（年度統計要靠 id 去重）
+            record.trainee = {
+              ...record.trainee,
+              id: record.trainee?.id ?? traineeId,
+              name: record.trainee?.name || traineeNameMap.get(traineeId) || "",
+            } as any;
             allRecords.push(record);
           }
         }
@@ -377,11 +512,39 @@ const loadCoachInsights = async (coach: Coach): Promise<void> => {
       (a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
     );
     coachRecords.value = allRecords;
+
+    if (viewAll) {
+      yearlySummary.value = buildYearlySummaryFromRecords(allRecords);
+    }
   } catch (error) {
     console.error("Failed to fetch coach records:", error);
   } finally {
     isLoadingRecords.value = false;
+    if (viewAll) {
+      isLoadingYearlySummary.value = false;
+    }
   }
+};
+
+/**
+ * 手動重新載入課程紀錄與年度統計
+ * 不走 coachStore.fetchAll()，避免它的 loading 旗標把整頁內容切回載入畫面
+ */
+const refreshInsights = async (): Promise<void> => {
+  if (!currentCoach.value || isLoadingRecords.value) return;
+
+  // 先擋住按鈕，否則抓學員清單的這段空窗期還能重複點擊
+  isLoadingRecords.value = true;
+
+  try {
+    // 學員清單決定要抓哪些人的紀錄，先更新才看得到新學員的簽到
+    coachStore.trainees = await api.getTrainees();
+  } catch (error) {
+    // 學員清單抓失敗不影響紀錄重載，沿用現有清單即可
+    console.error("Failed to refresh trainees:", error);
+  }
+
+  await loadCoachInsights(currentCoach.value);
 };
 
 const totalPages = computed(() => Math.ceil(coachRecords.value.length / pageSize));
@@ -413,6 +576,21 @@ const formatTime = (dateStr: string): string => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const recordColumnClass = computed(() =>
+  canViewAllRecords.value ? "w-1/5" : "w-1/4"
+);
+
+/**
+ * 取得該筆紀錄的授課教練：團體課程以開課教練為準，其餘以訓練計畫教練為準
+ */
+const getRecordCoachName = (record: TrainingRecord): string => {
+  const coach =
+    record.trainingPlan?.planType === "GroupFitness" && record.openingCourse
+      ? record.openingCourse.coach
+      : record.trainingPlan?.coach;
+  return coach?.name || "未指定";
 };
 
 const getPlanTypeLabel = (planType?: string): string => {

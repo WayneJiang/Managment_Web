@@ -276,6 +276,12 @@ h1 {
   color: #fca5a5 !important;
 }
 
+/* ===== Tooltip ===== */
+/* daisyUI 預設把提示文字置中，說明性的長句換行後靠左才好讀 */
+.tooltip[data-tip]:before {
+  text-align: left;
+}
+
 /* ===== Liquid Glass Modal ===== */
 .modal {
   z-index: 9999 !important;

@@ -107,14 +107,30 @@
               <span v-if="isRegenerating" class="loading loading-spinner loading-sm"></span>
               {{ isRegenerating ? '產生中...' : '重新產生報表' }}
             </button>
-            <button
-              @click="fetchBlobs"
-              class="btn btn-outline btn-sm"
-              :disabled="isLoadingBlobs"
-            >
-              <span v-if="isLoadingBlobs" class="loading loading-spinner loading-sm"></span>
-              重新整理
-            </button>
+            <!-- 位在卡片右緣，tooltip 往左展開才不會溢出 -->
+            <span class="tooltip tooltip-left" data-tip="重新整理">
+              <button
+                @click="fetchBlobs"
+                class="btn btn-ghost btn-sm btn-circle"
+                :disabled="isLoadingBlobs"
+                aria-label="重新整理"
+              >
+                <svg
+                  class="h-5 w-5 opacity-60"
+                  :class="{ 'animate-spin': isLoadingBlobs }"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  ></path>
+                </svg>
+              </button>
+            </span>
           </div>
         </div>
 

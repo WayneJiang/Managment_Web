@@ -236,7 +236,18 @@
                   </tr>
                   <tr v-for="record in dayRecords" :key="record.id">
                     <td>{{ formatTime(record.createdDate) }}</td>
-                    <td>{{ record.trainee?.name || '未知學員' }}</td>
+                    <td>
+                      <!-- 沒有學員 id 就無從跳頁，維持純文字 -->
+                      <button
+                        v-if="record.trainee?.id"
+                        type="button"
+                        class="link link-hover font-medium trainee-link"
+                        @click="navigateToTraineeFromRecord(record)"
+                      >
+                        {{ record.trainee?.name || '未知學員' }}
+                      </button>
+                      <span v-else>未知學員</span>
+                    </td>
                     <td v-if="canViewAllRecords">{{ getRecordCoachName(record) }}</td>
                     <td>
                       <span
@@ -616,6 +627,23 @@ const navigateToUpdate = (trainee: Trainee): void => {
   router.push("/trainee/info");
 };
 
+/**
+ * 由課程紀錄的學員名稱跳往學員資訊頁，導覽參數對齊學員清單的「查看」
+ */
+const navigateToTraineeFromRecord = (record: TrainingRecord): void => {
+  const traineeId = record.trainee?.id;
+  if (!traineeId) return;
+
+  navStore.setTraineeNav(traineeId, {
+    coach: true,
+    coachId: currentCoach.value?.id || -1,
+    register: false,
+    showRecords: true,
+    showPlans: false,
+  });
+  router.push("/trainee/info");
+};
+
 const navigateToAdjust = (trainee: Trainee): void => {
   if (!currentCoach.value) return;
   navStore.setPlanNav(trainee.id, {
@@ -646,3 +674,19 @@ const navigateToCoachManage = (): void => {
   router.push({ path: "/coach/manage" });
 };
 </script>
+
+<style scoped>
+/* 咖啡棕：明度各自調過讓文字在兩種主題都夠清楚 */
+.trainee-link {
+  color: #78350f;
+  transition: color 0.3s ease;
+}
+
+[data-theme="dark"] .trainee-link {
+  color: #d6a77a;
+}
+
+.trainee-link:hover {
+  color: var(--color-text);
+}
+</style>

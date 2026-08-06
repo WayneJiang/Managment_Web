@@ -21,7 +21,8 @@ export interface UpdateTrainingRecord {
   trainingPlan: number;
   date: string;
   editor: number;
-  openingCourse?: number;
+  /** null 代表解除開課綁定；undefined 會被 JSON 丟掉，後端就維持原狀 */
+  openingCourse?: number | null;
 }
 
 /**
@@ -32,7 +33,7 @@ export interface CreateTrainingRecord {
   trainingPlan: number;
   date?: Date;
   editor: number;
-  openingCourse?: number;
+  openingCourse?: number | null;
 }
 
 /**

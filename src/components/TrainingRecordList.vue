@@ -28,7 +28,7 @@
                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               ></path>
             </svg>
-            新增簽到
+            新增
           </button>
           <button
             type="button"
@@ -41,7 +41,7 @@
               v-if="isExporting"
               class="loading loading-spinner loading-sm"
             ></span>
-            匯出 PDF
+            匯出
           </button>
         </div>
       </div>
@@ -119,54 +119,58 @@
                   </div>
                 </div>
 
-                <!-- 教練資訊 -->
-                <div class="flex items-center justify-center gap-2">
-                  <svg
-                    class="w-4 h-4 opacity-70"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    ></path>
-                  </svg>
-                  <span class="text-sm opacity-70">負責教練：</span>
-                  <span
-                    class="font-medium"
-                    :class="{
-                      'text-error': !getCoachName(record),
-                    }"
-                  >
-                    {{ getCoachName(record) }}
-                  </span>
-                </div>
-
-                <!-- 團體課程時間（僅團體課程顯示） -->
+                <!-- 教練資訊與團體課程時間並排，窄螢幕再自動換行 -->
                 <div
-                  v-if="record.trainingPlan?.planType === 'GroupFitness' && record.openingCourse"
-                  class="flex items-center justify-center gap-2"
+                  class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
                 >
-                  <svg
-                    class="w-4 h-4 opacity-70"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                  <div class="flex items-center gap-2">
+                    <svg
+                      class="w-4 h-4 opacity-70"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      ></path>
+                    </svg>
+                    <span class="text-sm opacity-70">教練：</span>
+                    <span
+                      class="font-medium"
+                      :class="{
+                        'text-error': !getCoachName(record),
+                      }"
+                    >
+                      {{ getCoachName(record) }}
+                    </span>
+                  </div>
+
+                  <!-- 團體課程時間（僅團體課程顯示） -->
+                  <div
+                    v-if="record.trainingPlan?.planType === 'GroupFitness' && record.openingCourse"
+                    class="flex items-center gap-2"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                  <span class="text-sm opacity-70">時間：</span>
-                  <span class="font-medium">
-                    {{ record.openingCourse.start }}~{{ record.openingCourse.end }}
-                  </span>
+                    <svg
+                      class="w-4 h-4 opacity-70"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span class="text-sm opacity-70">時間：</span>
+                    <span class="font-medium">
+                      {{ record.openingCourse.start }}~{{ record.openingCourse.end }}
+                    </span>
+                  </div>
                 </div>
 
                 <!-- 操作按鈕 -->
@@ -600,7 +604,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -829,6 +833,132 @@ const openingCourseOptions = computed(() =>
       `(${course.coach?.name || "未指定教練"})`,
   }))
 );
+
+/** dayjs 的 day() 對應的星期代碼，不依賴 locale 才不會被語系設定影響 */
+const dayOfWeekKeys = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+/**
+ * 取得選取內容對應的上課時段
+ * 有選團體課程就以開課為準，否則用該計畫的訓練時段（優先取所選日期當天的時段）
+ */
+const resolveSchedule = (
+  isGroupFitness: boolean,
+  planId: number,
+  openingCourseId: number | undefined,
+  date: string
+): { dayOfWeek: string; start: string } | undefined => {
+  const openingCourse = isGroupFitness
+    ? openingCourses.value.find((course) => course.id === openingCourseId)
+    : undefined;
+
+  if (openingCourse) {
+    return { dayOfWeek: openingCourse.dayOfWeek, start: openingCourse.start };
+  }
+
+  const trainingTimeSlots =
+    availableTrainingPlans.value.find((plan) => plan.id === planId)
+      ?.trainingTimeSlot || [];
+
+  if (trainingTimeSlots.length === 0) {
+    return undefined;
+  }
+
+  const dayOfWeek = date ? dayOfWeekKeys[dayjs(date).day()] : "";
+  const matchedSlot =
+    trainingTimeSlots.find((slot) => slot.dayOfWeek === dayOfWeek) ||
+    trainingTimeSlots[0];
+
+  return { dayOfWeek: matchedSlot.dayOfWeek, start: matchedSlot.start };
+};
+
+/**
+ * 往前找最近一天符合該星期的日期（當天就符合則不動）
+ * 簽到是補登已經上過的課，所以往回推而不是往後推
+ */
+const resolveDate = (date: string, dayOfWeek: string): string => {
+  const targetDay = dayOfWeekKeys.indexOf(dayOfWeek);
+
+  if (targetDay < 0) {
+    return date;
+  }
+
+  const baseDate = date ? dayjs(date) : dayjs().tz("Asia/Taipei");
+  const daysToSubtract = (baseDate.day() - targetDay + 7) % 7;
+
+  return baseDate.subtract(daysToSubtract, "day").format("YYYY-MM-DD");
+};
+
+/**
+ * 依選取的教練（訓練計畫時段）與團體課程帶入編輯中的簽到時間
+ * withDate 只在換計畫、換團體課程時開啟，手動改日期時不要把日期又搬走
+ */
+const applyEditingSchedule = (withDate: boolean): void => {
+  const schedule = resolveSchedule(
+    isEditingGroupFitnessPlan.value,
+    editingRecord.value.trainingPlan,
+    editingOpeningCourse.value,
+    editingDate.value
+  );
+
+  if (!schedule) {
+    return;
+  }
+
+  if (withDate) {
+    editingDate.value = resolveDate(editingDate.value, schedule.dayOfWeek);
+  }
+
+  const [hour, minute] = schedule.start.split(":");
+  editingTime.value = schedule.start;
+  editingHour.value = hour;
+  editingMinute.value = minute;
+};
+
+/**
+ * 依選取的教練（訓練計畫時段）與團體課程帶入新增中的簽到時間
+ */
+const applyCreatingSchedule = (withDate: boolean): void => {
+  const schedule = resolveSchedule(
+    isCreatingGroupFitnessPlan.value,
+    creatingRecord.value.trainingPlan,
+    creatingOpeningCourse.value,
+    creatingDate.value
+  );
+
+  if (!schedule) {
+    return;
+  }
+
+  if (withDate) {
+    creatingDate.value = resolveDate(creatingDate.value, schedule.dayOfWeek);
+  }
+
+  const [hour, minute] = schedule.start.split(":");
+  creatingTime.value = schedule.start;
+  creatingHour.value = hour;
+  creatingMinute.value = minute;
+};
+
+// 換計畫或換團體課程：日期、時間都跟著帶
+watch([() => editingRecord.value.trainingPlan, editingOpeningCourse], () =>
+  applyEditingSchedule(true)
+);
+
+watch([() => creatingRecord.value.trainingPlan, creatingOpeningCourse], () =>
+  applyCreatingSchedule(true)
+);
+
+// 手動改日期：只重新對時間（多個時段時挑當天星期的那個）
+watch(editingDate, () => applyEditingSchedule(false));
+watch(creatingDate, () => applyCreatingSchedule(false));
 
 /**
  * 載入訓練紀錄資料
@@ -1099,15 +1229,21 @@ const handleEditRecord = async (record: TrainingRecord): Promise<void> => {
     editingMinute.value = "00";
 
     if (props.trainingPlans && props.trainingPlans.length > 0) {
-      // 只顯示還有剩餘額度的訓練計畫
+      // 只顯示還有剩餘額度的訓練計畫；但這筆紀錄原本掛的計畫一定要留著，
+      // 否則額度用完的計畫會從選單消失，連帶讓團體課程欄位不顯示、儲存時清掉開課綁定
       availableTrainingPlans.value = props.trainingPlans.filter(
-        (plan) => (plan.quota || 0) - (plan.trainingRecord?.length || 0) > 0
+        (plan) =>
+          (plan.quota || 0) - (plan.trainingRecord?.length || 0) > 0 ||
+          plan.id === record.trainingPlan?.id
       );
     }
 
     // 載入團體課程列表
     await coachStore.fetchOpeningCourses();
     openingCourses.value = coachStore.openingCourses;
+
+    // 選項是非同步載入的，watch 會在資料到齊前就跑完，這裡要再帶一次
+    applyEditingSchedule(true);
 
     showEditModal.value = true;
   } catch (error) {
@@ -1128,11 +1264,11 @@ const handleSaveEditRecord = async (): Promise<void> => {
   const combinedDateTime = `${editingDate.value}T${combinedTime}`;
   editingRecord.value.date = dayjs(combinedDateTime).tz("Asia/Taipei").format();
 
-  // 如果是團體課程類型，加入團體課程 ID
+  // 如果是團體課程類型，加入團體課程 ID；改成其他類型時要送 null 才解得掉舊的綁定
   if (isEditingGroupFitnessPlan.value && editingOpeningCourse.value) {
     editingRecord.value.openingCourse = editingOpeningCourse.value;
   } else {
-    editingRecord.value.openingCourse = undefined;
+    editingRecord.value.openingCourse = null;
   }
 
   try {
@@ -1210,6 +1346,8 @@ const handleCreateRecord = async (): Promise<void> => {
     await coachStore.fetchOpeningCourses();
     openingCourses.value = coachStore.openingCourses;
 
+    applyCreatingSchedule(true);
+
     showCreateModal.value = true;
   } catch (error) {
     console.error("Failed to handle create record:", error);
@@ -1271,7 +1409,7 @@ const handleSaveCreateRecord = async (): Promise<void> => {
   if (isCreatingGroupFitnessPlan.value && creatingOpeningCourse.value) {
     creatingRecord.value.openingCourse = creatingOpeningCourse.value;
   } else {
-    creatingRecord.value.openingCourse = undefined;
+    creatingRecord.value.openingCourse = null;
   }
 
   try {

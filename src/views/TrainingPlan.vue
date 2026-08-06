@@ -40,13 +40,14 @@
                     <span
                       class="label-text font-semibold"
                       :style="{ color: 'var(--color-text)' }"
-                      >負責教練</span
+                      >教練</span
                     >
                   </label>
                   <GlassSelect
                     v-model="selectedCoach"
                     :options="coachOptions"
-                    placeholder="請選擇教練"
+                    :placeholder="coachPlaceholder"
+                    :disabled="isGroupFitnessPlan"
                     :error="!!validationErrors.coach"
                   />
                   <label v-if="validationErrors.coach" class="label">
@@ -417,6 +418,21 @@ const planTypeOptions = [
   { value: "GroupFitness", label: "團體課程" },
 ];
 
+/** 團體課程的授課教練是看簽到紀錄掛的開課，計畫層級不指定教練 */
+const isGroupFitnessPlan = computed(() => planType.value === "GroupFitness");
+
+const coachPlaceholder = computed(() =>
+  isGroupFitnessPlan.value ? "由開課教練決定" : "請選擇教練"
+);
+
+// 切成團體課程時清掉教練，避免欄位鎖住後還把殘留的教練送出去
+watch(isGroupFitnessPlan, (isGroupFitness) => {
+  if (isGroupFitness) {
+    selectedCoach.value = 0;
+    validationErrors.value.coach = "";
+  }
+});
+
 const dayOptions = [
   { value: "Monday", label: "星期一" },
   { value: "Tuesday", label: "星期二" },
@@ -534,8 +550,8 @@ const validateForm = (): boolean => {
     trainingSlots: "",
   };
 
-  // 所有計畫類型都需要選擇教練
-  if (!selectedCoach.value) {
+  // 團體課程以外的計畫類型都需要選擇教練
+  if (!isGroupFitnessPlan.value && !selectedCoach.value) {
     errors.coach = "請選擇教練";
   }
 
@@ -593,7 +609,8 @@ const handleSubmit = async (): Promise<void> => {
   try {
     const data: UpdateTrainingPlan = {
       trainee: currentTrainee.value.id,
-      coach: selectedCoach.value,
+      // 團體課程不帶教練，後端會把計畫上原本的教練一併清掉
+      coach: isGroupFitnessPlan.value ? undefined : selectedCoach.value,
       planType: planType.value,
       quota: quota.value,
       trainingTimeSlot: trainingTimeSlots.value,

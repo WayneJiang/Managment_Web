@@ -178,34 +178,40 @@
       <!-- 課程紀錄卡片 -->
       <div v-if="currentCoach" class="card shadow-xl w-full mt-4">
         <div class="card-body">
-          <h2 class="card-title text-2xl">
-            課程紀錄
-            <!-- 靠右後改用 tooltip-left，往下展開會超出卡片右緣 -->
-            <span class="tooltip tooltip-left font-normal ml-auto" data-tip="重新載入最新資料">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <h2 class="card-title text-2xl">
+              課程紀錄
+              <span v-if="!isLoadingRecords" class="badge badge-sm font-normal">
+                {{ filteredRecords.length }} 筆
+              </span>
+            </h2>
+
+            <!-- 篩選：教練欄位只在全域檢視時有多個對象，一般教練只看得到自己的紀錄 -->
+            <div v-if="!isLoadingRecords && coachRecords.length > 0" class="flex flex-wrap items-center gap-2">
+              <div v-if="canViewAllRecords" class="w-40">
+                <GlassSelect
+                  v-model="coachFilter"
+                  :options="coachFilterOptions"
+                  size="sm"
+                />
+              </div>
+              <div class="w-40">
+                <GlassSelect
+                  v-model="planTypeFilter"
+                  :options="planTypeFilterOptions"
+                  size="sm"
+                />
+              </div>
               <button
+                v-if="hasActiveFilter"
                 type="button"
-                class="btn btn-ghost btn-xs btn-circle"
-                :disabled="isLoadingRecords"
-                aria-label="重新載入課程紀錄"
-                @click="refreshInsights"
+                class="btn btn-ghost btn-sm"
+                @click="clearFilters"
               >
-                <svg
-                  class="h-5 w-5 opacity-60"
-                  :class="{ 'animate-spin': isLoadingRecords }"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  ></path>
-                </svg>
+                清除篩選
               </button>
-            </span>
-          </h2>
+            </div>
+          </div>
 
           <div v-if="isLoadingRecords" class="flex justify-center py-8">
             <span class="loading loading-spinner loading-lg"></span>
@@ -213,6 +219,10 @@
 
           <div v-else-if="coachRecords.length === 0" class="text-center py-8 text-gray-500">
             目前沒有課程紀錄
+          </div>
+
+          <div v-else-if="filteredRecords.length === 0" class="text-center py-8 text-gray-500">
+            沒有符合篩選條件的課程紀錄
           </div>
 
           <div v-else class="overflow-x-auto mt-2">
@@ -301,12 +311,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useCoachStore } from "../stores/coach";
 import { useNavigationStore } from "../stores/navigation";
 import TraineeList from "../components/TraineeList.vue";
 import LoadingState from "../components/LoadingState.vue";
+import GlassSelect from "../utils/GlassSelect.vue";
 import { api } from "../services/api";
 import type { Trainee } from "../services/trainee";
 import type { Coach } from "../services/coach";
@@ -338,6 +349,12 @@ const yearlySummary = ref<{
 }>({ privateTraining: [], groupFitness: [] });
 const currentPage = ref<number>(1);
 const pageSize = 20;
+
+// 篩選：以字串當值，未掛教練 / 未知計畫也要有一個可選的 key
+const ALL_FILTER = "all";
+const UNSPECIFIED_FILTER = "unspecified";
+const coachFilter = ref<string>(ALL_FILTER);
+const planTypeFilter = ref<string>(ALL_FILTER);
 
 const filteredTrainees = computed(() => {
   if (!currentCoach.value) return trainees.value;
@@ -538,31 +555,93 @@ const loadCoachInsights = async (coach: Coach): Promise<void> => {
 };
 
 /**
- * 手動重新載入課程紀錄與年度統計
- * 不走 coachStore.fetchAll()，避免它的 loading 旗標把整頁內容切回載入畫面
+ * 取得該筆紀錄的授課教練：團體課程以開課教練為準，其餘以訓練計畫教練為準
  */
-const refreshInsights = async (): Promise<void> => {
-  if (!currentCoach.value || isLoadingRecords.value) return;
+const getRecordCoach = (record: TrainingRecord) =>
+  record.trainingPlan?.planType === "GroupFitness" && record.openingCourse
+    ? record.openingCourse.coach
+    : record.trainingPlan?.coach;
 
-  // 先擋住按鈕，否則抓學員清單的這段空窗期還能重複點擊
-  isLoadingRecords.value = true;
+const getRecordCoachName = (record: TrainingRecord): string =>
+  getRecordCoach(record)?.name || "未指定";
 
-  try {
-    // 學員清單決定要抓哪些人的紀錄，先更新才看得到新學員的簽到
-    coachStore.trainees = await api.getTrainees();
-  } catch (error) {
-    // 學員清單抓失敗不影響紀錄重載，沿用現有清單即可
-    console.error("Failed to refresh trainees:", error);
-  }
-
-  await loadCoachInsights(currentCoach.value);
+const getRecordCoachKey = (record: TrainingRecord): string => {
+  const coachId = getRecordCoach(record)?.id;
+  return coachId != null ? String(coachId) : UNSPECIFIED_FILTER;
 };
 
-const totalPages = computed(() => Math.ceil(coachRecords.value.length / pageSize));
+const getRecordPlanTypeKey = (record: TrainingRecord): string =>
+  record.trainingPlan?.planType || UNSPECIFIED_FILTER;
+
+/**
+ * 篩選選項只列出目前紀錄裡真的出現過的教練 / 計畫，避免選了必定空白的條件
+ */
+const buildFilterOptions = (
+  allLabel: string,
+  getKey: (record: TrainingRecord) => string,
+  getLabel: (record: TrainingRecord) => string
+) => {
+  const labelByKey = new Map<string, string>();
+  for (const record of coachRecords.value) {
+    const key = getKey(record);
+    if (!labelByKey.has(key)) labelByKey.set(key, getLabel(record));
+  }
+
+  return [
+    { value: ALL_FILTER, label: allLabel },
+    ...Array.from(labelByKey, ([value, label]) => ({ value, label })).sort((a, b) =>
+      a.label.localeCompare(b.label, "zh-Hant")
+    ),
+  ];
+};
+
+const coachFilterOptions = computed(() =>
+  buildFilterOptions("全部教練", getRecordCoachKey, getRecordCoachName)
+);
+
+const planTypeFilterOptions = computed(() =>
+  buildFilterOptions("全部計畫", getRecordPlanTypeKey, (record) =>
+    getPlanTypeLabel(record.trainingPlan?.planType)
+  )
+);
+
+const hasActiveFilter = computed(
+  () => coachFilter.value !== ALL_FILTER || planTypeFilter.value !== ALL_FILTER
+);
+
+const clearFilters = (): void => {
+  coachFilter.value = ALL_FILTER;
+  planTypeFilter.value = ALL_FILTER;
+};
+
+const filteredRecords = computed(() =>
+  coachRecords.value.filter((record) => {
+    if (
+      coachFilter.value !== ALL_FILTER &&
+      getRecordCoachKey(record) !== coachFilter.value
+    ) {
+      return false;
+    }
+    if (
+      planTypeFilter.value !== ALL_FILTER &&
+      getRecordPlanTypeKey(record) !== planTypeFilter.value
+    ) {
+      return false;
+    }
+    return true;
+  })
+);
+
+// 換條件後停在原本的頁碼會看到空白頁，一律回到第一頁
+watch([coachFilter, planTypeFilter], () => {
+  currentPage.value = 1;
+});
+
+const totalPages = computed(() => Math.ceil(filteredRecords.value.length / pageSize));
 
 const pagedRecords = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
-  return coachRecords.value.slice(start, start + pageSize);
+  return filteredRecords.value.slice(start, start + pageSize);
 });
 
 const pagedGroupedRecords = computed(() => {
@@ -592,17 +671,6 @@ const formatTime = (dateStr: string): string => {
 const recordColumnClass = computed(() =>
   canViewAllRecords.value ? "w-1/5" : "w-1/4"
 );
-
-/**
- * 取得該筆紀錄的授課教練：團體課程以開課教練為準，其餘以訓練計畫教練為準
- */
-const getRecordCoachName = (record: TrainingRecord): string => {
-  const coach =
-    record.trainingPlan?.planType === "GroupFitness" && record.openingCourse
-      ? record.openingCourse.coach
-      : record.trainingPlan?.coach;
-  return coach?.name || "未指定";
-};
 
 const getPlanTypeLabel = (planType?: string): string => {
   const labels: Record<string, string> = {

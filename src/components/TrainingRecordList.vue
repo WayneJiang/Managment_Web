@@ -621,6 +621,7 @@ import type { OpeningCourse } from "../services/opening-course";
 import { useTraineeStore } from "../stores/trainee";
 import { useCoachStore } from "../stores/coach";
 import GlassSelect from "../utils/GlassSelect.vue";
+import { applyChineseFont, PDF_FONT_FAMILY } from "../utils/pdf-font";
 
 const traineeStore = useTraineeStore();
 const coachStore = useCoachStore();
@@ -1139,9 +1140,8 @@ const handleExportToPdf = async (): Promise<void> => {
   try {
     const doc = new jsPDF();
 
-    doc.addFont("/fonts/NotoSansTC-Regular.ttf", "NotoSansTC", "normal");
-    doc.addFont("/fonts/NotoSansTC-Bold.ttf", "NotoSansTC", "bold");
-    doc.setFont("NotoSansTC");
+    // 首次匯出要下載字型，之後同一個分頁沿用快取
+    await applyChineseFont(doc);
 
     doc.setFontSize(20);
     doc.text("簽到紀錄", 14, 20);
@@ -1150,7 +1150,7 @@ const handleExportToPdf = async (): Promise<void> => {
 
     Object.entries(groupedRecords.value).forEach(([date, records]) => {
       doc.setFontSize(14);
-      doc.setFont("NotoSansTC", "bold");
+      doc.setFont(PDF_FONT_FAMILY, "bold");
       doc.text(formatDateHeader(date), 14, currentY);
       currentY += 10;
 
@@ -1169,12 +1169,12 @@ const handleExportToPdf = async (): Promise<void> => {
         body: tableData,
         startY: currentY,
         styles: {
-          font: "NotoSansTC",
+          font: PDF_FONT_FAMILY,
           fontSize: 9,
           halign: "center",
         },
         headStyles: {
-          font: "NotoSansTC",
+          font: PDF_FONT_FAMILY,
           fontStyle: "bold",
           fillColor: [66, 139, 202],
           halign: "center",

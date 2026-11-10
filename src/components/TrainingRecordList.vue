@@ -967,9 +967,10 @@ watch(creatingDate, () => applyCreatingSchedule(false));
 const loadTrainingRecords = async (): Promise<void> => {
   try {
     isLoading.value = true;
+    // 前端頁碼從 0 起算，後端從 1 起算
     const response = await traineeStore.fetchTrainingRecord(
       props.traineeId,
-      currentPage.value
+      currentPage.value + 1
     );
 
     if (response) {
@@ -1011,10 +1012,12 @@ const handleNextPage = async (): Promise<void> => {
 /**
  * 按日期分組訓練紀錄
  */
-const groupedRecords = computed(() => {
+const groupRecordsByDate = (
+  records: TrainingRecord[]
+): Record<string, TrainingRecord[]> => {
   const groups: Record<string, TrainingRecord[]> = {};
 
-  props.trainingRecords.forEach((record) => {
+  records.forEach((record) => {
     const date = dayjs(record.createdDate)
       .tz("Asia/Taipei")
       .format("YYYY-MM-DD");
@@ -1040,7 +1043,27 @@ const groupedRecords = computed(() => {
     });
 
   return sortedGroups;
-});
+};
+
+const groupedRecords = computed(() => groupRecordsByDate(props.trainingRecords));
+
+/**
+ * 抓這位學員所有分頁的簽到紀錄（匯出用）
+ * 後端依 id 排序分頁，補登的紀錄可能和同一天的其他紀錄落在不同頁，只匯出目前頁會漏資料
+ */
+const fetchAllTrainingRecords = async (): Promise<TrainingRecord[]> => {
+  const allRecords: TrainingRecord[] = [];
+  let page = 1;
+  let totalPagesLocal = 1;
+  while (page <= totalPagesLocal) {
+    const response = await traineeStore.fetchTrainingRecord(props.traineeId, page);
+    if (!response) break;
+    allRecords.push(...response.data);
+    totalPagesLocal = response.totalPages;
+    page++;
+  }
+  return allRecords;
+};
 
 /**
  * 獲取計畫類型標籤
@@ -1141,14 +1164,17 @@ const handleExportToPdf = async (): Promise<void> => {
     const doc = new jsPDF();
 
     // 首次匯出要下載字型，之後同一個分頁沿用快取
-    await applyChineseFont(doc);
+    const [allRecords] = await Promise.all([
+      fetchAllTrainingRecords(),
+      applyChineseFont(doc),
+    ]);
 
     doc.setFontSize(20);
     doc.text("簽到紀錄", 14, 20);
 
     let currentY = 30;
 
-    Object.entries(groupedRecords.value).forEach(([date, records]) => {
+    Object.entries(groupRecordsByDate(allRecords)).forEach(([date, records]) => {
       doc.setFontSize(14);
       doc.setFont(PDF_FONT_FAMILY, "bold");
       doc.text(formatDateHeader(date), 14, currentY);

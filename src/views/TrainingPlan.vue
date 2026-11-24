@@ -140,6 +140,47 @@
                 border: '1px solid var(--color-border)',
               }"
             >
+              <label class="label" for="training-plan-note">
+                <span
+                  class="label-text font-semibold"
+                  :style="{ color: 'var(--color-text)' }"
+                  >備註</span
+                >
+                <span class="text-sm">{{ note.length }}/100</span>
+              </label>
+              <textarea
+                id="training-plan-note"
+                v-model="note"
+                class="textarea w-full"
+                :class="{ 'textarea-error': validationErrors.note }"
+                :style="{
+                  backgroundColor: 'var(--color-input-bg)',
+                  borderColor: validationErrors.note
+                    ? 'var(--color-error)'
+                    : 'var(--color-input-border)',
+                  color: 'var(--color-text)',
+                }"
+                maxlength="100"
+                rows="3"
+                placeholder="請輸入備註（最多100字）..."
+                @input="validateNote"
+              ></textarea>
+              <p
+                v-if="validationErrors.note"
+                class="text-sm mt-1"
+                :style="{ color: 'var(--color-error)' }"
+              >
+                {{ validationErrors.note }}
+              </p>
+            </div>
+
+            <div
+              class="card bg-base-100 shadow-md p-3 mt-4"
+              :style="{
+                backgroundColor: 'var(--color-card-bg)',
+                border: '1px solid var(--color-border)',
+              }"
+            >
               <div class="">
                 <div class="flex justify-between items-center mb-4">
                   <label class="label">
@@ -374,6 +415,7 @@ const coaches = ref<Coach[]>([]);
 const selectedCoach = ref<number>(0);
 const planType = ref<string>("");
 const quota = ref<number>(0);
+const note = ref<string>("");
 const trainingTimeSlots = ref<TrainingTimeSlot[]>([]);
 const editTrainingPlanId = ref<number>(0);
 const editorId = ref<number>(0);
@@ -387,7 +429,16 @@ const validationErrors = ref({
   planType: "",
   quota: "",
   trainingSlots: "",
+  note: "",
 });
+
+/**
+ * 備註長度即時驗證（maxlength 為主要限制，這裡是防禦性檢查）
+ */
+const validateNote = (): void => {
+  validationErrors.value.note =
+    note.value.length > 100 ? "備註不能超過100字" : "";
+};
 
 // 計算屬性
 const isEditMode = computed(() => editTrainingPlanId.value !== 0);
@@ -548,7 +599,12 @@ const validateForm = (): boolean => {
     planType: "",
     quota: "",
     trainingSlots: "",
+    note: "",
   };
+
+  if (note.value.length > 100) {
+    errors.note = "備註不能超過100字";
+  }
 
   // 團體課程以外的計畫類型都需要選擇教練
   if (!isGroupFitnessPlan.value && !selectedCoach.value) {
@@ -613,6 +669,7 @@ const handleSubmit = async (): Promise<void> => {
       coach: isGroupFitnessPlan.value ? undefined : selectedCoach.value,
       planType: planType.value,
       quota: quota.value,
+      note: note.value.trim(),
       trainingTimeSlot: trainingTimeSlots.value,
       editor: editorId.value,
       id: editTrainingPlanId.value,
@@ -626,8 +683,12 @@ const handleSubmit = async (): Promise<void> => {
     }
 
     if (!result) {
-      const errorMessage = isEditMode.value ? "更新失敗" : "新增失敗";
-      ElMessage.error(errorMessage);
+      // store 失敗時會設定 error，會讓整頁（含表單與輸入內容）被隱藏；
+      // 這裡改以訊息提示並清除 error，保留表單與使用者輸入
+      const failMessage =
+        traineeStore.error || (isEditMode.value ? "更新失敗" : "新增失敗");
+      traineeStore.error = null;
+      ElMessage.error(failMessage);
       return;
     }
 
@@ -657,6 +718,7 @@ const resetForm = (): void => {
   selectedCoach.value = 0;
   planType.value = "";
   quota.value = 0;
+  note.value = "";
   trainingTimeSlots.value = [];
   editTrainingPlanId.value = 0;
   validationErrors.value = {
@@ -664,6 +726,7 @@ const resetForm = (): void => {
     planType: "",
     quota: "",
     trainingSlots: "",
+    note: "",
   };
 };
 
@@ -675,6 +738,8 @@ const handleEditTrainingPlan = (trainingPlan: TrainingPlan): void => {
   selectedCoach.value = trainingPlan.coach?.id || 0;
   planType.value = trainingPlan.planType;
   quota.value = trainingPlan.quota;
+  note.value = trainingPlan.note ?? "";
+  validationErrors.value.note = "";
 
   if (trainingPlan.trainingTimeSlot.length > 0) {
     const uniqueSlots = trainingPlan.trainingTimeSlot.filter(

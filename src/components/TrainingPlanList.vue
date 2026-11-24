@@ -4,7 +4,7 @@
       <div
         v-for="trainingPlan in trainingPlans"
         :key="trainingPlan.id"
-        class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300"
+        class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 min-w-0"
         :style="{
           backgroundColor: 'var(--color-card-bg)',
           color: 'var(--color-text)',
@@ -174,6 +174,26 @@
             <div class="text-base font-medium">
               {{ trainingPlan.editor?.name || "" }}
             </div>
+          </div>
+
+          <div class="mb-4 min-w-0">
+            <div class="flex items-center gap-2 mb-2">
+              <svg
+                class="w-4 h-4 opacity-70"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 8h10M7 12h10M7 16h6M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"
+                ></path>
+              </svg>
+              <span class="font-semibold text-sm opacity-80">備註</span>
+            </div>
+            <div class="text-sm whitespace-pre-line break-words max-h-24 overflow-y-auto">{{ trainingPlan.note?.trim() }}</div>
           </div>
 
           <div

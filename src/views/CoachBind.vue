@@ -38,15 +38,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
-import { createLineLoginService } from "../services/line-login";
-import { encodeLineState } from "../utils/line-state";
+import {
+  createLineLoginService,
+  LOGIN_FAILED_MESSAGE,
+} from "../services/line-login";
+import {
+  beginLineLogin,
+  clearPendingIfStateMatches,
+  clearPendingLineLogin,
+  SessionStorageUnavailableError,
+  STORAGE_BLOCKED_MESSAGE,
+} from "../utils/line-state";
 import LoadingState from "../components/LoadingState.vue";
 import {
   LINE_AUTH_MESSAGE_TYPE,
   openLineLoginPopup,
+  POPUP_CLOSED_GRACE_MS,
   processLineAuthCode,
+  resolveLineAuthError,
   type LineAuthMessage,
 } from "../services/line-auth-flow";
 
@@ -64,16 +75,35 @@ const route = useRoute();
 
 const getCoachId = (): number | null => {
   const coachIdParam = route.query.coachId as string;
-  if (coachIdParam) {
-    return Number(coachIdParam);
+  const coachId = Number(coachIdParam);
+  return Number.isInteger(coachId) && coachId > 0 ? coachId : null;
+};
+
+// 目前進行中的登入監聽（開始新登入前與元件卸載時要先清掉，避免 listener / timer 外洩）
+let activeCleanup: (() => void) | null = null;
+// 已開啟但尚未收到結果的 popup；收到訊息（開始交換）或 popup 已關閉後會設為 null
+let activePopup: Window | null = null;
+
+/** 中止進行中的登入：清掉監聽，並關閉仍開著的 popup 與尚未使用的 pending */
+const abortActiveLogin = (): void => {
+  activeCleanup?.();
+  if (activePopup) {
+    try {
+      activePopup.close();
+    } catch {
+      // 無法關閉時忽略
+    }
+    clearPendingLineLogin();
+    activePopup = null;
   }
-  return null;
 };
 
 /**
  * 處理 LINE 登入：在彈窗中開啟授權頁，主頁面 history 不會被汙染
  */
 const handleLineLogin = (): void => {
+  abortActiveLogin();
+
   try {
     isLineLoginLoading.value = true;
 
@@ -84,8 +114,21 @@ const handleLineLogin = (): void => {
       return;
     }
 
-    const state = encodeLineState("bind-coach", { coachId });
-    const loginUrl = lineLoginService.generateLoginUrl(state);
+    // 先寫入 pending（state / nonce / coachId），再開啟視窗
+    let loginUrl: string;
+    let expectedState: string;
+    try {
+      const { state, nonce } = beginLineLogin("bind-coach", { coachId });
+      expectedState = state;
+      loginUrl = lineLoginService.generateLoginUrl(state, nonce);
+    } catch (err) {
+      errorMessage.value =
+        err instanceof SessionStorageUnavailableError
+          ? STORAGE_BLOCKED_MESSAGE
+          : LOGIN_FAILED_MESSAGE;
+      isLineLoginLoading.value = false;
+      return;
+    }
 
     const popup = openLineLoginPopup(loginUrl);
     if (!popup) {
@@ -93,7 +136,10 @@ const handleLineLogin = (): void => {
       return;
     }
 
+    activePopup = popup;
+
     let closedPoller: number | null = null;
+    let graceTimer: number | null = null;
 
     const cleanup = (): void => {
       window.removeEventListener("message", handleMessage);
@@ -101,21 +147,34 @@ const handleLineLogin = (): void => {
         window.clearInterval(closedPoller);
         closedPoller = null;
       }
+      if (graceTimer !== null) {
+        window.clearTimeout(graceTimer);
+        graceTimer = null;
+      }
+      if (activeCleanup === cleanup) activeCleanup = null;
     };
+    activeCleanup = cleanup;
 
     const handleMessage = async (event: MessageEvent): Promise<void> => {
       if (event.origin !== window.location.origin) return;
+      if (event.source !== popup) return;
       const data = event.data as LineAuthMessage | undefined;
       if (!data || data.type !== LINE_AUTH_MESSAGE_TYPE) return;
+      // 忽略 state 不符的訊息（例如重複使用的 popup 送來的舊訊息），不影響目前流程
+      if (data.state !== expectedState) return;
 
+      // 在任何 await 之前同步 cleanup，避免與 closedPoller 競態
       cleanup();
+      activePopup = null;
 
-      if (data.error) {
-        errorMessage.value = data.error;
+      if (data.error !== undefined) {
+        // 只依 error 代碼顯示固定訊息；state 相符才清除 pending
+        errorMessage.value = resolveLineAuthError(data.error, data.state);
         isLineLoginLoading.value = false;
         return;
       }
       if (!data.code) {
+        clearPendingIfStateMatches(data.state ?? null);
         errorMessage.value = "未收到LINE授權碼";
         isLineLoginLoading.value = false;
         return;
@@ -134,18 +193,29 @@ const handleLineLogin = (): void => {
 
     window.addEventListener("message", handleMessage);
 
+    // 使用者手動關閉彈窗：先停止 poller，寬限一段時間再 cleanup，
+    // 讓已排入佇列的 message 事件仍能被處理（不清除 pending，交給 TTL 與下一次登入覆蓋）
     closedPoller = window.setInterval(() => {
       if (popup.closed) {
-        cleanup();
-        isLineLoginLoading.value = false;
+        if (closedPoller !== null) {
+          window.clearInterval(closedPoller);
+          closedPoller = null;
+        }
+        graceTimer = window.setTimeout(() => {
+          cleanup();
+          activePopup = null;
+          isLineLoginLoading.value = false;
+        }, POPUP_CLOSED_GRACE_MS);
       }
     }, 500);
   } catch (error) {
     isLineLoginLoading.value = false;
-    errorMessage.value = "LINE 登入失敗，請稍後再試";
+    errorMessage.value = LOGIN_FAILED_MESSAGE;
     console.error("LINE login error:", error);
   }
 };
+
+onBeforeUnmount(abortActiveLogin);
 
 /**
  * 初始化頁面

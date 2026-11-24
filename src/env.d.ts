@@ -2,8 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
-  readonly VITE_LINE_CHANNEL_ID: string;
-  readonly VITE_LINE_CHANNEL_SECRET: string;
+  readonly VITE_LINE_LOGIN_CHANNEL_ID: string;
 }
 
 interface ImportMeta {

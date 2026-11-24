@@ -55,10 +55,12 @@ npm run dev    # http://localhost:5173
 | 變數 | 用途 |
 |---|---|
 | `VITE_API_URL` | 後端 API 的基底 URL（`src/services/api.ts`、`src/views/CoachManage.vue`） |
-| `VITE_LINE_CHANNEL_ID` | LINE Login channel ID（`src/services/line-login.ts`、`src/services/api-line.ts`） |
-| `VITE_LINE_CHANNEL_SECRET` | LINE Login channel secret（`src/services/api-line.ts`） |
+| `VITE_LINE_LOGIN_CHANNEL_ID` | LINE Login channel ID（`src/services/line-login.ts`） |
 | `BLOB_READ_WRITE_TOKEN` | 僅 dev server（`vite.config.ts`）使用的 Vercel Blob token |
 | `VITE_BLOB_READ_WRITE_TOKEN` | 同上，`BLOB_READ_WRITE_TOKEN` 未設定時的備用名稱（`vite.config.ts`） |
+
+- **`VITE_LINE_CHANNEL_SECRET` 已移除，不得設定**（Vercel 所有環境也要刪除）。`VITE_*` 會被打包進前端，secret 只能放在後端。LINE Login 的 token 交換改由後端 `POST /auth/line-login` 處理。
+- LINE 相關的本機值放在 `.env.development.local`；LINE 變數的完整說明見 [`LINE_BOT/README.md`](../LINE_BOT/README.md)。
 
 ---
 
@@ -77,7 +79,7 @@ npm run dev    # http://localhost:5173
 ## 主要功能
 
 - **學員 / 教練管理**：學員與教練列表、詳細資料與表單。
-- **LINE 登入與教練綁定**：透過 LINE Login 登入（`/line-callback`），並綁定教練帳號。
+- **LINE 登入與教練綁定**：透過 LINE Login 登入（`/line-callback`），並綁定教練帳號。登入以一次性的隨機 `state` / `nonce` 驗證，授權碼交由後端 `POST /auth/line-login` 換取身分。
 - **訓練計畫**（`TrainingPlan.vue`）：新增、編輯計畫（方案類型、額度、訓練時段）。
 - **簽到紀錄**（`TrainingRecordList.vue`）：列表與下拉選單，可前端匯出 PDF。
 - **團體課程**：開課課程表單與週檢視（`OpeningCourse.vue`）。
@@ -97,6 +99,7 @@ npm run dev    # http://localhost:5173
 - 部署平台為 **Vercel**，建置指令為 `npm run build`（`vite build`）。
 - 部署順序：**migration → 後端（LINE_BOT）→ 前端（本 repo）**。前端最後部署，詳見 [`LINE_BOT/README.md`](../LINE_BOT/README.md) 的「資料庫 Migration 與部署」。
 - 若先部署前端，備註會因後端尚未支援而無法儲存。
+- LINE 登入與 Webhook 相關的部署順序（含 `VITE_LINE_CHANNEL_SECRET` 移除與 LINE Login secret 輪替）見 [`LINE_BOT/README.md`](../LINE_BOT/README.md) 的「LINE 登入與 Webhook 部署」。
 
 ## 相關專案
 

@@ -15,6 +15,7 @@ import {
   UpdateOpeningCourse,
 } from "./opening-course";
 import { UpdateTrainingPlan } from "./training-plan";
+import { LOGIN_FAILED_MESSAGE } from "./line-login";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const apiClient = axios.create({
@@ -25,9 +26,29 @@ const apiClient = axios.create({
 });
 
 export const api = {
+  /**
+   * 以 LINE 授權碼向後端換取使用者身分（頻道密鑰只存在後端）
+   */
+  async lineLogin(
+    code: string,
+    redirectUri: string,
+    nonce: string
+  ): Promise<{ userId: string; displayName: string }> {
+    try {
+      return (
+        await apiClient.post("/auth/line-login", { code, redirectUri, nonce })
+      ).data;
+    } catch (error) {
+      const message = (error as any).response?.data?.message;
+      throw new Error(
+        typeof message === "string" ? message : LOGIN_FAILED_MESSAGE
+      );
+    }
+  },
+
   async getBySocialId(socialId: string): Promise<Viewer> {
     try {
-      return (await apiClient.get(`/view/${socialId}`)).data;
+      return (await apiClient.get(`/view/${encodeURIComponent(socialId)}`)).data;
     } catch (error) {
       throw new Error((error as any).response?.data?.message || "無法獲取資訊");
     }
@@ -85,7 +106,7 @@ export const api = {
       const filteredData = Object.fromEntries(
         Object.entries(updateTrainee).filter(([_, v]) => v !== undefined)
       );
-      return (await apiClient.post(`/trainee/info/${socialId}`, filteredData))
+      return (await apiClient.post(`/trainee/info/${encodeURIComponent(socialId)}`, filteredData))
         .data;
     } catch (error) {
       throw new Error((error as any).response?.data?.message || "無法獲取資訊");
